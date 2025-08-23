@@ -24,6 +24,9 @@ function App() {
         <button className="btn btn-success update-btn">
           🔄 最新更新: 2025-08-23 17:40
         </button>
+        <button className="btn btn-danger test-btn">
+          🚨 测试按钮 - 点击我！
+        </button>
       </div>
       
       <div className="stats-grid">
