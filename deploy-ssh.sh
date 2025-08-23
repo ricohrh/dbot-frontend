@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# DBot前端自动部署脚本（干净版本）
-# 使用方法: ./deploy-clean.sh
+# DBot前端自动部署脚本（SSH版本）
+# 使用方法: ./deploy-ssh.sh
 
 echo "🚀 开始部署DBot前端到GitHub Pages..."
 
@@ -22,6 +22,39 @@ fi
 echo -e "${BLUE}🔧 配置Git...${NC}"
 git config user.name "ricohrh"
 git config user.email "ricohrh@github.com"
+
+# 检查SSH密钥
+echo -e "${BLUE}🔑 检查SSH密钥...${NC}"
+if [ ! -f ~/.ssh/github_key ]; then
+    echo -e "${YELLOW}⚠️  SSH密钥不存在，正在生成...${NC}"
+    ssh-keygen -t ed25519 -C "ricohrh@github.com" -f ~/.ssh/github_key -N ""
+    
+    # 配置SSH
+    mkdir -p ~/.ssh
+    echo "Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/github_key
+    IdentitiesOnly yes" > ~/.ssh/config
+    
+    chmod 600 ~/.ssh/github_key
+    chmod 644 ~/.ssh/github_key.pub
+    chmod 600 ~/.ssh/config
+    
+    echo -e "${GREEN}✅ SSH密钥已生成${NC}"
+    echo -e "${BLUE}📋 请将以下公钥添加到GitHub:${NC}"
+    echo -e "${YELLOW}$(cat ~/.ssh/github_key.pub)${NC}"
+    echo -e "${BLUE}💡 访问: https://github.com/settings/keys${NC}"
+    read -p "添加完成后按回车继续..."
+fi
+
+# 设置SSH URL
+echo -e "${BLUE}🔗 设置SSH URL...${NC}"
+git remote set-url origin git@github.com:ricohrh/dbot-frontend.git
+
+# 测试SSH连接
+echo -e "${BLUE}🔍 测试SSH连接...${NC}"
+ssh -T git@github.com 2>&1 | grep -q "successfully authenticated" && echo -e "${GREEN}✅ SSH连接成功${NC}" || echo -e "${YELLOW}⚠️  SSH连接测试失败，但继续执行${NC}"
 
 # 获取提交信息
 COMMIT_MSG="自动更新: $(date '+%Y-%m-%d %H:%M:%S')"
@@ -80,13 +113,15 @@ echo -e "${GREEN}✅ 提交成功${NC}"
 
 # 6. 推送到GitHub
 echo -e "${YELLOW}📤 推送到GitHub...${NC}"
-echo -e "${BLUE}💡 提示: 请手动输入GitHub认证信息${NC}"
-
 git push origin main
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ 推送失败${NC}"
-    echo -e "${YELLOW}💡 请检查GitHub认证设置${NC}"
-    exit 1
+    echo -e "${YELLOW}💡 尝试强制推送...${NC}"
+    git push origin main --force
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ 强制推送也失败了${NC}"
+        exit 1
+    fi
 fi
 echo -e "${GREEN}✅ 推送成功${NC}"
 
