@@ -19,7 +19,12 @@ function App() {
 
   const renderDashboard = () => (
     <div className="dashboard">
-      <h2>🚀 DBot API 管理系统</h2>
+      <div className="dashboard-header">
+        <h2>🚀 DBot API 管理系统</h2>
+        <button className="btn btn-success update-btn">
+          🔄 最新更新: 2025-08-23 17:40
+        </button>
+      </div>
       
       <div className="stats-grid">
         <div className="stat-card">
@@ -240,7 +245,10 @@ function App() {
   return (
     <div className="App">
       <nav className="navbar">
-        <div className="nav-brand">🚀 DBot API</div>
+        <div className="nav-brand">
+          🚀 DBot API
+          <span className="version-badge">v2.1</span>
+        </div>
         <div className="nav-tabs">
           <button 
             className={`nav-tab ${activeTab === 'dashboard' ? 'active' : ''}`}
