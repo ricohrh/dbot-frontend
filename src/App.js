@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import WalletManager from './components/WalletManager/WalletManager';
 import StrategyManager from './components/StrategyManager/StrategyManager';
+import MarketData from './components/MarketData/MarketData';
 import './App.css';
 
 const App = () => {
@@ -16,6 +17,8 @@ const App = () => {
         return <WalletManager />;
       case 'trade':
         return <TradeOverview />;
+      case 'market':
+        return <MarketData />;
       default:
         return <StrategyManager />;
     }
@@ -26,7 +29,7 @@ const App = () => {
       <nav className="navbar">
         <div className="nav-brand">
           🚀 MemeCoin 管理系统
-          <span className="version-badge">v4.3</span>
+          <span className="version-badge">v4.4</span>
         </div>
         <div className="nav-tabs">
           <button
@@ -52,6 +55,12 @@ const App = () => {
             onClick={() => setActiveTab('trade')}
           >
             💰 交易总览
+          </button>
+          <button
+            className={`nav-tab ${activeTab === 'market' ? 'active' : ''}`}
+            onClick={() => setActiveTab('market')}
+          >
+            📈 实时行情
           </button>
         </div>
       </nav>
