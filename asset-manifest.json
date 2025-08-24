@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/dbot-frontend/static/css/main.c7d5ba98.css",
-    "main.js": "/dbot-frontend/static/js/main.f3950e94.js",
+    "main.js": "/dbot-frontend/static/js/main.d0685747.js",
     "static/js/453.670e15c7.chunk.js": "/dbot-frontend/static/js/453.670e15c7.chunk.js",
     "index.html": "/dbot-frontend/index.html",
     "main.c7d5ba98.css.map": "/dbot-frontend/static/css/main.c7d5ba98.css.map",
-    "main.f3950e94.js.map": "/dbot-frontend/static/js/main.f3950e94.js.map",
+    "main.d0685747.js.map": "/dbot-frontend/static/js/main.d0685747.js.map",
     "453.670e15c7.chunk.js.map": "/dbot-frontend/static/js/453.670e15c7.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.c7d5ba98.css",
-    "static/js/main.f3950e94.js"
+    "static/js/main.d0685747.js"
   ]
 }
