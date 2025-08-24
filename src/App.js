@@ -62,13 +62,17 @@ function App() {
         
         console.log('解析后的钱包列表:', walletList);
         console.log('钱包数量:', walletList.length);
+        console.log('钱包列表类型:', typeof walletList);
+        console.log('是否为数组:', Array.isArray(walletList));
         
         // 显示每个钱包的详细信息
         walletList.forEach((wallet, index) => {
           console.log(`钱包 ${index + 1}:`, wallet);
         });
         
+        console.log('设置钱包状态前的wallets:', wallets);
         setWallets(walletList);
+        console.log('设置钱包状态后的wallets:', walletList);
       } else {
         console.error('获取钱包列表失败:', response.status);
         const errorData = await response.json().catch(() => ({}));
@@ -388,6 +392,11 @@ function App() {
         </div>
       )}
       
+      {/* 调试信息 */}
+      <div style={{background: '#f0f0f0', padding: '10px', margin: '10px 0', borderRadius: '5px', fontSize: '12px'}}>
+        <strong>调试信息:</strong> 钱包数量: {wallets.length}, 钱包数据: {JSON.stringify(wallets)}
+      </div>
+      
       <div className="wallet-grid">
         {wallets.length === 0 ? (
           <div className="empty-state">
@@ -622,7 +631,7 @@ function App() {
       <nav className="navbar">
         <div className="nav-brand">
           🚀 MemeCoin 管理系统
-          <span className="version-badge">v4.0</span>
+          <span className="version-badge">v4.1</span>
         </div>
         <div className="nav-tabs">
           <button
