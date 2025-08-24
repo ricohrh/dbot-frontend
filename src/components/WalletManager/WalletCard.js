@@ -1,6 +1,6 @@
 import React from 'react';
 
-const WalletCard = ({ wallet, onDelete, onInfo }) => {
+const WalletCard = ({ wallet, onEdit, onDelete, onInfo }) => {
   const formatAddress = (address) => {
     if (!address) return '未知';
     return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`;
@@ -36,6 +36,12 @@ const WalletCard = ({ wallet, onDelete, onInfo }) => {
           onClick={onInfo}
         >
           📊 详情
+        </button>
+        <button 
+          className="btn btn-sm btn-outline"
+          onClick={onEdit}
+        >
+          ✏️ 编辑
         </button>
         <button 
           className="btn btn-sm btn-outline"

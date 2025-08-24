@@ -40,6 +40,21 @@ const WalletManager = () => {
     }
   };
 
+  // 编辑钱包
+  const handleEditWallet = async (walletData) => {
+    try {
+      setLoading(true);
+      await walletService.editWallet(walletData);
+      setMessage('钱包编辑成功！');
+      setShowModal(false);
+      setTimeout(() => fetchWallets(), 1000);
+    } catch (error) {
+      setMessage(`编辑失败: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 删除钱包
   const handleDeleteWallet = async (walletId) => {
     try {
@@ -115,6 +130,7 @@ const WalletManager = () => {
             <WalletCard
               key={wallet.id || wallet._id}
               wallet={wallet}
+              onEdit={() => openModal('edit', wallet)}
               onDelete={() => openModal('delete', wallet)}
               onInfo={() => openModal('info', wallet)}
             />
@@ -128,6 +144,7 @@ const WalletManager = () => {
           wallet={selectedWallet}
           onClose={() => setShowModal(false)}
           onImport={handleImportWallet}
+          onEdit={handleEditWallet}
           onDelete={handleDeleteWallet}
           loading={loading}
         />

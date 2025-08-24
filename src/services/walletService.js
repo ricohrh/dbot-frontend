@@ -30,6 +30,22 @@ export const walletService = {
     }
   },
 
+  // 编辑钱包
+  async editWallet(walletData) {
+    try {
+      const { _id, name } = walletData;
+      const data = await apiRequest('/account/wallet', {
+        method: 'PATCH',
+        body: JSON.stringify({ _id, name })
+      });
+      console.log('编辑钱包成功:', data);
+      return data;
+    } catch (error) {
+      console.error('编辑钱包失败:', error);
+      throw error;
+    }
+  },
+
   // 删除钱包
   async deleteWallet(walletId) {
     try {

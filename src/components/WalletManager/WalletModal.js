@@ -1,11 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const WalletModal = ({ type, wallet, onClose, onImport, onDelete, loading }) => {
+const WalletModal = ({ type, wallet, onClose, onImport, onEdit, onDelete, loading }) => {
   const [formData, setFormData] = useState({
     name: '',
     privateKey: '',
     type: 'solana'
   });
+
+  // 当编辑模式时，初始化表单数据
+  useEffect(() => {
+    if (type === 'edit' && wallet) {
+      setFormData({
+        name: wallet.name || '',
+        privateKey: '',
+        type: wallet.type || 'solana'
+      });
+    } else if (type === 'add') {
+      setFormData({
+        name: '',
+        privateKey: '',
+        type: 'solana'
+      });
+    }
+  }, [type, wallet]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -19,6 +36,11 @@ const WalletModal = ({ type, wallet, onClose, onImport, onDelete, loading }) => 
     e.preventDefault();
     if (type === 'add') {
       onImport(formData);
+    } else if (type === 'edit') {
+      onEdit({
+        _id: wallet.id || wallet._id,
+        name: formData.name
+      });
     } else if (type === 'delete') {
       onDelete(wallet.id || wallet._id);
     }
@@ -66,6 +88,40 @@ const WalletModal = ({ type, wallet, onClose, onImport, onDelete, loading }) => 
         </button>
         <button type="submit" className="btn btn-primary" disabled={loading}>
           {loading ? '导入中...' : '导入钱包'}
+        </button>
+      </div>
+    </form>
+  );
+
+  const renderEditForm = () => (
+    <form onSubmit={handleSubmit}>
+      <div className="form-group">
+        <label>钱包名称</label>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          placeholder="输入新的钱包名称"
+          required
+        />
+      </div>
+      <div className="form-group">
+        <label>钱包类型</label>
+        <input
+          type="text"
+          value={formData.type}
+          disabled
+          className="form-control-disabled"
+        />
+        <small className="form-help">钱包类型不可修改</small>
+      </div>
+      <div className="modal-actions">
+        <button type="button" className="btn btn-outline" onClick={onClose}>
+          取消
+        </button>
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? '保存中...' : '保存修改'}
         </button>
       </div>
     </form>
@@ -126,6 +182,7 @@ const WalletModal = ({ type, wallet, onClose, onImport, onDelete, loading }) => 
   const getModalTitle = () => {
     switch (type) {
       case 'add': return '导入钱包';
+      case 'edit': return '编辑钱包';
       case 'delete': return '删除钱包';
       case 'info': return '钱包信息';
       default: return '钱包操作';
@@ -135,6 +192,7 @@ const WalletModal = ({ type, wallet, onClose, onImport, onDelete, loading }) => 
   const renderContent = () => {
     switch (type) {
       case 'add': return renderAddForm();
+      case 'edit': return renderEditForm();
       case 'delete': return renderDeleteConfirm();
       case 'info': return renderWalletInfo();
       default: return null;

@@ -1,70 +1,136 @@
-# Getting Started with Create React App
+# MemeCoin 管理系统前端
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 项目结构
 
-## Available Scripts
+```
+frontend/src/
+├── components/                 # 组件目录
+│   ├── WalletManager/         # 钱包管理模块
+│   │   ├── WalletManager.js   # 钱包管理主组件
+│   │   ├── WalletCard.js      # 钱包卡片组件
+│   │   ├── WalletModal.js     # 钱包模态框组件
+│   │   └── WalletManager.css  # 钱包管理样式
+│   ├── StrategyManager/       # 策略管理模块
+│   │   ├── StrategyManager.js # 策略管理主组件
+│   │   ├── StrategyCard.js    # 策略卡片组件
+│   │   └── StrategyManager.css # 策略管理样式
+│   ├── PositionOverview/      # 持仓总览模块 (待开发)
+│   └── TradeOverview/         # 交易总览模块 (待开发)
+├── services/                  # API服务层
+│   ├── api.js                # API配置和通用请求函数
+│   ├── walletService.js      # 钱包相关API服务
+│   ├── strategyService.js    # 策略相关API服务 (待开发)
+│   └── tradeService.js       # 交易相关API服务 (待开发)
+├── utils/                     # 工具函数
+│   └── constants.js          # 常量定义
+├── App.js                    # 主应用组件
+├── App.css                   # 全局样式
+└── index.js                  # 应用入口
+```
 
-In the project directory, you can run:
+## 模块化设计说明
 
-### `npm start`
+### 1. 组件模块化
+每个功能模块都有独立的目录，包含：
+- 主组件文件
+- 子组件文件
+- 样式文件
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 2. 服务层模块化
+API调用按功能分类：
+- `walletService.js`: 钱包相关API
+- `strategyService.js`: 策略相关API
+- `tradeService.js`: 交易相关API
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 3. 当前已实现功能
 
-### `npm test`
+#### 钱包管理模块
+- ✅ 获取钱包列表
+- ✅ 导入钱包
+- ✅ 编辑钱包
+- ✅ 删除钱包
+- ✅ 查看钱包详情
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+#### 策略管理模块
+- ✅ 策略列表展示
+- ✅ 策略状态管理
+- ✅ 策略操作按钮
 
-### `npm run build`
+### 4. 待开发功能
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+#### 持仓总览模块
+- 持仓列表展示
+- 持仓统计信息
+- 持仓操作功能
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+#### 交易总览模块
+- 交易历史记录
+- 交易统计信息
+- 交易分析功能
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## API接口说明
 
-### `npm run eject`
+### 钱包管理API
+```javascript
+// 获取钱包列表
+GET /account/wallets
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+// 导入钱包
+POST /account/wallet
+{
+  "type": "solana",
+  "name": "wallet_name",
+  "privateKey": "private_key"
+}
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+// 编辑钱包
+PATCH /account/wallet
+{
+  "_id": "wallet_id",
+  "name": "new_wallet_name"
+}
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+// 删除钱包
+DELETE /account/wallet/{id}
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 开发指南
 
-## Learn More
+### 添加新功能模块
+1. 在 `components/` 下创建新模块目录
+2. 创建主组件和子组件
+3. 在 `services/` 下创建对应的API服务
+4. 在 `App.js` 中集成新模块
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### 样式规范
+- 每个模块使用独立的CSS文件
+- 使用BEM命名规范
+- 响应式设计支持移动端
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 状态管理
+- 使用React Hooks管理组件状态
+- 复杂状态可考虑使用Context API
+- 避免过度使用全局状态
 
-### Code Splitting
+## 部署说明
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### GitHub Pages部署
+```bash
+# 构建项目
+npm run build
 
-### Analyzing the Bundle Size
+# 部署到GitHub Pages
+npm run deploy
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### 环境配置
+- 生产环境API地址: `https://api-bot-v1.dbotx.com`
+- API密钥通过环境变量配置
 
-### Making a Progressive Web App
+## 版本历史
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- v4.3: 完成钱包管理模块化重构
+- v4.2: 添加编辑钱包功能
+- v4.1: 完善钱包管理功能
+- v4.0: 重构为模块化架构
+- v3.x: 基础功能开发
