@@ -13,10 +13,6 @@ function App() {
   // API配置
   const API_BASE_URL = 'https://api-bot-v1.dbotx.com';
   const API_KEY = 'uber1py2znkw219bo168jh3xm6rnc903';
-  
-  // CORS代理配置
-  const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
-  const USE_PROXY = true; // 设置为true使用代理，false直接访问
 
   // 表单状态
   const [walletForm, setWalletForm] = useState({
@@ -29,20 +25,22 @@ function App() {
   const fetchWallets = async () => {
     try {
       setLoading(true);
-      const url = USE_PROXY ? `${CORS_PROXY}${API_BASE_URL}/account/wallets` : `${API_BASE_URL}/account/wallets`;
-      
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/account/wallets`, {
+        method: 'GET',
         headers: {
           'x-api-key': API_KEY,
           'Content-Type': 'application/json',
-          ...(USE_PROXY && { 'Origin': window.location.origin })
-        }
+          'Access-Control-Allow-Origin': '*'
+        },
+        mode: 'cors'
       });
       
       if (response.ok) {
         const data = await response.json();
+        console.log('获取到的钱包数据:', data);
         setWallets(data.data || []);
       } else {
+        console.error('获取钱包列表失败:', response.status);
         setMessage('获取钱包列表失败');
       }
     } catch (error) {
@@ -55,12 +53,8 @@ function App() {
 
   // 导入钱包
   const importWallet = async () => {
-    console.log('开始导入钱包...');
-    console.log('表单数据:', walletForm);
-    
     if (!walletForm.name || !walletForm.privateKey) {
       setMessage('请填写完整信息');
-      console.log('表单验证失败');
       return;
     }
 
@@ -74,39 +68,35 @@ function App() {
         privateKey: walletForm.privateKey
       };
       
-      const url = USE_PROXY ? `${CORS_PROXY}${API_BASE_URL}/account/wallet` : `${API_BASE_URL}/account/wallet`;
+      console.log('发送导入请求:', requestBody);
       
-      console.log('发送请求到:', url);
-      console.log('请求头:', {
-        'x-api-key': API_KEY,
-        'Content-Type': 'application/json',
-        ...(USE_PROXY && { 'Origin': window.location.origin })
-      });
-      console.log('请求体:', requestBody);
-      
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/account/wallet`, {
         method: 'POST',
         headers: {
           'x-api-key': API_KEY,
           'Content-Type': 'application/json',
-          ...(USE_PROXY && { 'Origin': window.location.origin })
+          'Access-Control-Allow-Origin': '*'
         },
+        mode: 'cors',
         body: JSON.stringify(requestBody)
       });
 
-      console.log('响应状态:', response.status);
-      console.log('响应头:', response.headers);
-      
-      const data = await response.json();
-      console.log('响应数据:', data);
+      console.log('导入响应状态:', response.status);
       
       if (response.ok) {
+        const data = await response.json();
+        console.log('导入成功:', data);
         setMessage('钱包导入成功！');
         setShowWalletModal(false);
         setWalletForm({ name: '', privateKey: '', type: 'solana' });
-        fetchWallets(); // 刷新钱包列表
+        // 延迟一下再刷新列表，确保服务器处理完成
+        setTimeout(() => {
+          fetchWallets();
+        }, 1000);
       } else {
-        setMessage(data.message || `导入失败 (${response.status})`);
+        const errorData = await response.json();
+        console.error('导入失败:', errorData);
+        setMessage(errorData.message || `导入失败 (${response.status})`);
       }
     } catch (error) {
       console.error('导入钱包错误:', error);
@@ -120,21 +110,20 @@ function App() {
   const deleteWallet = async (walletId) => {
     try {
       setLoading(true);
-      const url = USE_PROXY ? `${CORS_PROXY}${API_BASE_URL}/account/wallet/${walletId}` : `${API_BASE_URL}/account/wallet/${walletId}`;
-      
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/account/wallet/${walletId}`, {
         method: 'DELETE',
         headers: {
           'x-api-key': API_KEY,
           'Content-Type': 'application/json',
-          ...(USE_PROXY && { 'Origin': window.location.origin })
-        }
+          'Access-Control-Allow-Origin': '*'
+        },
+        mode: 'cors'
       });
 
       if (response.ok) {
         setMessage('钱包删除成功！');
         setShowWalletModal(false);
-        fetchWallets(); // 刷新钱包列表
+        fetchWallets();
       } else {
         const data = await response.json();
         setMessage(data.message || '删除失败');
@@ -536,63 +525,23 @@ function App() {
                 </div>
               </div>
             )}
-            {walletModalType === 'info' && selectedWallet && (
+            {walletModalType === 'edit' && selectedWallet && (
               <div className="form-group">
-                <div className="wallet-details">
-                  <div className="detail-row">
-                    <span className="label">钱包名称:</span>
-                    <span className="value">{selectedWallet.name}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">钱包类型:</span>
-                    <span className="value">{selectedWallet.type || 'solana'}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">钱包地址:</span>
-                    <span className="value address">{selectedWallet.address}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">当前余额:</span>
-                    <span className="value balance">{selectedWallet.balance || '0'} {selectedWallet.currency || 'SOL'}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">创建时间:</span>
-                    <span className="value">{selectedWallet.created_at || '未知'}</span>
-                  </div>
-                </div>
+                <label>钱包名称</label>
+                <input type="text" defaultValue={selectedWallet.name} />
                 <div className="form-actions">
-                  <button className="btn btn-outline" onClick={() => setShowWalletModal(false)}>关闭</button>
+                  <button className="btn btn-primary">保存</button>
+                  <button className="btn btn-outline" onClick={() => setShowWalletModal(false)}>取消</button>
                 </div>
               </div>
             )}
             {walletModalType === 'delete' && selectedWallet && (
               <div className="form-group">
-                <div className="delete-warning">
-                  <div className="warning-icon">⚠️</div>
-                  <h4>确认删除钱包</h4>
-                  <p>您确定要删除钱包 <strong>"{selectedWallet.name}"</strong> 吗？</p>
-                  <p className="warning-text">⚠️ 此操作不可撤销！删除后钱包将无法恢复。</p>
-                </div>
-                {message && (
-                  <div className={`message ${message.includes('成功') ? 'success' : 'error'}`}>
-                    {message}
-                  </div>
-                )}
+                <p>确定要删除钱包 "{selectedWallet.name}" 吗？</p>
+                <p className="warning">⚠️ 此操作不可撤销！</p>
                 <div className="form-actions">
-                  <button 
-                    className="btn btn-danger" 
-                    onClick={() => deleteWallet(selectedWallet.id)}
-                    disabled={loading}
-                  >
-                    {loading ? '删除中...' : '确认删除'}
-                  </button>
-                  <button 
-                    className="btn btn-outline" 
-                    onClick={() => setShowWalletModal(false)}
-                    disabled={loading}
-                  >
-                    取消
-                  </button>
+                  <button className="btn btn-danger">确认删除</button>
+                  <button className="btn btn-outline" onClick={() => setShowWalletModal(false)}>取消</button>
                 </div>
               </div>
             )}
@@ -607,7 +556,7 @@ function App() {
       <nav className="navbar">
         <div className="nav-brand">
           🚀 MemeCoin 管理系统
-          <span className="version-badge">v3.3</span>
+          <span className="version-badge">v3.4</span>
         </div>
         <div className="nav-tabs">
           <button
