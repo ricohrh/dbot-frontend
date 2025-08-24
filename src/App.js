@@ -26,10 +26,8 @@ function App() {
     try {
       setLoading(true);
       
-      // 尝试使用支持GET的代理
-      const proxyUrl = 'https://api.allorigins.win/raw?url=';
-      const targetUrl = `${API_BASE_URL}/account/wallets`;
-      const url = `${proxyUrl}${encodeURIComponent(targetUrl)}`;
+      // 直接访问API，不使用代理
+      const url = `${API_BASE_URL}/account/wallets`;
       
       console.log('尝试获取钱包列表:', url);
       
@@ -74,14 +72,19 @@ function App() {
         privateKey: walletForm.privateKey
       };
       
+      // 根据API文档，可能需要不同的字段名
+      console.log('原始请求体:', requestBody);
+      
       console.log('发送导入请求:', requestBody);
       
-      // 尝试使用支持POST的代理
-      const proxyUrl = 'https://thingproxy.freeboard.io/fetch/';
-      const targetUrl = `${API_BASE_URL}/account/wallet`;
-      const url = `${proxyUrl}${targetUrl}`;
+      // 直接访问API，不使用代理
+      const url = `${API_BASE_URL}/account/wallet`;
       
       console.log('导入请求URL:', url);
+      console.log('请求头:', {
+        'x-api-key': API_KEY,
+        'Content-Type': 'application/json'
+      });
       
       const response = await fetch(url, {
         method: 'POST',
@@ -93,6 +96,7 @@ function App() {
       });
 
       console.log('导入响应状态:', response.status);
+      console.log('响应头:', response.headers);
       
       if (response.ok) {
         const data = await response.json();
@@ -105,9 +109,15 @@ function App() {
           fetchWallets();
         }, 1000);
       } else {
-        const errorData = await response.json();
-        console.error('导入失败:', errorData);
-        setMessage(errorData.message || `导入失败 (${response.status})`);
+        let errorMessage = `导入失败 (${response.status})`;
+        try {
+          const errorData = await response.json();
+          console.error('导入失败详情:', errorData);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          console.error('无法解析错误响应:', e);
+        }
+        setMessage(errorMessage);
       }
     } catch (error) {
       console.error('导入钱包错误:', error);
@@ -571,7 +581,7 @@ function App() {
       <nav className="navbar">
         <div className="nav-brand">
           🚀 MemeCoin 管理系统
-          <span className="version-badge">v3.5</span>
+          <span className="version-badge">v3.6</span>
         </div>
         <div className="nav-tabs">
           <button
