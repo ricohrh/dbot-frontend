@@ -39,12 +39,31 @@ function App() {
         }
       });
       
+      console.log('获取钱包列表响应状态:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
         console.log('获取到的钱包数据:', data);
-        setWallets(data.data || []);
+        console.log('钱包列表详情:', JSON.stringify(data, null, 2));
+        
+        // 检查不同的数据结构
+        let walletList = [];
+        if (data.data) {
+          walletList = data.data;
+        } else if (data.wallets) {
+          walletList = data.wallets;
+        } else if (Array.isArray(data)) {
+          walletList = data;
+        } else if (data.result) {
+          walletList = data.result;
+        }
+        
+        console.log('解析后的钱包列表:', walletList);
+        setWallets(walletList);
       } else {
         console.error('获取钱包列表失败:', response.status);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('错误详情:', errorData);
         setMessage('获取钱包列表失败');
       }
     } catch (error) {
@@ -108,17 +127,27 @@ function App() {
         setTimeout(() => {
           fetchWallets();
         }, 1000);
-      } else {
-        let errorMessage = `导入失败 (${response.status})`;
-        try {
-          const errorData = await response.json();
-          console.error('导入失败详情:', errorData);
-          errorMessage = errorData.message || errorData.error || errorMessage;
-        } catch (e) {
-          console.error('无法解析错误响应:', e);
+              } else {
+          let errorMessage = `导入失败 (${response.status})`;
+          try {
+            const errorData = await response.json();
+            console.error('导入失败详情:', errorData);
+            
+            // 处理特定的错误类型
+            if (errorData.res === 'Duplicate Error') {
+              errorMessage = '❌ 钱包已存在！请使用不同的钱包名称或私钥。';
+            } else if (errorData.message) {
+              errorMessage = errorData.message;
+            } else if (errorData.error) {
+              errorMessage = errorData.error;
+            } else if (errorData.res) {
+              errorMessage = errorData.res;
+            }
+          } catch (e) {
+            console.error('无法解析错误响应:', e);
+          }
+          setMessage(errorMessage);
         }
-        setMessage(errorMessage);
-      }
     } catch (error) {
       console.error('导入钱包错误:', error);
       setMessage(`网络错误: ${error.message}`);
@@ -326,7 +355,10 @@ function App() {
           </button>
           <button 
             className="btn btn-outline"
-            onClick={fetchWallets}
+            onClick={() => {
+              console.log('手动刷新钱包列表...');
+              fetchWallets();
+            }}
             disabled={loading}
           >
             🔄 刷新列表
@@ -581,7 +613,7 @@ function App() {
       <nav className="navbar">
         <div className="nav-brand">
           🚀 MemeCoin 管理系统
-          <span className="version-badge">v3.6</span>
+          <span className="version-badge">v3.8</span>
         </div>
         <div className="nav-tabs">
           <button
