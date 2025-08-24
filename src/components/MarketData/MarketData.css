@@ -221,14 +221,44 @@
   gap: 4px;
 }
 
+.token-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.token-image {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e0e0e0;
+}
+
+.token-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .token-symbol {
   font-weight: 600;
   color: #333;
+  font-size: 0.95rem;
+}
+
+.token-name {
+  font-size: 0.8rem;
+  color: #666;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .token-address {
-  font-size: 0.8rem;
-  color: #666;
+  font-size: 0.75rem;
+  color: #999;
   font-family: 'Courier New', monospace;
 }
 
@@ -247,29 +277,50 @@
   font-weight: 500;
 }
 
-.time-cell {
-  font-size: 0.8rem;
-  color: #666;
+.holders-cell {
+  font-weight: 500;
+  color: #333;
 }
 
 .action-cell {
   text-align: center;
 }
 
-.btn-view {
+.action-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.btn-view,
+.btn-chart {
   background: #667eea;
   color: white;
   border: none;
-  padding: 6px 12px;
+  padding: 6px 8px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.8rem;
   transition: all 0.3s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn-view:hover {
+.btn-view:hover,
+.btn-chart:hover {
   background: #5a6fd8;
   transform: translateY(-1px);
+}
+
+.btn-chart {
+  background: #00b894;
+}
+
+.btn-chart:hover {
+  background: #00a085;
 }
 
 /* 加载状态 */

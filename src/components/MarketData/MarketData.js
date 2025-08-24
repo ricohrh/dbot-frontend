@@ -133,12 +133,13 @@ const MarketData = () => {
         <table>
           <thead>
             <tr>
-              <th>代币名称</th>
-              <th>价格</th>
+              <th>代币信息</th>
+              <th>价格 (USD)</th>
               <th>24h涨跌</th>
-              <th>交易量</th>
+              <th>1h涨跌</th>
+              <th>交易量 (1h)</th>
               <th>市值</th>
-              <th>创建时间</th>
+              <th>持有人数</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -147,29 +148,60 @@ const MarketData = () => {
               <tr key={index} className="data-row">
                 <td>
                   <div className="token-info">
-                    <div className="token-symbol">{item.symbol || item.name || 'N/A'}</div>
-                    <div className="token-address">{item.address ? `${item.address.slice(0, 6)}...${item.address.slice(-4)}` : 'N/A'}</div>
+                    <div className="token-header">
+                      {item.image && (
+                        <img 
+                          src={item.image} 
+                          alt={item.symbol} 
+                          className="token-image"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      )}
+                      <div className="token-details">
+                        <div className="token-symbol">{item.symbol || 'N/A'}</div>
+                        <div className="token-name">{item.name || 'N/A'}</div>
+                        <div className="token-address">{item.mint ? `${item.mint.slice(0, 6)}...${item.mint.slice(-4)}` : 'N/A'}</div>
+                      </div>
+                    </div>
                   </div>
                 </td>
                 <td className="price-cell">
-                  {formatPrice(item.price)}
+                  {formatPrice(item.tokenPriceUsd)}
                 </td>
                 <td className="change-cell">
                   {formatPercentage(item.priceChange24h)}
                 </td>
+                <td className="change-cell">
+                  {formatPercentage(item.priceChange1h)}
+                </td>
                 <td className="volume-cell">
-                  {formatNumber(item.volume24h)}
+                  {formatNumber(item.buyAndSellVolume1h)}
                 </td>
                 <td className="market-cap-cell">
                   {formatNumber(item.marketCap)}
                 </td>
-                <td className="time-cell">
-                  {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'N/A'}
+                <td className="holders-cell">
+                  {item.holders ? item.holders.toLocaleString() : 'N/A'}
                 </td>
                 <td className="action-cell">
-                  <button className="btn-view" onClick={() => window.open(`https://solscan.io/token/${item.address}`, '_blank')}>
-                    查看
-                  </button>
+                  <div className="action-buttons">
+                    <button 
+                      className="btn-view" 
+                      onClick={() => window.open(`https://solscan.io/token/${item.mint}`, '_blank')}
+                      title="查看代币详情"
+                    >
+                      🔍
+                    </button>
+                    <button 
+                      className="btn-chart" 
+                      onClick={() => window.open(`https://dexscreener.com/solana/${item.mint}`, '_blank')}
+                      title="查看图表"
+                    >
+                      📈
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
