@@ -34,18 +34,21 @@ const WalletCard = ({ wallet, onEdit, onDelete, onInfo }) => {
         <button 
           className="btn btn-sm btn-outline"
           onClick={onInfo}
+          style={{ marginRight: '8px' }}
         >
           📊 详情
         </button>
         <button 
           className="btn btn-sm btn-outline"
           onClick={onEdit}
+          style={{ marginRight: '8px', backgroundColor: '#fff', color: '#0066cc', border: '1px solid #0066cc' }}
         >
           ✏️ 编辑
         </button>
         <button 
           className="btn btn-sm btn-outline"
           onClick={onDelete}
+          style={{ backgroundColor: '#fff', color: '#dc3545', border: '1px solid #dc3545' }}
         >
           🗑️ 删除
         </button>
