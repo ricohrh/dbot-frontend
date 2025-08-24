@@ -1,262 +1,407 @@
-/* 实时行情模块样式 */
+/* 实时行情页面样式 */
 .market-data-container {
-  display: flex;
-  gap: 20px;
   padding: 20px;
-  flex-wrap: wrap;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: #333;
 }
 
-.market-data {
+.market-data-header {
+  text-align: center;
+  margin-bottom: 30px;
+  color: white;
+}
+
+.market-data-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.market-data-header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.market-data-content {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* 侧边栏样式 */
+.categories-sidebar {
   background: white;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  height: fit-content;
+}
+
+.categories-sidebar h3 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.3rem;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+.categories-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.category-card {
+  background: #f8f9fa;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  max-width: 400px;
-  min-width: 350px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.category-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.category-card.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.category-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
   flex-shrink: 0;
 }
 
-.market-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #e1e5e9;
-  background: #f8f9fa;
-}
-
-.market-header h2 {
-  margin: 0;
-  color: #333;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.header-dropdown {
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.header-dropdown:hover {
-  background: #e9ecef;
-}
-
-.dropdown-icon {
-  color: #666;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.market-list {
-  padding: 0;
-}
-
-.market-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #f1f3f4;
-  transition: background-color 0.2s;
-}
-
-.market-item:last-child {
-  border-bottom: none;
-}
-
-.market-item:hover {
-  background: #f8f9fa;
-}
-
-.market-item-content {
+.category-info {
   flex: 1;
 }
 
-.market-item-name {
-  color: #333;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.market-item-action {
-  margin-left: 16px;
-}
-
-.btn-get {
-  background: #28a745;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-size: 12px;
+.category-info h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.1rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+}
+
+.category-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.category-status {
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 60px;
-  justify-content: center;
+  gap: 8px;
 }
 
-.btn-get:hover:not(:disabled) {
-  background: #218838;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
-}
-
-.btn-get:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(40, 167, 69, 0.3);
-}
-
-.btn-get:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-get.loading {
-  background: #6c757d;
-}
-
-.btn-spinner {
-  width: 12px;
-  height: 12px;
-  border: 2px solid transparent;
-  border-top: 2px solid white;
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #667eea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
+.error-icon {
+  color: #ff6b6b;
+  font-size: 1.2rem;
+}
+
+.success-icon {
+  color: #00b894;
+  font-size: 1.2rem;
+}
+
+/* 数据显示区域 */
+.data-display {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.data-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.data-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.data-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-refresh {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 数据表格样式 */
+.market-data-table {
+  overflow-x: auto;
+}
+
+.market-data-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.market-data-table th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.market-data-table td {
+  padding: 15px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.9rem;
+}
+
+.data-row:hover {
+  background: #f8f9fa;
+}
+
+.token-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.token-symbol {
+  font-weight: 600;
+  color: #333;
+}
+
+.token-address {
+  font-size: 0.8rem;
+  color: #666;
+  font-family: 'Courier New', monospace;
+}
+
+.price-cell {
+  font-weight: 600;
+  color: #333;
+}
+
+.change-cell {
+  font-weight: 600;
+}
+
+.volume-cell,
+.market-cap-cell {
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+.time-cell {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.action-cell {
+  text-align: center;
+}
+
+.btn-view {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+}
+
+.btn-view:hover {
+  background: #5a6fd8;
+  transform: translateY(-1px);
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-spinner-large {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+.loading-container p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* 错误状态 */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.error-icon-large {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.error-container h3 {
+  color: #ff6b6b;
+  margin-bottom: 10px;
+}
+
+.error-container p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.btn-retry {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.btn-retry:hover {
+  background: #ff5252;
+  transform: translateY(-1px);
+}
+
+/* 无数据状态 */
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.no-data-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.no-data p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* 动画 */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-/* 数据显示区域 */
-.market-data-results {
-  flex: 1;
-  min-width: 300px;
-}
-
-.loading-indicator {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  color: #666;
-  font-size: 14px;
-}
-
-.loading-indicator .spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #e9ecef;
-  border-top: 2px solid #0066cc;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.error-message {
-  padding: 12px 16px;
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  font-size: 14px;
-}
-
-.market-data-display {
-  background: white;
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  overflow: hidden;
-}
-
-.market-data-display h4 {
-  margin: 0;
-  padding: 16px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e1e5e9;
-  color: #333;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.data-content {
-  padding: 16px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.data-content pre {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: #333;
-  background: #f8f9fa;
-  padding: 12px;
-  border-radius: 4px;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
 /* 响应式设计 */
 @media (max-width: 1200px) {
-  .market-data-container {
-    flex-direction: column;
+  .market-data-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
   
-  .market-data {
-    max-width: none;
-    min-width: auto;
+  .categories-sidebar {
+    order: 2;
+  }
+  
+  .data-display {
+    order: 1;
   }
 }
 
 @media (max-width: 768px) {
   .market-data-container {
-    padding: 10px;
+    padding: 15px;
+  }
+  
+  .market-data-header h1 {
+    font-size: 2rem;
+  }
+  
+  .data-header {
+    flex-direction: column;
     gap: 15px;
+    align-items: flex-start;
   }
   
-  .market-header {
-    padding: 16px;
+  .market-data-table {
+    font-size: 0.8rem;
   }
   
-  .market-header h2 {
-    font-size: 16px;
-  }
-  
-  .market-item {
-    padding: 12px 16px;
-  }
-  
-  .market-item-name {
-    font-size: 13px;
-  }
-  
-  .btn-get {
-    padding: 6px 12px;
-    font-size: 11px;
-    min-width: 50px;
-  }
-  
-  .data-content {
-    padding: 12px;
-  }
-  
-  .data-content pre {
-    font-size: 11px;
-    padding: 8px;
+  .market-data-table th,
+  .market-data-table td {
+    padding: 10px 8px;
   }
 } 

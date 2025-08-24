@@ -5,7 +5,7 @@ export const marketDataService = {
   // 获取热门市场数据
   async getHotMarketData() {
     try {
-      const data = await apiRequest('/market/hot');
+      const data = await apiRequest('/kline/hot?chain=solana&sortBy=buyAndSellTimes&sort=-1&interval=1h');
       console.log('获取热门市场数据成功:', data);
       return data;
     } catch (error) {
@@ -17,7 +17,7 @@ export const marketDataService = {
   // 获取最新市场数据
   async getLatestMarketData() {
     try {
-      const data = await apiRequest('/market/latest');
+      const data = await apiRequest('/kline/latest?chain=solana&sortBy=createdAt&sort=-1&interval=1h');
       console.log('获取最新市场数据成功:', data);
       return data;
     } catch (error) {
@@ -29,7 +29,7 @@ export const marketDataService = {
   // 获取新创建的Meme币数据
   async getNewMemeData() {
     try {
-      const data = await apiRequest('/market/meme/new');
+      const data = await apiRequest('/kline/meme/new?chain=solana&sortBy=createdAt&sort=-1&interval=1h');
       console.log('获取新创建Meme币数据成功:', data);
       return data;
     } catch (error) {
@@ -41,7 +41,7 @@ export const marketDataService = {
   // 获取即将完成的Meme币数据
   async getUpcomingMemeData() {
     try {
-      const data = await apiRequest('/market/meme/upcoming');
+      const data = await apiRequest('/kline/meme/upcoming?chain=solana&sortBy=launchTime&sort=1&interval=1h');
       console.log('获取即将完成Meme币数据成功:', data);
       return data;
     } catch (error) {
@@ -53,7 +53,7 @@ export const marketDataService = {
   // 获取飙升的Meme币数据
   async getSoaringMemeData() {
     try {
-      const data = await apiRequest('/market/meme/soaring');
+      const data = await apiRequest('/kline/meme/soaring?chain=solana&sortBy=priceChange&sort=-1&interval=1h');
       console.log('获取飙升Meme币数据成功:', data);
       return data;
     } catch (error) {
@@ -65,7 +65,7 @@ export const marketDataService = {
   // 获取已开盘的Meme币数据
   async getOpenedMemeData() {
     try {
-      const data = await apiRequest('/market/meme/opened');
+      const data = await apiRequest('/kline/meme/opened?chain=solana&sortBy=volume&sort=-1&interval=1h');
       console.log('获取已开盘Meme币数据成功:', data);
       return data;
     } catch (error) {
