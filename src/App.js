@@ -13,6 +13,10 @@ function App() {
   // API配置
   const API_BASE_URL = 'https://api-bot-v1.dbotx.com';
   const API_KEY = 'uber1py2znkw219bo168jh3xm6rnc903';
+  
+  // CORS代理配置
+  const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+  const USE_PROXY = true; // 设置为true使用代理，false直接访问
 
   // 表单状态
   const [walletForm, setWalletForm] = useState({
@@ -25,10 +29,13 @@ function App() {
   const fetchWallets = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/account/wallets`, {
+      const url = USE_PROXY ? `${CORS_PROXY}${API_BASE_URL}/account/wallets` : `${API_BASE_URL}/account/wallets`;
+      
+      const response = await fetch(url, {
         headers: {
           'x-api-key': API_KEY,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(USE_PROXY && { 'Origin': window.location.origin })
         }
       });
       
@@ -48,27 +55,50 @@ function App() {
 
   // 导入钱包
   const importWallet = async () => {
+    console.log('开始导入钱包...');
+    console.log('表单数据:', walletForm);
+    
     if (!walletForm.name || !walletForm.privateKey) {
       setMessage('请填写完整信息');
+      console.log('表单验证失败');
       return;
     }
 
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/account/wallet`, {
+      setMessage('正在导入钱包...');
+      
+      const requestBody = {
+        type: walletForm.type,
+        name: walletForm.name,
+        privateKey: walletForm.privateKey
+      };
+      
+      const url = USE_PROXY ? `${CORS_PROXY}${API_BASE_URL}/account/wallet` : `${API_BASE_URL}/account/wallet`;
+      
+      console.log('发送请求到:', url);
+      console.log('请求头:', {
+        'x-api-key': API_KEY,
+        'Content-Type': 'application/json',
+        ...(USE_PROXY && { 'Origin': window.location.origin })
+      });
+      console.log('请求体:', requestBody);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'x-api-key': API_KEY,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(USE_PROXY && { 'Origin': window.location.origin })
         },
-        body: JSON.stringify({
-          type: walletForm.type,
-          name: walletForm.name,
-          privateKey: walletForm.privateKey
-        })
+        body: JSON.stringify(requestBody)
       });
 
+      console.log('响应状态:', response.status);
+      console.log('响应头:', response.headers);
+      
       const data = await response.json();
+      console.log('响应数据:', data);
       
       if (response.ok) {
         setMessage('钱包导入成功！');
@@ -76,11 +106,11 @@ function App() {
         setWalletForm({ name: '', privateKey: '', type: 'solana' });
         fetchWallets(); // 刷新钱包列表
       } else {
-        setMessage(data.message || '导入失败');
+        setMessage(data.message || `导入失败 (${response.status})`);
       }
     } catch (error) {
       console.error('导入钱包错误:', error);
-      setMessage('网络错误，请重试');
+      setMessage(`网络错误: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -90,11 +120,14 @@ function App() {
   const deleteWallet = async (walletId) => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/account/wallet/${walletId}`, {
+      const url = USE_PROXY ? `${CORS_PROXY}${API_BASE_URL}/account/wallet/${walletId}` : `${API_BASE_URL}/account/wallet/${walletId}`;
+      
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: {
           'x-api-key': API_KEY,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(USE_PROXY && { 'Origin': window.location.origin })
         }
       });
 
@@ -574,7 +607,7 @@ function App() {
       <nav className="navbar">
         <div className="nav-brand">
           🚀 MemeCoin 管理系统
-          <span className="version-badge">v3.1</span>
+          <span className="version-badge">v3.3</span>
         </div>
         <div className="nav-tabs">
           <button
