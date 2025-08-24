@@ -25,14 +25,20 @@ function App() {
   const fetchWallets = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/account/wallets`, {
+      
+      // 尝试使用支持GET的代理
+      const proxyUrl = 'https://api.allorigins.win/raw?url=';
+      const targetUrl = `${API_BASE_URL}/account/wallets`;
+      const url = `${proxyUrl}${encodeURIComponent(targetUrl)}`;
+      
+      console.log('尝试获取钱包列表:', url);
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'x-api-key': API_KEY,
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        },
-        mode: 'cors'
+          'Content-Type': 'application/json'
+        }
       });
       
       if (response.ok) {
@@ -70,14 +76,19 @@ function App() {
       
       console.log('发送导入请求:', requestBody);
       
-      const response = await fetch(`${API_BASE_URL}/account/wallet`, {
+      // 尝试使用支持POST的代理
+      const proxyUrl = 'https://thingproxy.freeboard.io/fetch/';
+      const targetUrl = `${API_BASE_URL}/account/wallet`;
+      const url = `${proxyUrl}${targetUrl}`;
+      
+      console.log('导入请求URL:', url);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'x-api-key': API_KEY,
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          'Content-Type': 'application/json'
         },
-        mode: 'cors',
         body: JSON.stringify(requestBody)
       });
 
@@ -110,14 +121,18 @@ function App() {
   const deleteWallet = async (walletId) => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/account/wallet/${walletId}`, {
+      
+      // 尝试使用支持DELETE的代理
+      const proxyUrl = 'https://thingproxy.freeboard.io/fetch/';
+      const targetUrl = `${API_BASE_URL}/account/wallet/${walletId}`;
+      const url = `${proxyUrl}${targetUrl}`;
+      
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: {
           'x-api-key': API_KEY,
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        },
-        mode: 'cors'
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response.ok) {
@@ -556,7 +571,7 @@ function App() {
       <nav className="navbar">
         <div className="nav-brand">
           🚀 MemeCoin 管理系统
-          <span className="version-badge">v3.4</span>
+          <span className="version-badge">v3.5</span>
         </div>
         <div className="nav-tabs">
           <button
