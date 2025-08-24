@@ -245,7 +245,7 @@ body {
 .data-table .negative {
   color: #dc3545;
   font-weight: 500;
-}
+  }
 
 /* 持仓总览和交易总览样式 */
 .position-overview,
