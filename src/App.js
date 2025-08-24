@@ -1,15 +1,123 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState('strategy');
-  const [wallets, setWallets] = useState([
-    { id: 1, name: '主钱包', address: '0x1234...5678', balance: '1,234.56', currency: 'USDT' },
-    { id: 2, name: '交易钱包', address: '0x8765...4321', balance: '567.89', currency: 'USDT' }
-  ]);
+  const [wallets, setWallets] = useState([]);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [walletModalType, setWalletModalType] = useState('add');
   const [selectedWallet, setSelectedWallet] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  // API配置
+  const API_BASE_URL = 'https://api-bot-v1.dbotx.com';
+  const API_KEY = 'uber1py2znkw219bo168jh3xm6rnc903';
+
+  // 表单状态
+  const [walletForm, setWalletForm] = useState({
+    name: '',
+    privateKey: '',
+    type: 'solana'
+  });
+
+  // 获取钱包列表
+  const fetchWallets = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/account/wallets`, {
+        headers: {
+          'x-api-key': API_KEY,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setWallets(data.data || []);
+      } else {
+        setMessage('获取钱包列表失败');
+      }
+    } catch (error) {
+      console.error('获取钱包列表错误:', error);
+      setMessage('网络错误，请检查连接');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 导入钱包
+  const importWallet = async () => {
+    if (!walletForm.name || !walletForm.privateKey) {
+      setMessage('请填写完整信息');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/account/wallet`, {
+        method: 'POST',
+        headers: {
+          'x-api-key': API_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: walletForm.type,
+          name: walletForm.name,
+          privateKey: walletForm.privateKey
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setMessage('钱包导入成功！');
+        setShowWalletModal(false);
+        setWalletForm({ name: '', privateKey: '', type: 'solana' });
+        fetchWallets(); // 刷新钱包列表
+      } else {
+        setMessage(data.message || '导入失败');
+      }
+    } catch (error) {
+      console.error('导入钱包错误:', error);
+      setMessage('网络错误，请重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 删除钱包
+  const deleteWallet = async (walletId) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/account/wallet/${walletId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-api-key': API_KEY,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setMessage('钱包删除成功！');
+        setShowWalletModal(false);
+        fetchWallets(); // 刷新钱包列表
+      } else {
+        const data = await response.json();
+        setMessage(data.message || '删除失败');
+      }
+    } catch (error) {
+      console.error('删除钱包错误:', error);
+      setMessage('网络错误，请重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 组件加载时获取钱包列表
+  useEffect(() => {
+    fetchWallets();
+  }, []);
 
   // 策略数据
   const strategies = [
@@ -36,6 +144,14 @@ function App() {
     setWalletModalType(type);
     setSelectedWallet(wallet);
     setShowWalletModal(true);
+    setMessage('');
+  };
+
+  const handleFormChange = (field, value) => {
+    setWalletForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const renderStrategyManagement = () => (
@@ -153,50 +269,88 @@ function App() {
     <div className="wallet-management">
       <div className="section-header">
         <h2>💼 我的钱包</h2>
-        <button 
-          className="btn btn-primary"
-          onClick={() => handleWalletAction('add')}
-        >
-          ➕ 导入钱包
-        </button>
+        <div className="header-actions">
+          <button 
+            className="btn btn-primary"
+            onClick={() => handleWalletAction('add')}
+            disabled={loading}
+          >
+            ➕ 导入钱包
+          </button>
+          <button 
+            className="btn btn-outline"
+            onClick={fetchWallets}
+            disabled={loading}
+          >
+            🔄 刷新列表
+          </button>
+        </div>
       </div>
+
+      {message && (
+        <div className={`message ${message.includes('成功') ? 'success' : 'error'}`}>
+          {message}
+        </div>
+      )}
+      
+      {loading && (
+        <div className="loading">
+          <div className="spinner"></div>
+          <span>加载中...</span>
+        </div>
+      )}
       
       <div className="wallet-grid">
-        {wallets.map(wallet => (
-          <div key={wallet.id} className="wallet-card">
-            <div className="wallet-header">
-              <h3>{wallet.name}</h3>
+        {wallets.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">💼</div>
+            <h3>暂无钱包</h3>
+            <p>点击"导入钱包"按钮添加您的第一个钱包</p>
+          </div>
+        ) : (
+          wallets.map(wallet => (
+            <div key={wallet.id} className="wallet-card">
+              <div className="wallet-header">
+                <h3>{wallet.name}</h3>
+                <span className="wallet-type">{wallet.type || 'solana'}</span>
+              </div>
+              <div className="wallet-info">
+                <div className="info-item">
+                  <span className="label">地址:</span>
+                  <span className="value address">
+                    {wallet.address ? `${wallet.address.substring(0, 8)}...${wallet.address.substring(wallet.address.length - 8)}` : '未知'}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="label">余额:</span>
+                  <span className="value balance">
+                    {wallet.balance ? `${wallet.balance} ${wallet.currency || 'SOL'}` : '加载中...'}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="label">状态:</span>
+                  <span className="value status">
+                    <span className="status-badge active">🟢 正常</span>
+                  </span>
+                </div>
+              </div>
               <div className="wallet-actions">
                 <button 
                   className="btn btn-sm btn-outline"
-                  onClick={() => handleWalletAction('edit', wallet)}
+                  onClick={() => handleWalletAction('info', wallet)}
                 >
-                  ✏️ 编辑
+                  📊 详情
                 </button>
                 <button 
-                  className="btn btn-sm btn-danger"
+                  className="btn btn-sm btn-outline"
                   onClick={() => handleWalletAction('delete', wallet)}
                 >
                   🗑️ 删除
                 </button>
               </div>
             </div>
-            <div className="wallet-info">
-              <div className="info-item">
-                <span className="label">地址:</span>
-                <span className="value address">{wallet.address}</span>
-              </div>
-              <div className="info-item">
-                <span className="label">余额:</span>
-                <span className="value balance">{wallet.balance} {wallet.currency}</span>
-              </div>
-            </div>
-            <div className="wallet-actions-bottom">
-              <button className="btn btn-sm btn-outline">🔑 导出私钥</button>
-              <button className="btn btn-sm btn-outline">🔄 刷新余额</button>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
@@ -287,33 +441,125 @@ function App() {
           <div className="modal-body">
             {walletModalType === 'add' && (
               <div className="form-group">
-                <label>钱包名称</label>
-                <input type="text" placeholder="输入钱包名称" />
-                <label>私钥</label>
-                <textarea placeholder="输入私钥（请确保安全）" rows="3"></textarea>
+                <div className="form-row">
+                  <div className="form-field">
+                    <label>钱包类型</label>
+                    <select 
+                      value={walletForm.type}
+                      onChange={(e) => handleFormChange('type', e.target.value)}
+                    >
+                      <option value="solana">Solana</option>
+                      <option value="evm">EVM</option>
+                      <option value="tron">Tron</option>
+                    </select>
+                  </div>
+                  <div className="form-field">
+                    <label>钱包名称 *</label>
+                    <input 
+                      type="text" 
+                      placeholder="输入钱包名称"
+                      value={walletForm.name}
+                      onChange={(e) => handleFormChange('name', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="form-field">
+                  <label>私钥 *</label>
+                  <textarea 
+                    placeholder="输入私钥（请确保安全）" 
+                    rows="4"
+                    value={walletForm.privateKey}
+                    onChange={(e) => handleFormChange('privateKey', e.target.value)}
+                  ></textarea>
+                  <div className="form-help">
+                    <p>⚠️ 安全提示：</p>
+                    <ul>
+                      <li>请确保在安全的环境下输入私钥</li>
+                      <li>私钥将加密存储在服务器中</li>
+                      <li>请勿在公共场所输入私钥</li>
+                    </ul>
+                  </div>
+                </div>
+                {message && (
+                  <div className={`message ${message.includes('成功') ? 'success' : 'error'}`}>
+                    {message}
+                  </div>
+                )}
                 <div className="form-actions">
-                  <button className="btn btn-primary">导入</button>
-                  <button className="btn btn-outline" onClick={() => setShowWalletModal(false)}>取消</button>
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={importWallet}
+                    disabled={loading || !walletForm.name || !walletForm.privateKey}
+                  >
+                    {loading ? '导入中...' : '导入钱包'}
+                  </button>
+                  <button 
+                    className="btn btn-outline" 
+                    onClick={() => setShowWalletModal(false)}
+                    disabled={loading}
+                  >
+                    取消
+                  </button>
                 </div>
               </div>
             )}
-            {walletModalType === 'edit' && selectedWallet && (
+            {walletModalType === 'info' && selectedWallet && (
               <div className="form-group">
-                <label>钱包名称</label>
-                <input type="text" defaultValue={selectedWallet.name} />
+                <div className="wallet-details">
+                  <div className="detail-row">
+                    <span className="label">钱包名称:</span>
+                    <span className="value">{selectedWallet.name}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">钱包类型:</span>
+                    <span className="value">{selectedWallet.type || 'solana'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">钱包地址:</span>
+                    <span className="value address">{selectedWallet.address}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">当前余额:</span>
+                    <span className="value balance">{selectedWallet.balance || '0'} {selectedWallet.currency || 'SOL'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">创建时间:</span>
+                    <span className="value">{selectedWallet.created_at || '未知'}</span>
+                  </div>
+                </div>
                 <div className="form-actions">
-                  <button className="btn btn-primary">保存</button>
-                  <button className="btn btn-outline" onClick={() => setShowWalletModal(false)}>取消</button>
+                  <button className="btn btn-outline" onClick={() => setShowWalletModal(false)}>关闭</button>
                 </div>
               </div>
             )}
             {walletModalType === 'delete' && selectedWallet && (
               <div className="form-group">
-                <p>确定要删除钱包 "{selectedWallet.name}" 吗？</p>
-                <p className="warning">⚠️ 此操作不可撤销！</p>
+                <div className="delete-warning">
+                  <div className="warning-icon">⚠️</div>
+                  <h4>确认删除钱包</h4>
+                  <p>您确定要删除钱包 <strong>"{selectedWallet.name}"</strong> 吗？</p>
+                  <p className="warning-text">⚠️ 此操作不可撤销！删除后钱包将无法恢复。</p>
+                </div>
+                {message && (
+                  <div className={`message ${message.includes('成功') ? 'success' : 'error'}`}>
+                    {message}
+                  </div>
+                )}
                 <div className="form-actions">
-                  <button className="btn btn-danger">确认删除</button>
-                  <button className="btn btn-outline" onClick={() => setShowWalletModal(false)}>取消</button>
+                  <button 
+                    className="btn btn-danger" 
+                    onClick={() => deleteWallet(selectedWallet.id)}
+                    disabled={loading}
+                  >
+                    {loading ? '删除中...' : '确认删除'}
+                  </button>
+                  <button 
+                    className="btn btn-outline" 
+                    onClick={() => setShowWalletModal(false)}
+                    disabled={loading}
+                  >
+                    取消
+                  </button>
                 </div>
               </div>
             )}
@@ -328,7 +574,7 @@ function App() {
       <nav className="navbar">
         <div className="nav-brand">
           🚀 MemeCoin 管理系统
-          <span className="version-badge">v3.0</span>
+          <span className="version-badge">v3.1</span>
         </div>
         <div className="nav-tabs">
           <button
