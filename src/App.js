@@ -48,7 +48,9 @@ function App() {
         
         // 检查不同的数据结构
         let walletList = [];
-        if (data.data) {
+        if (data.res && Array.isArray(data.res)) {
+          walletList = data.res;
+        } else if (data.data) {
           walletList = data.data;
         } else if (data.wallets) {
           walletList = data.wallets;
@@ -59,6 +61,13 @@ function App() {
         }
         
         console.log('解析后的钱包列表:', walletList);
+        console.log('钱包数量:', walletList.length);
+        
+        // 显示每个钱包的详细信息
+        walletList.forEach((wallet, index) => {
+          console.log(`钱包 ${index + 1}:`, wallet);
+        });
+        
         setWallets(walletList);
       } else {
         console.error('获取钱包列表失败:', response.status);
@@ -395,22 +404,22 @@ function App() {
               </div>
               <div className="wallet-info">
                 <div className="info-item">
+                  <span className="label">钱包ID:</span>
+                  <span className="value id">{wallet.id || wallet._id}</span>
+                </div>
+                <div className="info-item">
                   <span className="label">地址:</span>
                   <span className="value address">
                     {wallet.address ? `${wallet.address.substring(0, 8)}...${wallet.address.substring(wallet.address.length - 8)}` : '未知'}
                   </span>
                 </div>
                 <div className="info-item">
-                  <span className="label">余额:</span>
-                  <span className="value balance">
-                    {wallet.balance ? `${wallet.balance} ${wallet.currency || 'SOL'}` : '加载中...'}
-                  </span>
+                  <span className="label">类型:</span>
+                  <span className="value type">{wallet.type || 'solana'}</span>
                 </div>
                 <div className="info-item">
-                  <span className="label">状态:</span>
-                  <span className="value status">
-                    <span className="status-badge active">🟢 正常</span>
-                  </span>
+                  <span className="label">排序:</span>
+                  <span className="value sort">{wallet.sort || 0}</span>
                 </div>
               </div>
               <div className="wallet-actions">
@@ -613,7 +622,7 @@ function App() {
       <nav className="navbar">
         <div className="nav-brand">
           🚀 MemeCoin 管理系统
-          <span className="version-badge">v3.8</span>
+          <span className="version-badge">v4.0</span>
         </div>
         <div className="nav-tabs">
           <button
