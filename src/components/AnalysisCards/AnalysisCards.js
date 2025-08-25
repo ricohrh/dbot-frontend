@@ -461,17 +461,21 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
   const renderDevTokens = (data) => {
     if (!data || data.error) return <div className="error-message">暂无数据</div>;
     
-    // 后端返回的数据结构：data.data 或 data.analysis
-    const devData = data.data || data.analysis || {};
-    const devTokensCount = devData.dev_tokens_count || 0;
-    const devTokensList = devData.dev_tokens || [];
+    // 优先使用 analysis 字段
+    const analysisRoot = data.analysis || {};
+    const devInfo = analysisRoot.dev_info || {};
+    const historyAnalysis = analysisRoot.history_analysis || {};
+    const rugRisk = analysisRoot.rug_risk_assessment || {};
 
-    // 增加从规范化数据读取历史发盘数量，回退到 raw
-    const devHistoriesCount = devData.dev_histories_count ?? (data.raw?.data?.data?.dev_histories_count) ?? 0;
-    const devHistories = devData.dev_histories || data.raw?.data?.data?.dev_histories || [];
-    const balance = data.raw?.data?.data?.balance;
-    const devAddress = data.raw?.data?.data?.dev_ca;
-    
+    // 计数与列表
+    const devTokensCount = (data.data && data.data.dev_tokens_count) || 0;
+    const devHistoriesCount = (historyAnalysis.histories_count ?? historyAnalysis.total_histories ?? (data.data && data.data.dev_histories_count)) || 0;
+    const recentProjects = historyAnalysis.recent_projects || [];
+
+    // 兼容旧字段
+    const devTokensList = (data.data && data.data.dev_tokens) || [];
+    const fallbackHistories = (data.data && data.data.dev_histories) || [];
+
     return (
       <div className="analysis-content">
         <div className="analysis-header">
@@ -488,7 +492,6 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
             </div>
           </div>
 
-          {/* 新增：历史发盘数量 */}
           <div className="analysis-card">
             <h4>历史发盘</h4>
             <div className="metric">
@@ -497,19 +500,29 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
             </div>
           </div>
 
-          {devAddress && (
-            <div className="analysis-card">
-              <h4>开发者信息</h4>
-              <div className="metric">
-                <span className="value">{(balance ?? 0).toLocaleString()}</span>
-                <span className="label">余额 (SOL)</span>
-              </div>
-              <div className="metric">
-                <span className="value"><CopyableAddress address={devAddress} /></span>
-                <span className="label">开发者地址</span>
-              </div>
+          <div className="analysis-card">
+            <h4>余额 (SOL)</h4>
+            <div className="metric">
+              <span className="value">{(devInfo.balance ?? 0).toLocaleString()}</span>
+              <span className="label">{(devInfo.balance_analysis && (devInfo.balance_analysis.level || devInfo.balance_analysis.description)) || '—'}</span>
             </div>
-          )}
+          </div>
+
+          <div className="analysis-card">
+            <h4>发行量</h4>
+            <div className="metric">
+              <span className="value">{(devInfo.token_mint_amount ?? 0).toLocaleString()}</span>
+              <span className="label">{(devInfo.token_analysis && (devInfo.token_analysis.level || devInfo.token_analysis.description)) || '—'}</span>
+            </div>
+          </div>
+
+          <div className="analysis-card">
+            <h4>跑路风险</h4>
+            <div className="metric">
+              <span className="value">{rugRisk.confidence_level ?? rugRisk.risk_score ?? 0}</span>
+              <span className="label">{rugRisk.overall_risk || '—'}</span>
+            </div>
+          </div>
         </div>
 
         {devTokensList.length > 0 && (
@@ -527,11 +540,11 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
           </div>
         )}
 
-        {devHistories.length > 0 && (
+        {(recentProjects.length > 0 || fallbackHistories.length > 0) && (
           <div className="dev-tokens-list">
             <h4>🕘 历史发盘</h4>
             <div className="dev-tokens-grid">
-              {devHistories.slice(0, 12).map((h, i) => (
+              {(recentProjects.length ? recentProjects : fallbackHistories).slice(0, 12).map((h, i) => (
                 <div key={i} className="dev-token-item">
                   <div className="token-symbol">{h.symbol || '—'}</div>
                   <div className="token-name">{h.name || '—'}</div>
@@ -539,14 +552,6 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {devTokensCount === 0 && devHistories.length === 0 && (
-          <div className="no-data-message">
-            <div className="no-data-icon">📊</div>
-            <h4>暂无开发者代币数据</h4>
-            <p>该代币地址在ChainInsight中未找到相关的开发者代币信息</p>
           </div>
         )}
 
