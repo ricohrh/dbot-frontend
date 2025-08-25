@@ -111,6 +111,18 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
     const analysis = analysisData.community_analysis || {};
     const signalAnalysis = analysisData.signal_analysis || {};
     const kolAnalysis = analysisData.kol_analysis || {};
+
+    // 兼容 0 值显示
+    const communityCount = analysis.community_count ?? 0;
+    const influenceScore = analysis.influence_score ?? 0;
+    const attentionLevel = analysis.attention_level || '未知';
+
+    const signalCount = signalAnalysis.signal_count ?? 0;
+    const activityScore = signalAnalysis.activity_score ?? 0;
+    const activityLevel = signalAnalysis.activity_level || '未知';
+
+    const kolMention = kolAnalysis.mention_count ?? 0;
+    const kolInfluence = kolAnalysis.influence_score ?? 0;
     
     return (
       <div className="analysis-content">
@@ -123,15 +135,15 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
           <div className="analysis-card">
             <h4>社区关注度</h4>
             <div className="metric">
-              <span className="value">{analysis.community_count || 0}</span>
+              <span className="value">{communityCount}</span>
               <span className="label">关注社群数</span>
             </div>
             <div className="metric">
-              <span className="value">{analysis.influence_score || 0}</span>
+              <span className="value">{influenceScore}</span>
               <span className="label">影响力评分</span>
             </div>
             <div className="metric">
-              <span className="value">{analysis.attention_level || '未知'}</span>
+              <span className="value">{attentionLevel}</span>
               <span className="label">关注等级</span>
             </div>
           </div>
@@ -139,15 +151,15 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
           <div className="analysis-card">
             <h4>信号活跃度</h4>
             <div className="metric">
-              <span className="value">{signalAnalysis.signal_count || 0}</span>
+              <span className="value">{signalCount}</span>
               <span className="label">信号数量</span>
             </div>
             <div className="metric">
-              <span className="value">{signalAnalysis.activity_score || 0}</span>
+              <span className="value">{activityScore}</span>
               <span className="label">活跃度评分</span>
             </div>
             <div className="metric">
-              <span className="value">{signalAnalysis.activity_level || '未知'}</span>
+              <span className="value">{activityLevel}</span>
               <span className="label">活跃等级</span>
             </div>
           </div>
@@ -155,11 +167,11 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
           <div className="analysis-card">
             <h4>KOL影响力</h4>
             <div className="metric">
-              <span className="value">{kolAnalysis.mention_count || 0}</span>
+              <span className="value">{kolMention}</span>
               <span className="label">提及用户数</span>
             </div>
             <div className="metric">
-              <span className="value">{kolAnalysis.influence_score || 0}</span>
+              <span className="value">{kolInfluence}</span>
               <span className="label">影响力评分</span>
             </div>
           </div>
@@ -169,7 +181,7 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
           <div className="investment-score">
             <h4>💡 投资评分</h4>
             <div className="score-display">
-              <span className="score">{analysisData.investment_score.overall_score || analysisData.investment_score}</span>
+              <span className="score">{analysisData.investment_score.overall || analysisData.investment_score.overall_score || 0}</span>
               <span className="score-label">/ 100</span>
             </div>
           </div>
@@ -182,8 +194,14 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
     if (!data || data.error) return <div className="error-message">暂无数据</div>;
     
     // 后端返回的数据结构：data.data 或 data.analysis
-    const kolData = data.data || data.analysis || {};
-    const kolCalls = kolData.kolCalls || [];
+    const kolData = data.analysis || data.data || {};
+
+    // 映射后端结构到前端展示
+    const mentionUserCount = kolData.basic_stats?.total_kols ?? kolData.mentionUserCount ?? 0;
+    const holdingStability = kolData.investment_score?.scores?.holding_stability ?? 0;
+    const signalStrength = kolData.investment_score?.scores?.signal_strength ?? 0;
+    const rating = kolData.investment_score?.rating || kolData.investment_score?.investment_signal || 'N/A';
+    const kolCalls = kolData.kolCalls || kolData.investment_signals?.signals || [];
     
     return (
       <div className="analysis-content">
@@ -196,27 +214,36 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
           <div className="analysis-card">
             <h4>基础统计</h4>
             <div className="metric">
-              <span className="value">{kolData.mentionUserCount || 0}</span>
+              <span className="value">{mentionUserCount}</span>
               <span className="label">提及用户数</span>
             </div>
             <div className="metric">
-              <span className="value">{kolCalls.length || 0}</span>
-              <span className="label">KOL数量</span>
+              <span className="value">{holdingStability}</span>
+              <span className="label">持仓稳定性</span>
+            </div>
+            <div className="metric">
+              <span className="value">{signalStrength}</span>
+              <span className="label">信号强度</span>
+            </div>
+          </div>
+
+          <div className="analysis-card">
+            <h4>评级</h4>
+            <div className="metric">
+              <span className="value">{rating}</span>
+              <span className="label">投资建议/评级</span>
             </div>
           </div>
         </div>
 
-        {kolCalls.length > 0 && (
-          <div className="kol-list">
-            <h4>👑 主要KOL</h4>
-            <div className="kol-grid">
-              {kolCalls.slice(0, 6).map((kol, index) => (
-                <div key={index} className="kol-item">
-                  <div className="kol-avatar">👤</div>
-                  <div className="kol-info">
-                    <div className="kol-name">{kol.userName || '未知用户'}</div>
-                    <div className="kol-followers">{kol.followerCount || 0} 粉丝</div>
-                  </div>
+        {kolCalls && kolCalls.length > 0 && (
+          <div className="dev-tokens-list">
+            <h4>📋 KOL信号</h4>
+            <div className="dev-tokens-grid">
+              {kolCalls.slice(0, 5).map((sig, index) => (
+                <div key={index} className="dev-token-item">
+                  <div className="token-symbol">{sig.symbol || sig.type || 'N/A'}</div>
+                  <div className="token-name">{sig.name || sig.description || 'N/A'}</div>
                 </div>
               ))}
             </div>
@@ -263,8 +290,13 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
   const renderTelegramAnalysis = (data) => {
     if (!data || data.error) return <div className="error-message">暂无数据</div>;
     
-    // 后端返回的数据结构：data.data 或 data.analysis
-    const telegramData = data.data || data.analysis || {};
+    // 后端返回的数据结构：优先 analysis，再退回 data
+    const telegramData = data.analysis || data.data || {};
+
+    // 字段兼容映射
+    const channelCount = telegramData.groups?.total_groups ?? telegramData.channelCount ?? 0;
+    const messageCount = telegramData.activity?.monthly_messages ?? telegramData.activity?.weekly_messages ?? telegramData.messageCount ?? 0;
+    const userCount = telegramData.groups?.member_statistics?.total_members ?? telegramData.userCount ?? 0;
     
     return (
       <div className="analysis-content">
@@ -277,15 +309,15 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
           <div className="analysis-card">
             <h4>Telegram活跃度</h4>
             <div className="metric">
-              <span className="value">{telegramData.channelCount || 0}</span>
+              <span className="value">{channelCount}</span>
               <span className="label">频道数量</span>
             </div>
             <div className="metric">
-              <span className="value">{telegramData.messageCount || 0}</span>
+              <span className="value">{messageCount}</span>
               <span className="label">消息数量</span>
             </div>
             <div className="metric">
-              <span className="value">{telegramData.userCount || 0}</span>
+              <span className="value">{userCount}</span>
               <span className="label">用户数量</span>
             </div>
           </div>
@@ -297,8 +329,13 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
   const renderNarrativeAnalysis = (data) => {
     if (!data || data.error) return <div className="error-message">暂无数据</div>;
     
-    // 后端返回的数据结构：data.data 或 data.analysis
-    const narrativeData = data.data || data.analysis || {};
+    // 新后端结构：code=0, data: { narrative, source, symbol }
+    const fromData = data.data && (data.data.narrative || data.data.symbol)
+      ? { narrative: data.data.narrative, source: data.data.source, symbol: data.data.symbol }
+      : null;
+    const narrativeData = fromData || data.analysis || {};
+    const narrativeText = narrativeData.narrative || '暂无叙事';
+    const narrativeSymbol = narrativeData.symbol || '';
     
     return (
       <div className="analysis-content">
@@ -308,29 +345,14 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
         </div>
         
         <div className="analysis-grid">
-          <div className="analysis-card">
-            <h4>叙事分析</h4>
+          <div className="analysis-card" style={{ gridColumn: '1 / -1' }}>
+            <h4>叙事内容{narrativeSymbol ? `（${narrativeSymbol}）` : ''}</h4>
             <div className="metric">
-              <span className="value">{narrativeData.narrativeScore || 0}</span>
-              <span className="label">叙事评分</span>
-            </div>
-            <div className="metric">
-              <span className="value">{narrativeData.keywords?.length || 0}</span>
-              <span className="label">关键词数量</span>
+              <span className="value" style={{ whiteSpace: 'pre-wrap', textAlign: 'left' }}>{narrativeText}</span>
+              <span className="label">来源：{narrativeData.source || 'self-ai'}</span>
             </div>
           </div>
         </div>
-
-        {narrativeData.keywords && narrativeData.keywords.length > 0 && (
-          <div className="keywords-section">
-            <h4>🔑 关键词</h4>
-            <div className="keywords-grid">
-              {narrativeData.keywords.slice(0, 10).map((keyword, index) => (
-                <span key={index} className="keyword-tag">{keyword}</span>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     );
   };
@@ -453,9 +475,13 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
               <div className="card-status">
                 {loading[type.id] && <div className="loading-spinner-small"></div>}
                 {error[type.id] && <div className="error-icon-small">❌</div>}
-                {analysisData[type.id] && !loading[type.id] && !error[type.id] && (
-                  <div className="success-icon-small">✅</div>
-                )}
+                {(() => {
+                  const d = analysisData[type.id];
+                  const hasContent = !!(d && (d.analysis || d.data));
+                  return hasContent && !loading[type.id] && !error[type.id] ? (
+                    <div className="success-icon-small">✅</div>
+                  ) : null;
+                })()}
               </div>
             </div>
           </div>
