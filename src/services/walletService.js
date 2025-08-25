@@ -38,6 +38,50 @@ export const walletService = {
     }
   },
 
+  // 导入钱包
+  async importWallet(walletData) {
+    try {
+      const data = await apiRequest('/account/wallet', {
+        method: 'POST',
+        body: JSON.stringify(walletData)
+      });
+      console.log('导入钱包成功:', data);
+      return data;
+    } catch (error) {
+      console.error('导入钱包失败:', error);
+      throw error;
+    }
+  },
+
+  // 编辑钱包
+  async editWallet(walletData) {
+    try {
+      const data = await apiRequest('/account/wallet', {
+        method: 'PATCH',
+        body: JSON.stringify(walletData)
+      });
+      console.log('编辑钱包成功:', data);
+      return data;
+    } catch (error) {
+      console.error('编辑钱包失败:', error);
+      throw error;
+    }
+  },
+
+  // 删除钱包
+  async deleteWallet(walletId) {
+    try {
+      const data = await apiRequest(`/account/wallet/${walletId}`, {
+        method: 'DELETE'
+      });
+      console.log('删除钱包成功:', data);
+      return data;
+    } catch (error) {
+      console.error('删除钱包失败:', error);
+      throw error;
+    }
+  },
+
   // 格式化资产数据
   formatAssetData(assets) {
     if (!assets || !Array.isArray(assets)) {
