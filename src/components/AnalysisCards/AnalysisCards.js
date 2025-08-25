@@ -412,7 +412,7 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
     if (!data || data.error) return <div className="error-message">暂无数据</div>;
     
     // 后端返回的数据结构：data.data 或 data.analysis
-    const twitterData = data.data || data.analysis || {};
+    const twitterData = data.analysis || data.data || {};
     
     return (
       <div className="analysis-content">
@@ -453,15 +453,119 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
               <span className="label">认证状态</span>
             </div>
             <div className="metric">
+              <span className="value">{twitterData.follower_quality?.total_followers ?? 0}</span>
+              <span className="label">粉丝总数</span>
+            </div>
+            {twitterData.basic_info?.profile_image && (
+              <div className="metric">
+                <span className="value">
+                  <img src={twitterData.basic_info.profile_image} alt="avatar" style={{ width: 40, height: 40, borderRadius: '50%' }} />
+                </span>
+                <span className="label">头像</span>
+              </div>
+            )}
+            {twitterData.basic_info?.twitter_url && (
+              <div className="metric">
+                <span className="value" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <a href={twitterData.basic_info.twitter_url} target="_blank" rel="noopener noreferrer">前往 Twitter</a>
+                </span>
+                <span className="label">链接</span>
+              </div>
+            )}
+          </div>
+
+          <div className="analysis-card">
+            <h4>粉丝质量</h4>
+            <div className="metric">
               <span className="value">{twitterData.follower_quality?.quality_rating || '—'}</span>
               <span className="label">质量评级</span>
             </div>
             <div className="metric">
-              <span className="value">{twitterData.smart_follower_ratio ?? 0}</span>
+              <span className="value">{twitterData.follower_quality?.smart_follower_ratio ?? 0}</span>
               <span className="label">智能粉占比</span>
+            </div>
+            <div className="metric">
+              <span className="value">{twitterData.follower_quality?.smart_followers_count ?? 0}</span>
+              <span className="label">智能粉数量</span>
+            </div>
+          </div>
+
+          <div className="analysis-card">
+            <h4>影响力</h4>
+            <div className="metric">
+              <span className="value">{twitterData.influence?.influence_level || '—'}</span>
+              <span className="label">影响力等级</span>
+            </div>
+            <div className="metric">
+              <span className="value">{twitterData.influence?.follower_reach ?? 0}</span>
+              <span className="label">触达粉丝</span>
+            </div>
+            <div className="metric">
+              <span className="value">{twitterData.influence?.market_impact_potential ?? 0}</span>
+              <span className="label">市场影响潜力</span>
+            </div>
+          </div>
+
+          <div className="analysis-card">
+            <h4>投资评分</h4>
+            <div className="metric">
+              <span className="value">{twitterData.investment_score?.overall_score ?? 0}</span>
+              <span className="label">综合得分</span>
+            </div>
+            <div className="metric">
+              <span className="value">{twitterData.investment_score?.rating || twitterData.investment_score?.investment_signal || '—'}</span>
+              <span className="label">评级/信号</span>
             </div>
           </div>
         </div>
+
+        {twitterData.investment_score?.score_breakdown && (
+          <div className="dev-tokens-list">
+            <h4>评分构成</h4>
+            <div className="dev-tokens-grid">
+              {Object.entries(twitterData.investment_score.score_breakdown).map(([k,v], idx) => (
+                <div key={idx} className="dev-token-item">
+                  <div className="token-symbol">{k}</div>
+                  <div className="token-name">{String(v)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {twitterData.investment_score?.scores && (
+          <div className="dev-tokens-list">
+            <h4>分项得分</h4>
+            <div className="dev-tokens-grid">
+              {Object.entries(twitterData.investment_score.scores).map(([k,v], idx) => (
+                <div key={idx} className="dev-token-item">
+                  <div className="token-symbol">{k}</div>
+                  <div className="token-name">{String(v)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {twitterData.risks && (
+          <div className="dev-tokens-list">
+            <h4>风险评估</h4>
+            <div className="dev-tokens-grid">
+              <div className="dev-token-item">
+                <div className="token-symbol">风险等级</div>
+                <div className="token-name">{twitterData.risks.risk_level || '—'}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">风险分</div>
+                <div className="token-name">{twitterData.risks.risk_score ?? 0}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">投资建议</div>
+                <div className="token-name">{twitterData.risks.recommendation || '—'}</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <RawBlock title="原始数据 (twitter)" obj={data} />
       </div>
