@@ -39,7 +39,7 @@ const PositionOverview = () => {
     setError(null);
 
     try {
-      const response = await walletService.getWalletAssets(walletAddress);
+      const response = await walletService.getWalletAssets(address);
       
       if (response.err) {
         setError(response.res || '获取钱包资产失败');
