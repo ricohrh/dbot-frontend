@@ -197,6 +197,19 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
                 </div>
               </div>
             )}
+            {analysisData.investment_score.scores && (
+              <div className="dev-tokens-list">
+                <h4>分项得分</h4>
+                <div className="dev-tokens-grid">
+                  {Object.entries(analysisData.investment_score.scores).map(([k,v], idx) => (
+                    <div key={idx} className="dev-token-item">
+                      <div className="token-symbol">{k}</div>
+                      <div className="token-name">{String(v)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -217,6 +230,65 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
                 <div className="token-name">{analysisData.market_heat.recommendation || '—'}</div>
               </div>
             </div>
+            {analysisData.market_heat.trend_prediction && (
+              <div className="dev-tokens-list">
+                <h4>趋势预测</h4>
+                <div className="dev-tokens-grid">
+                  {Object.entries(analysisData.market_heat.trend_prediction).map(([k,v], idx) => (
+                    <div key={idx} className="dev-token-item">
+                      <div className="token-symbol">{k}</div>
+                      <div className="token-name">{String(v)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {signalAnalysis && (
+          <div className="dev-tokens-list">
+            <h4>📡 信号分析</h4>
+            <div className="dev-tokens-grid">
+              <div className="dev-token-item">
+                <div className="token-symbol">信号数量</div>
+                <div className="token-name">{signalAnalysis.signal_count ?? 0}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">活跃度评分</div>
+                <div className="token-name">{signalAnalysis.activity_score ?? 0}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">活跃等级</div>
+                <div className="token-name">{signalAnalysis.activity_level || '未知'}</div>
+              </div>
+            </div>
+            {signalAnalysis.frequency_analysis && (
+              <div className="dev-tokens-list">
+                <h4>频率分析</h4>
+                <div className="dev-tokens-grid">
+                  {Object.entries(signalAnalysis.frequency_analysis).map(([k,v], idx) => (
+                    <div key={idx} className="dev-token-item">
+                      <div className="token-symbol">{k}</div>
+                      <div className="token-name">{String(v)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {signalAnalysis.timing_analysis && (
+              <div className="dev-tokens-list">
+                <h4>时序分析</h4>
+                <div className="dev-tokens-grid">
+                  {Object.entries(signalAnalysis.timing_analysis).map(([k,v], idx) => (
+                    <div key={idx} className="dev-token-item">
+                      <div className="token-symbol">{k}</div>
+                      <div className="token-name">{String(v)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
