@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { marketDataService } from '../../services/marketDataService';
 import CopyableAddress from '../common/CopyableAddress';
+import AnalysisCards from '../AnalysisCards/AnalysisCards';
 import './MarketData.css';
 
 const MarketData = () => {
@@ -8,6 +9,8 @@ const MarketData = () => {
   const [marketData, setMarketData] = useState({});
   const [loading, setLoading] = useState({});
   const [error, setError] = useState({});
+  const [selectedToken, setSelectedToken] = useState(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
 
   const categories = [
     {
@@ -98,6 +101,16 @@ const MarketData = () => {
     fetchData(activeCategory);
   }, [activeCategory]);
 
+  const handleTokenClick = (token) => {
+    setSelectedToken(token);
+    setShowAnalysis(true);
+  };
+
+  const handleCloseAnalysis = () => {
+    setShowAnalysis(false);
+    setSelectedToken(null);
+  };
+
   const formatNumber = (num) => {
     if (!num) return '0';
     if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
@@ -146,7 +159,7 @@ const MarketData = () => {
           </thead>
           <tbody>
             {data.res.slice(0, 20).map((item, index) => (
-              <tr key={index} className="data-row">
+              <tr key={index} className="data-row" onClick={() => handleTokenClick(item)}>
                 <td>
                   <div className="token-info">
                     <div className="token-header">
@@ -196,17 +209,33 @@ const MarketData = () => {
                   <div className="action-buttons">
                     <button 
                       className="btn-view" 
-                      onClick={() => window.open(`https://solscan.io/token/${item.mint}`, '_blank')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`https://solscan.io/token/${item.mint}`, '_blank');
+                      }}
                       title="查看代币详情"
                     >
                       🔍
                     </button>
                     <button 
                       className="btn-chart" 
-                      onClick={() => window.open(`https://dexscreener.com/solana/${item.mint}`, '_blank')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`https://dexscreener.com/solana/${item.mint}`, '_blank');
+                      }}
                       title="查看图表"
                     >
                       📈
+                    </button>
+                    <button 
+                      className="btn-analysis" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTokenClick(item);
+                      }}
+                      title="深度分析"
+                    >
+                      🔍
                     </button>
                   </div>
                 </td>
@@ -305,6 +334,27 @@ const MarketData = () => {
           </div>
         </div>
       </div>
+
+      {/* 分析卡片 */}
+      {showAnalysis && selectedToken && (
+        <div className="analysis-overlay">
+          <div className="analysis-modal">
+            <div className="analysis-modal-header">
+              <h2>🔍 {selectedToken.symbol || selectedToken.name} 深度分析</h2>
+              <button className="close-analysis-btn" onClick={handleCloseAnalysis}>
+                ✕
+              </button>
+            </div>
+            <div className="analysis-modal-content">
+              <AnalysisCards 
+                tokenAddress={selectedToken.mint}
+                tokenSymbol={selectedToken.symbol}
+                tokenName={selectedToken.name}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
