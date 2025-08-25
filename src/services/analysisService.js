@@ -84,7 +84,7 @@ export const analysisService = {
   async getKOLAlerts(tokenAddress) {
     try {
       console.log('正在获取KOL警报数据:', tokenAddress);
-      const data = await apiRequest(`/analysis/alerts?tokenAddress=${tokenAddress}`);
+      const data = await apiRequest(`/analysis/alerts`);
       console.log('KOL警报数据获取成功:', data);
       return data;
     } catch (error) {
