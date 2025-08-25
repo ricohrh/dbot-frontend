@@ -219,6 +219,23 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
             </div>
           </div>
         )}
+
+        {/* 社群清单 */}
+        {analysis.communities && analysis.communities.length > 0 && (
+          <div className="dev-tokens-list">
+            <h4>📋 社群列表</h4>
+            <div className="dev-tokens-grid">
+              {analysis.communities.slice(0, 12).map((c, i) => (
+                <div key={i} className="dev-token-item">
+                  <div className="token-symbol">{c.groupName || c.kolName || 'Community'}</div>
+                  <div className="token-name">{c.kolTwitterId || '—'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <RawBlock title="原始数据 (community)" obj={data} />
       </div>
     );
   };
@@ -298,6 +315,23 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
             </div>
           </div>
         )}
+
+        {/* KOL行为分类 */}
+        {kolData.kol_behavior?.categories && (
+          <div className="dev-tokens-list">
+            <h4>🧭 KOL 行为分类</h4>
+            <div className="dev-tokens-grid">
+              {Object.entries(kolData.kol_behavior.categories).map(([cat, arr], idx) => (
+                <div key={idx} className="dev-token-item">
+                  <div className="token-symbol">{cat}</div>
+                  <div className="token-name">{Array.isArray(arr) ? arr.length : 0} 人</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <RawBlock title="原始数据 (kol)" obj={data} />
       </div>
     );
   };
@@ -371,6 +405,23 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
             </div>
           </div>
         </div>
+
+        {/* 群组清单 */}
+        {telegramData.groups?.group_details && telegramData.groups.group_details.length > 0 && (
+          <div className="dev-tokens-list">
+            <h4>📋 群组调用列表</h4>
+            <div className="dev-tokens-grid">
+              {telegramData.groups.group_details.slice(0, 12).map((g, i) => (
+                <div key={i} className="dev-token-item">
+                  <div className="token-symbol">{g.name || 'Group'}</div>
+                  <div className="token-name">{g.link || '—'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <RawBlock title="原始数据 (telegram)" obj={data} />
       </div>
     );
   };
@@ -402,6 +453,7 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
             </div>
           </div>
         </div>
+        <RawBlock title="原始数据 (narrative)" obj={data} />
       </div>
     );
   };
@@ -413,6 +465,11 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
     const devData = data.data || data.analysis || {};
     const devTokensCount = devData.dev_tokens_count || 0;
     const devTokensList = devData.dev_tokens || [];
+
+    // 从 raw 读取历史发盘
+    const devHistories = data.raw?.data?.data?.dev_histories || [];
+    const balance = data.raw?.data?.data?.balance;
+    const devAddress = data.raw?.data?.data?.dev_ca;
     
     return (
       <div className="analysis-content">
@@ -429,13 +486,26 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
               <span className="label">代币数量</span>
             </div>
           </div>
+          {devAddress && (
+            <div className="analysis-card">
+              <h4>开发者信息</h4>
+              <div className="metric">
+                <span className="value">{(balance ?? 0).toLocaleString()}</span>
+                <span className="label">余额 (SOL)</span>
+              </div>
+              <div className="metric">
+                <span className="value"><CopyableAddress address={devAddress} /></span>
+                <span className="label">开发者地址</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {devTokensList.length > 0 && (
           <div className="dev-tokens-list">
             <h4>📋 开发者代币列表</h4>
             <div className="dev-tokens-grid">
-              {devTokensList.slice(0, 5).map((token, index) => (
+              {devTokensList.slice(0, 10).map((token, index) => (
                 <div key={index} className="dev-token-item">
                   <div className="token-symbol">{token.symbol || 'N/A'}</div>
                   <div className="token-name">{token.name || 'N/A'}</div>
@@ -446,13 +516,30 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
           </div>
         )}
 
-        {devTokensCount === 0 && (
+        {devHistories.length > 0 && (
+          <div className="dev-tokens-list">
+            <h4>🕘 历史发盘</h4>
+            <div className="dev-tokens-grid">
+              {devHistories.slice(0, 12).map((h, i) => (
+                <div key={i} className="dev-token-item">
+                  <div className="token-symbol">{h.symbol || '—'}</div>
+                  <div className="token-name">{h.name || '—'}</div>
+                  <CopyableAddress address={h.address} className="token-address-small" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {devTokensCount === 0 && devHistories.length === 0 && (
           <div className="no-data-message">
             <div className="no-data-icon">📊</div>
             <h4>暂无开发者代币数据</h4>
             <p>该代币地址在ChainInsight中未找到相关的开发者代币信息</p>
           </div>
         )}
+
+        <RawBlock title="原始数据 (dev)" obj={data} />
       </div>
     );
   };
@@ -498,6 +585,21 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
       default:
         return <div className="error-message">未知的分析类型</div>;
     }
+  };
+
+  const RawBlock = ({ title, obj }) => {
+    const [open, setOpen] = useState(false);
+    if (!obj) return null;
+    return (
+      <div className="dev-tokens-list">
+        <h4 onClick={() => setOpen(!open)} style={{cursor:'pointer'}}>{open ? '▼' : '▶'} {title}</h4>
+        {open && (
+          <pre style={{whiteSpace:'pre-wrap', wordBreak:'break-word', background:'rgba(255,255,255,0.05)', padding:12, borderRadius:8}}>
+            {JSON.stringify(obj, null, 2)}
+          </pre>
+        )}
+      </div>
+    );
   };
 
   return (
