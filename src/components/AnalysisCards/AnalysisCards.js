@@ -466,8 +466,9 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
     const devTokensCount = devData.dev_tokens_count || 0;
     const devTokensList = devData.dev_tokens || [];
 
-    // 从 raw 读取历史发盘
-    const devHistories = data.raw?.data?.data?.dev_histories || [];
+    // 增加从规范化数据读取历史发盘数量，回退到 raw
+    const devHistoriesCount = devData.dev_histories_count ?? (data.raw?.data?.data?.dev_histories_count) ?? 0;
+    const devHistories = devData.dev_histories || data.raw?.data?.data?.dev_histories || [];
     const balance = data.raw?.data?.data?.balance;
     const devAddress = data.raw?.data?.data?.dev_ca;
     
@@ -486,6 +487,16 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
               <span className="label">代币数量</span>
             </div>
           </div>
+
+          {/* 新增：历史发盘数量 */}
+          <div className="analysis-card">
+            <h4>历史发盘</h4>
+            <div className="metric">
+              <span className="value">{devHistoriesCount}</span>
+              <span className="label">发盘数量</span>
+            </div>
+          </div>
+
           {devAddress && (
             <div className="analysis-card">
               <h4>开发者信息</h4>
