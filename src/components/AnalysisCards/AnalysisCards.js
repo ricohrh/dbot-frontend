@@ -184,6 +184,39 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
               <span className="score">{analysisData.investment_score.overall || analysisData.investment_score.overall_score || 0}</span>
               <span className="score-label">/ 100</span>
             </div>
+            {analysisData.investment_score.score_breakdown && (
+              <div className="dev-tokens-list">
+                <h4>评分构成</h4>
+                <div className="dev-tokens-grid">
+                  {Object.entries(analysisData.investment_score.score_breakdown).map(([k,v], idx) => (
+                    <div key={idx} className="dev-token-item">
+                      <div className="token-symbol">{k}</div>
+                      <div className="token-name">{String(v)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {analysisData.market_heat && (
+          <div className="dev-tokens-list">
+            <h4>🔥 市场热度</h4>
+            <div className="dev-tokens-grid">
+              <div className="dev-token-item">
+                <div className="token-symbol">热度等级</div>
+                <div className="token-name">{analysisData.market_heat.heat_level || '未知'}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">热度分数</div>
+                <div className="token-name">{analysisData.market_heat.heat_score ?? 0}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">建议</div>
+                <div className="token-name">{analysisData.market_heat.recommendation || '—'}</div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -240,12 +273,28 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
           <div className="dev-tokens-list">
             <h4>📋 KOL信号</h4>
             <div className="dev-tokens-grid">
-              {kolCalls.slice(0, 5).map((sig, index) => (
+              {kolCalls.slice(0, 8).map((sig, index) => (
                 <div key={index} className="dev-token-item">
                   <div className="token-symbol">{sig.symbol || sig.type || 'N/A'}</div>
                   <div className="token-name">{sig.name || sig.description || 'N/A'}</div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {kolData.investment_score && (
+          <div className="dev-tokens-list">
+            <h4>📈 投资评分</h4>
+            <div className="dev-tokens-grid">
+              <div className="dev-token-item">
+                <div className="token-symbol">综合</div>
+                <div className="token-name">{kolData.investment_score.overall || kolData.investment_score.overall_score || 0}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">评级</div>
+                <div className="token-name">{kolData.investment_score.rating || kolData.investment_score.investment_signal || 'N/A'}</div>
+              </div>
             </div>
           </div>
         )}
