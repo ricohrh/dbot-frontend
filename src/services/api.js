@@ -1,5 +1,5 @@
 // API配置
-export const API_BASE_URL = 'http://localhost:8888/api/data';
+export const API_BASE_URL = 'http://104.129.23.155:8888/api/data';
 export const API_KEY = 'hwxwzxlpdc6whlt9uwaipnp6jxpdfabw';
 
 // 通用API请求函数
