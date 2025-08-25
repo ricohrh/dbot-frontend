@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import WalletManager from './components/WalletManager/WalletManager';
 import StrategyManager from './components/StrategyManager/StrategyManager';
 import MarketData from './components/MarketData/MarketData';
+import PositionOverview from './components/PositionOverview/PositionOverview';
 import './App.css';
 
 const App = () => {
@@ -72,79 +73,7 @@ const App = () => {
   );
 };
 
-// 临时组件 - 后续会模块化
-const PositionOverview = () => (
-  <div className="position-overview">
-    <div className="section-header">
-      <h2>📈 持仓总览</h2>
-      <div className="header-actions">
-        <button className="btn btn-primary">🔄 刷新</button>
-        <button className="btn btn-outline">📊 导出</button>
-      </div>
-    </div>
-    
-    <div className="stats-overview">
-      <div className="stat-card">
-        <div className="stat-icon">💰</div>
-        <div className="stat-content">
-          <h3>总资产</h3>
-          <p className="stat-value">$12,450.00</p>
-        </div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon">📈</div>
-        <div className="stat-content">
-          <h3>今日收益</h3>
-          <p className="stat-value positive">+$245.30</p>
-        </div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon">📊</div>
-        <div className="stat-content">
-          <h3>持仓数量</h3>
-          <p className="stat-value">8</p>
-        </div>
-      </div>
-    </div>
 
-    <div className="table-container">
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>币种</th>
-            <th>持仓数量</th>
-            <th>当前价格</th>
-            <th>持仓价值</th>
-            <th>收益率</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>PEPE</td>
-            <td>1,000,000</td>
-            <td>$0.000012</td>
-            <td>$12.00</td>
-            <td className="positive">+15.2%</td>
-            <td>
-              <button className="btn btn-sm btn-outline">卖出</button>
-            </td>
-          </tr>
-          <tr>
-            <td>DOGE</td>
-            <td>5,000</td>
-            <td>$0.085</td>
-            <td>$425.00</td>
-            <td className="negative">-2.1%</td>
-            <td>
-              <button className="btn btn-sm btn-outline">卖出</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-);
 
 const TradeOverview = () => (
   <div className="trade-overview">
