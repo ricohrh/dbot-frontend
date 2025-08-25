@@ -833,29 +833,143 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
           </div>
 
           <div className="analysis-card">
-            <h4>余额 (SOL)</h4>
-            <div className="metric">
-              <span className="value">{(devInfo.balance ?? 0).toLocaleString()}</span>
-              <span className="label">{(devInfo.balance_analysis && (devInfo.balance_analysis.level || devInfo.balance_analysis.description)) || '—'}</span>
-            </div>
-          </div>
-
-          <div className="analysis-card">
-            <h4>发行量</h4>
-            <div className="metric">
-              <span className="value">{(devInfo.token_mint_amount ?? 0).toLocaleString()}</span>
-              <span className="label">{(devInfo.token_analysis && (devInfo.token_analysis.level || devInfo.token_analysis.description)) || '—'}</span>
-            </div>
-          </div>
-
-          <div className="analysis-card">
             <h4>跑路风险</h4>
             <div className="metric">
               <span className="value">{rugRisk.confidence_level ?? rugRisk.risk_score ?? 0}</span>
-              <span className="label">{rugRisk.overall_risk || '—'}</span>
+              <span className="label">{rugRisk.risk_level || rugRisk.recommendation || '—'}</span>
             </div>
           </div>
         </div>
+
+        <div className="analysis-grid">
+          <div className="analysis-card">
+            <h4>钱包风险</h4>
+            <div className="metric">
+              <span className="value">{devInfo.dev_wallet_risk?.risk_score ?? 0}</span>
+              <span className="label">{devInfo.dev_wallet_risk?.is_high_risk ? '高风险' : '低风险'}</span>
+            </div>
+            {Array.isArray(devInfo.dev_wallet_risk?.risk_reasons) && devInfo.dev_wallet_risk.risk_reasons.length > 0 && (
+              <div className="metric">
+                <span className="value" style={{ whiteSpace: 'pre-wrap' }}>{devInfo.dev_wallet_risk.risk_reasons.join('\n')}</span>
+                <span className="label">风险原因</span>
+              </div>
+            )}
+          </div>
+
+          <div className="analysis-card">
+            <h4>余额与发行</h4>
+            <div className="metric">
+              <span className="value">{(devInfo.balance ?? 0).toLocaleString()} {devInfo.balance_symbol || 'SOL'}</span>
+              <span className="label">{devInfo.balance_analysis?.description || '—'}</span>
+            </div>
+            <div className="metric">
+              <span className="value">{(devInfo.token_mint_amount ?? 0).toLocaleString()}</span>
+              <span className="label">{devInfo.token_analysis?.description || '—'}</span>
+            </div>
+          </div>
+
+          <div className="analysis-card">
+            <h4>开发者地址</h4>
+            <div className="metric">
+              <span className="value"><CopyableAddress address={devInfo.dev_address} className="token-address-small" /></span>
+              <span className="label">Dev Address</span>
+            </div>
+          </div>
+        </div>
+
+        {historyAnalysis && (
+          <div className="dev-tokens-list">
+            <h4>🧭 历史模式分析</h4>
+            <div className="dev-tokens-grid">
+              <div className="dev-token-item">
+                <div className="token-symbol">总项目数</div>
+                <div className="token-name">{historyAnalysis.pattern_analysis?.total_projects ?? historyAnalysis.histories_count ?? 0}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">成功项目</div>
+                <div className="token-name">{historyAnalysis.pattern_analysis?.success_projects ?? 0}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">失败项目</div>
+                <div className="token-name">{historyAnalysis.pattern_analysis?.failed_projects ?? 0}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">典型行为</div>
+                <div className="token-name">{historyAnalysis.pattern_analysis?.typical_behavior || '—'}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">风险等级</div>
+                <div className="token-name">{historyAnalysis.risk_level || '—'}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">信誉分</div>
+                <div className="token-name">{historyAnalysis.reputation_score ?? 0}</div>
+              </div>
+            </div>
+            {Array.isArray(historyAnalysis.warning_flags) && historyAnalysis.warning_flags.length > 0 && (
+              <div className="dev-tokens-list">
+                <h4>⚠️ 警示标志</h4>
+                <div className="dev-tokens-grid">
+                  {historyAnalysis.warning_flags.map((w, idx) => (
+                    <div key={idx} className="dev-token-item">
+                      <div className="token-name" style={{ gridColumn: '1 / span 2' }}>{w}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {analysisRoot.safety_score && (
+          <div className="dev-tokens-list">
+            <h4>🛡️ 安全评分</h4>
+            <div className="dev-tokens-grid">
+              <div className="dev-token-item">
+                <div className="token-symbol">总分</div>
+                <div className="token-name">{analysisRoot.safety_score.overall_score ?? 0}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">评级</div>
+                <div className="token-name">{analysisRoot.safety_score.rating || '—'}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">安全级别</div>
+                <div className="token-name">{analysisRoot.safety_score.safety_level || '—'}</div>
+              </div>
+              <div className="dev-token-item">
+                <div className="token-symbol">建议</div>
+                <div className="token-name">{analysisRoot.safety_score.investment_advice || '—'}</div>
+              </div>
+            </div>
+            {analysisRoot.safety_score.score_breakdown && (
+              <div className="dev-tokens-list">
+                <h4>评分构成</h4>
+                <div className="dev-tokens-grid">
+                  {Object.entries(analysisRoot.safety_score.score_breakdown).map(([k,v], idx) => (
+                    <div key={idx} className="dev-token-item">
+                      <div className="token-symbol">{k}</div>
+                      <div className="token-name">{String(v)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {analysisRoot.safety_score.scores && (
+              <div className="dev-tokens-list">
+                <h4>分项得分</h4>
+                <div className="dev-tokens-grid">
+                  {Object.entries(analysisRoot.safety_score.scores).map(([k,v], idx) => (
+                    <div key={idx} className="dev-token-item">
+                      <div className="token-symbol">{k}</div>
+                      <div className="token-name">{String(v)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {devTokensList.length > 0 && (
           <div className="dev-tokens-list">
