@@ -365,7 +365,33 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
               <span className="label">情感倾向</span>
             </div>
           </div>
+
+          <div className="analysis-card">
+            <h4>账号基础信息</h4>
+            <div className="metric">
+              <span className="value">{twitterData.basic_info?.account_name || '—'}</span>
+              <span className="label">账号名称</span>
+            </div>
+            <div className="metric">
+              <span className="value">{twitterData.basic_info?.screen_name || '—'}</span>
+              <span className="label">用户名</span>
+            </div>
+            <div className="metric">
+              <span className="value">{twitterData.basic_info?.has_verified_info ? '已验证' : '未验证'}</span>
+              <span className="label">认证状态</span>
+            </div>
+            <div className="metric">
+              <span className="value">{twitterData.follower_quality?.quality_rating || '—'}</span>
+              <span className="label">质量评级</span>
+            </div>
+            <div className="metric">
+              <span className="value">{twitterData.smart_follower_ratio ?? 0}</span>
+              <span className="label">智能粉占比</span>
+            </div>
+          </div>
         </div>
+
+        <RawBlock title="原始数据 (twitter)" obj={data} />
       </div>
     );
   };
