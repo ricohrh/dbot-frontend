@@ -5,6 +5,14 @@
 
 echo "🚀 开始部署DBot前端到GitHub Pages..."
 
+# 检查是否有强制部署参数
+if [ "$1" = "--force" ]; then
+    echo -e "${YELLOW}🚀 强制部署模式已启用${NC}"
+    FORCE_DEPLOY=true
+else
+    FORCE_DEPLOY=false
+fi
+
 # 设置颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -64,14 +72,18 @@ echo -e "${BLUE}📝 提交信息: $COMMIT_MSG${NC}"
 echo -e "${YELLOW}📋 检查Git状态...${NC}"
 if [ -n "$(git status --porcelain)" ]; then
     echo -e "${GREEN}✅ 发现未提交的更改${NC}"
+elif [ "$FORCE_DEPLOY" = true ]; then
+    echo -e "${GREEN}✅ 强制部署模式：跳过Git检查${NC}"
 else
     echo -e "${YELLOW}⚠️  没有发现新的更改${NC}"
-    read -p "是否继续部署? (y/N): " -n 1 -r
+    echo -e "${BLUE}💡 提示: 即使没有Git更改，也可以强制重新构建和部署${NC}"
+    read -p "是否强制重新构建和部署? (y/N): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo -e "${YELLOW}🚫 部署已取消${NC}"
         exit 0
     fi
+    echo -e "${GREEN}✅ 将强制重新构建和部署${NC}"
 fi
 
 # 2. 安装依赖（如果需要）
@@ -165,4 +177,10 @@ echo -e "   📁 仓库: https://github.com/ricohrh/dbot-frontend"
 echo -e "${YELLOW}⏳ 等待部署生效（通常需要1-2分钟）...${NC}"
 echo -e "${BLUE}💡 提示: 您可以在GitHub仓库的Settings > Pages中查看部署状态${NC}"
 
-echo -e "${GREEN}✨ 脚本执行完成！${NC}" 
+echo -e "${GREEN}✨ 脚本执行完成！${NC}"
+
+# 显示使用说明
+echo -e "${BLUE}📖 使用说明:${NC}"
+echo -e "   🚀 正常部署: ./deploy-ssh.sh"
+echo -e "   🚀 强制部署: ./deploy-ssh.sh --force"
+echo -e "   💡 强制部署会跳过Git检查，直接重新构建和部署" 
