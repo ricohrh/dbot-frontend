@@ -404,6 +404,136 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
               <span className="label">用户数量</span>
             </div>
           </div>
+
+          <div className="analysis-card">
+            <h4>活跃度详情</h4>
+            <div className="metric">
+              <span className="value">{telegramData.activity?.daily_messages ?? 0}</span>
+              <span className="label">日消息数</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.activity?.weekly_messages ?? 0}</span>
+              <span className="label">周消息数</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.activity?.monthly_messages ?? 0}</span>
+              <span className="label">月消息数</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.activity?.message_frequency || '—'}</span>
+              <span className="label">消息频率</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.activity?.call_activity?.call_frequency_score ?? 0}</span>
+              <span className="label">调用活跃度(分)</span>
+            </div>
+            {Array.isArray(telegramData.activity?.peak_activity_hours) && telegramData.activity.peak_activity_hours.length > 0 && (
+              <div className="metric">
+                <span className="value" style={{ whiteSpace: 'pre-wrap' }}>{telegramData.activity.peak_activity_hours.join('、')}</span>
+                <span className="label">活跃时段</span>
+              </div>
+            )}
+          </div>
+
+          <div className="analysis-card">
+            <h4>群组覆盖</h4>
+            <div className="metric">
+              <span className="value">{telegramData.groups?.total_groups ?? 0}</span>
+              <span className="label">总群组数</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.groups?.verified_groups ?? 0}</span>
+              <span className="label">已认证群组</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.groups?.unique_channels ?? 0}</span>
+              <span className="label">唯一频道数</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.groups?.member_statistics?.total_members ?? 0}</span>
+              <span className="label">成员总数</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.groups?.member_statistics?.largest_group_size ?? 0}</span>
+              <span className="label">最大群人数</span>
+            </div>
+          </div>
+
+          <div className="analysis-card">
+            <h4>影响力</h4>
+            <div className="metric">
+              <span className="value">{telegramData.influence?.influence_score ?? 0}</span>
+              <span className="label">影响力评分</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.influence?.admin_activity || '—'}</span>
+              <span className="label">管理员活跃度</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.influence?.developer_presence ? '是' : '否'}</span>
+              <span className="label">开发者在场</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.influence?.official_announcements ?? 0}</span>
+              <span className="label">官方公告数</span>
+            </div>
+          </div>
+
+          <div className="analysis-card">
+            <h4>综合评分</h4>
+            <div className="metric">
+              <span className="value">{telegramData.overall_score?.rating || '—'}</span>
+              <span className="label">评级</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.overall_score?.total_score ?? 0}</span>
+              <span className="label">总分</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.overall_score?.recommendation || '—'}</span>
+              <span className="label">建议</span>
+            </div>
+          </div>
+
+          <div className="analysis-card">
+            <h4>风险评估</h4>
+            <div className="metric">
+              <span className="value">{telegramData.risks?.overall_risk_level || '—'}</span>
+              <span className="label">总体风险</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.risks?.trust_score ?? 0}</span>
+              <span className="label">信任分</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.risks?.bot_activity_level || '—'}</span>
+              <span className="label">机器人活跃</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.risks?.spam_ratio ?? 0}</span>
+              <span className="label">垃圾占比</span>
+            </div>
+          </div>
+
+          <div className="analysis-card">
+            <h4>情感分析</h4>
+            <div className="metric">
+              <span className="value">{telegramData.sentiment?.overall_sentiment || '—'}</span>
+              <span className="label">总体情感</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.sentiment?.sentiment_score ?? 0}</span>
+              <span className="label">情感分</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.sentiment?.positive_ratio ?? 0}</span>
+              <span className="label">正面占比</span>
+            </div>
+            <div className="metric">
+              <span className="value">{telegramData.sentiment?.negative_ratio ?? 0}</span>
+              <span className="label">负面占比</span>
+            </div>
+          </div>
         </div>
 
         {/* 群组清单 */}
