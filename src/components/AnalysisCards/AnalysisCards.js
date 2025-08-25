@@ -106,9 +106,11 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
   const renderCommunityAnalysis = (data) => {
     if (!data || data.error) return <div className="error-message">暂无数据</div>;
     
-    const analysis = data.analysis?.community_analysis || {};
-    const signalAnalysis = data.analysis?.signal_analysis || {};
-    const kolAnalysis = data.analysis?.kol_analysis || {};
+    // 后端返回的数据结构：data.analysis 或 data.data
+    const analysisData = data.analysis || data.data || {};
+    const analysis = analysisData.community_analysis || {};
+    const signalAnalysis = analysisData.signal_analysis || {};
+    const kolAnalysis = analysisData.kol_analysis || {};
     
     return (
       <div className="analysis-content">
@@ -163,11 +165,11 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
           </div>
         </div>
 
-        {data.analysis?.investment_score && (
+        {analysisData.investment_score && (
           <div className="investment-score">
             <h4>💡 投资评分</h4>
             <div className="score-display">
-              <span className="score">{data.analysis.investment_score}</span>
+              <span className="score">{analysisData.investment_score.overall_score || analysisData.investment_score}</span>
               <span className="score-label">/ 100</span>
             </div>
           </div>
@@ -179,7 +181,8 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
   const renderKOLAnalysis = (data) => {
     if (!data || data.error) return <div className="error-message">暂无数据</div>;
     
-    const kolData = data.data || {};
+    // 后端返回的数据结构：data.data 或 data.analysis
+    const kolData = data.data || data.analysis || {};
     const kolCalls = kolData.kolCalls || [];
     
     return (
@@ -226,7 +229,8 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
   const renderTwitterAnalysis = (data) => {
     if (!data || data.error) return <div className="error-message">暂无数据</div>;
     
-    const twitterData = data.data || {};
+    // 后端返回的数据结构：data.data 或 data.analysis
+    const twitterData = data.data || data.analysis || {};
     
     return (
       <div className="analysis-content">
@@ -259,7 +263,8 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
   const renderTelegramAnalysis = (data) => {
     if (!data || data.error) return <div className="error-message">暂无数据</div>;
     
-    const telegramData = data.data || {};
+    // 后端返回的数据结构：data.data 或 data.analysis
+    const telegramData = data.data || data.analysis || {};
     
     return (
       <div className="analysis-content">
@@ -292,7 +297,8 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
   const renderNarrativeAnalysis = (data) => {
     if (!data || data.error) return <div className="error-message">暂无数据</div>;
     
-    const narrativeData = data.data || {};
+    // 后端返回的数据结构：data.data 或 data.analysis
+    const narrativeData = data.data || data.analysis || {};
     
     return (
       <div className="analysis-content">
@@ -332,7 +338,8 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
   const renderDevTokens = (data) => {
     if (!data || data.error) return <div className="error-message">暂无数据</div>;
     
-    const devData = data.data || [];
+    // 后端返回的数据结构：data.data 或 data.analysis
+    const devData = data.data || data.analysis || [];
     
     return (
       <div className="analysis-content">
@@ -371,6 +378,9 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
 
   const renderAnalysisContent = (type) => {
     const data = analysisData[type];
+    
+    // 添加调试信息
+    console.log(`${type} 分析数据:`, data);
     
     if (loading[type]) {
       return (
