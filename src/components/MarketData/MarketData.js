@@ -158,7 +158,7 @@ const MarketData = () => {
             </tr>
           </thead>
           <tbody>
-            {data.res.slice(0, 20).map((item, index) => (
+            {data.res.slice(0, 80).map((item, index) => (
               <tr key={index} className="data-row" onClick={() => handleTokenClick(item)}>
                 <td>
                   <div className="token-info">
@@ -294,7 +294,7 @@ const MarketData = () => {
 
         <div className="data-display">
           <div className="data-header">
-            <h2>{categories.find(c => c.id === activeCategory)?.name}</h2>
+            <h2>{categories.find(c => c.id === activeCategory)?.name}（{marketData[activeCategory]?.res?.length || 0} 条）</h2>
             <div className="data-actions">
               <button 
                 className="btn-refresh"
