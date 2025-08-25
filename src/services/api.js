@@ -1,6 +1,6 @@
 // API配置
 export const API_BASE_URL = 'https://api-data-v1.dbotx.com';
-export const API_KEY = 'uber1py2znkw219bo168jh3xm6rnc903';
+export const API_KEY = 'hwxwzxlpdc6whlt9uwaipnp6jxpdfabw';
 
 // 通用API请求函数
 export const apiRequest = async (endpoint, options = {}) => {
