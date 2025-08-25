@@ -339,7 +339,9 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
     if (!data || data.error) return <div className="error-message">暂无数据</div>;
     
     // 后端返回的数据结构：data.data 或 data.analysis
-    const devData = data.data || data.analysis || [];
+    const devData = data.data || data.analysis || {};
+    const devTokensCount = devData.dev_tokens_count || 0;
+    const devTokensList = devData.dev_tokens || [];
     
     return (
       <div className="analysis-content">
@@ -352,17 +354,17 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
           <div className="analysis-card">
             <h4>开发者代币</h4>
             <div className="metric">
-              <span className="value">{devData.length || 0}</span>
+              <span className="value">{devTokensCount}</span>
               <span className="label">代币数量</span>
             </div>
           </div>
         </div>
 
-        {devData.length > 0 && (
+        {devTokensList.length > 0 && (
           <div className="dev-tokens-list">
             <h4>📋 开发者代币列表</h4>
             <div className="dev-tokens-grid">
-              {devData.slice(0, 5).map((token, index) => (
+              {devTokensList.slice(0, 5).map((token, index) => (
                 <div key={index} className="dev-token-item">
                   <div className="token-symbol">{token.symbol || 'N/A'}</div>
                   <div className="token-name">{token.name || 'N/A'}</div>
@@ -370,6 +372,14 @@ const AnalysisCards = ({ tokenAddress, tokenSymbol, tokenName }) => {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {devTokensCount === 0 && (
+          <div className="no-data-message">
+            <div className="no-data-icon">📊</div>
+            <h4>暂无开发者代币数据</h4>
+            <p>该代币地址在ChainInsight中未找到相关的开发者代币信息</p>
           </div>
         )}
       </div>
