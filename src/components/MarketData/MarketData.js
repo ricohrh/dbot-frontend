@@ -11,6 +11,7 @@ const MarketData = () => {
   const [error, setError] = useState({});
   const [selectedToken, setSelectedToken] = useState(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [showCount, setShowCount] = useState(20);
 
   const categories = [
     {
@@ -62,6 +63,8 @@ const MarketData = () => {
     
     setLoading(prev => ({ ...prev, [category]: true }));
     setError(prev => ({ ...prev, [category]: null }));
+    // 重置展示数量
+    setShowCount(20);
 
     try {
       let data;
@@ -89,6 +92,9 @@ const MarketData = () => {
       }
 
       setMarketData(prev => ({ ...prev, [category]: data }));
+      // 根据返回数量调整初始展示上限
+      const total = (data && Array.isArray(data.res)) ? data.res.length : 0;
+      setShowCount(prev => Math.min(prev, total || 20));
     } catch (err) {
       console.error(`获取${category}数据失败:`, err);
       setError(prev => ({ ...prev, [category]: err.message }));
@@ -98,6 +104,8 @@ const MarketData = () => {
   };
 
   useEffect(() => {
+    // 切换分类时重置展示数量并拉取数据
+    setShowCount(20);
     fetchData(activeCategory);
   }, [activeCategory]);
 
@@ -158,7 +166,7 @@ const MarketData = () => {
             </tr>
           </thead>
           <tbody>
-            {data.res.slice(0, 80).map((item, index) => (
+            {data.res.slice(0, showCount).map((item, index) => (
               <tr key={index} className="data-row" onClick={() => handleTokenClick(item)}>
                 <td>
                   <div className="token-info">
@@ -173,17 +181,17 @@ const MarketData = () => {
                           }}
                         />
                       )}
-                                              <div className="token-details">
-                          <div className="token-symbol">{item.symbol || 'N/A'}</div>
-                          <div className="token-name">{item.name || 'N/A'}</div>
-                          {item.mint && (
-                            <CopyableAddress 
-                              address={item.mint} 
-                              className="token-address"
-                              showCopyButton={true}
-                            />
-                          )}
-                        </div>
+                      <div className="token-details">
+                        <div className="token-symbol">{item.symbol || 'N/A'}</div>
+                        <div className="token-name">{item.name || 'N/A'}</div>
+                        {item.mint && (
+                          <CopyableAddress 
+                            address={item.mint} 
+                            className="token-address"
+                            showCopyButton={true}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -243,6 +251,25 @@ const MarketData = () => {
             ))}
           </tbody>
         </table>
+        <div className="table-actions" style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+          <button 
+            className="btn-load-more"
+            onClick={() => setShowCount(c => Math.min(c + 20, data.res.length))}
+            disabled={showCount >= data.res.length}
+          >
+            加载更多
+          </button>
+          <button 
+            className="btn-show-all"
+            onClick={() => setShowCount(data.res.length)}
+            disabled={showCount >= data.res.length}
+          >
+            显示全部
+          </button>
+          <div style={{ marginLeft: 'auto', opacity: 0.75 }}>
+            显示 {Math.min(showCount, data.res.length)} / {data.res.length}
+          </div>
+        </div>
       </div>
     );
   };
@@ -298,7 +325,7 @@ const MarketData = () => {
             <div className="data-actions">
               <button 
                 className="btn-refresh"
-                onClick={() => fetchData(activeCategory)}
+                onClick={() => { setShowCount(20); fetchData(activeCategory); }}
                 disabled={loading[activeCategory]}
               >
                 {loading[activeCategory] ? '🔄 加载中...' : '🔄 刷新'}
@@ -321,7 +348,7 @@ const MarketData = () => {
                 <p>{error[activeCategory]}</p>
                 <button 
                   className="btn-retry"
-                  onClick={() => fetchData(activeCategory)}
+                  onClick={() => { setShowCount(20); fetchData(activeCategory); }}
                 >
                   重试
                 </button>
