@@ -1,4 +1,5 @@
 import React from 'react';
+import CopyableAddress from '../common/CopyableAddress';
 
 const WalletCard = ({ wallet, onEdit, onDelete, onInfo }) => {
   const formatAddress = (address) => {
@@ -19,7 +20,11 @@ const WalletCard = ({ wallet, onEdit, onDelete, onInfo }) => {
         </div>
         <div className="info-item">
           <span className="label">地址:</span>
-          <span className="value address">{formatAddress(wallet.address)}</span>
+          <CopyableAddress 
+            address={wallet.address} 
+            className="wallet-address"
+            showCopyButton={true}
+          />
         </div>
         <div className="info-item">
           <span className="label">类型:</span>

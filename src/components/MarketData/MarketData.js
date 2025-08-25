@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { marketDataService } from '../../services/marketDataService';
+import CopyableAddress from '../common/CopyableAddress';
 import './MarketData.css';
 
 const MarketData = () => {
@@ -159,11 +160,17 @@ const MarketData = () => {
                           }}
                         />
                       )}
-                      <div className="token-details">
-                        <div className="token-symbol">{item.symbol || 'N/A'}</div>
-                        <div className="token-name">{item.name || 'N/A'}</div>
-                        <div className="token-address">{item.mint ? `${item.mint.slice(0, 6)}...${item.mint.slice(-4)}` : 'N/A'}</div>
-                      </div>
+                                              <div className="token-details">
+                          <div className="token-symbol">{item.symbol || 'N/A'}</div>
+                          <div className="token-name">{item.name || 'N/A'}</div>
+                          {item.mint && (
+                            <CopyableAddress 
+                              address={item.mint} 
+                              className="token-address"
+                              showCopyButton={true}
+                            />
+                          )}
+                        </div>
                     </div>
                   </div>
                 </td>

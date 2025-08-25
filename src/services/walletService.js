@@ -17,8 +17,20 @@ export const walletService = {
   // 获取钱包资产数据
   async getWalletAssets(walletAddress, chain = 'solana') {
     try {
+      console.log('正在获取钱包资产，地址:', walletAddress, '链:', chain);
       const data = await apiRequest(`/wallet/assets?chain=${chain}&walletAddress=${walletAddress}`);
       console.log('获取钱包资产成功:', data);
+      
+      // 添加调试信息
+      if (data.res && Array.isArray(data.res)) {
+        console.log('资产数量:', data.res.length);
+        if (data.res.length === 0) {
+          console.log('该钱包暂无资产');
+        } else {
+          console.log('资产列表:', data.res);
+        }
+      }
+      
       return data;
     } catch (error) {
       console.error('获取钱包资产失败:', error);

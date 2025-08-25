@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { walletService } from '../../services/walletService';
+import CopyableAddress from '../common/CopyableAddress';
 import './PositionOverview.css';
 
 const PositionOverview = () => {
@@ -57,6 +58,13 @@ const PositionOverview = () => {
       
       setTotalValue(total);
       setTotalChange24h(change);
+      
+      // 如果钱包没有资产，显示友好提示
+      if (formattedAssets.length === 0) {
+        setError('该钱包暂无代币资产数据（DBot API主要覆盖代币资产，原生代币如SOL、USDC可能不显示）');
+      } else {
+        setError(null);
+      }
     } catch (err) {
       setError(err.message || '获取钱包资产失败');
       setAssets([]);
@@ -193,6 +201,13 @@ const PositionOverview = () => {
             >
               查询
             </button>
+            {selectedWallet && (
+              <CopyableAddress 
+                address={selectedWallet} 
+                className="selected-wallet-address"
+                showCopyButton={true}
+              />
+            )}
           </div>
         )}
       </div>
@@ -290,6 +305,13 @@ const PositionOverview = () => {
                       <div className="token-details">
                         <div className="token-name">{asset.name}</div>
                         <div className="token-symbol">{asset.symbol}</div>
+                        {asset.token && (
+                          <CopyableAddress 
+                            address={asset.token} 
+                            className="token-address"
+                            showCopyButton={true}
+                          />
+                        )}
                       </div>
                     </div>
                   </div>

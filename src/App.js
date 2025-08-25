@@ -4,6 +4,7 @@ import StrategyManager from './components/StrategyManager/StrategyManager';
 import MarketData from './components/MarketData/MarketData';
 import PositionOverview from './components/PositionOverview/PositionOverview';
 import './App.css';
+import './utils/clipboard.css';
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('strategy');

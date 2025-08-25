@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { walletService } from '../../services/walletService';
 import WalletCard from './WalletCard';
 import WalletModal from './WalletModal';
+import CopyableAddress from '../common/CopyableAddress';
 import './WalletManager.css';
 
 const WalletManager = () => {

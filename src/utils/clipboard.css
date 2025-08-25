@@ -1,0 +1,126 @@
+/* 复制按钮样式 */
+.copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #666;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.copy-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.copy-btn:active {
+  transform: scale(0.95);
+}
+
+.copy-btn.success {
+  color: #4CAF50;
+  animation: copySuccess 0.3s ease;
+}
+
+.copy-btn.error {
+  color: #f44336;
+  animation: copyError 0.3s ease;
+}
+
+/* 地址显示容器 */
+.address-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.address-container:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.address-text {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #ccc;
+  word-break: break-all;
+}
+
+/* 特定组件的地址样式 */
+.token-address {
+  margin-top: 4px;
+  font-size: 10px;
+}
+
+.selected-wallet-address {
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+.wallet-address {
+  font-size: 11px;
+}
+
+/* 在表格中的地址样式 */
+.table-row .address-container {
+  padding: 2px 4px;
+  font-size: 10px;
+}
+
+/* 在卡片中的地址样式 */
+.wallet-card .address-container {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+/* 复制成功动画 */
+@keyframes copySuccess {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* 复制错误动画 */
+@keyframes copyError {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.1) rotate(-2deg); }
+  50% { transform: scale(1.1) rotate(2deg); }
+  75% { transform: scale(1.1) rotate(-2deg); }
+  100% { transform: scale(1); }
+}
+
+/* 提示消息样式 */
+.copy-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+} 
