@@ -157,12 +157,12 @@ const StrategyScanner = () => {
             <button 
               type="button"
               className="wallet-analysis-btn"
-              onClick={handleWalletAnalysis}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleWalletAnalysis(); }}
               disabled={walletLoading}
             >
               {walletLoading ? '🔍 分析中...' : '🔍 钱包分析'}
             </button>
-            <button className="close-btn" onClick={() => setSelectedToken(null)}>✕</button>
+            <button type="button" className="close-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedToken(null); }}>✕</button>
           </div>
         </div>
         
