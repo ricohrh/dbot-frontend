@@ -343,7 +343,7 @@ const StrategyScanner = () => {
                   <div className="pattern-list">
                     {walletAnalysis.analysis.suspicious_patterns.map((pattern, index) => (
                       <div key={index} className="pattern-item">
-                        ⚠️ {pattern}
+                        ⚠️ {typeof pattern === 'string' ? pattern : (pattern?.description || pattern?.type || '可疑模式')}
                       </div>
                     ))}
                   </div>
