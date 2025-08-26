@@ -125,22 +125,74 @@ const MarketData = () => {
 
   // 打开K线弹窗并加载数据
   const openKlineForItem = async (item, interval = '1m') => {
-    const pair = item?.id;
-    if (!pair) return;
     setShowKline(true);
     setKlineInterval(interval);
-    setKlineMeta({ symbol: item.symbol || '', name: item.name || '', pair, chain: 'solana' });
-    await fetchKline(pair, interval);
+    setKlineError(null);
+    setKlineLoading(true);
+
+    try {
+      const pair = await resolvePairFromItem(item);
+      setKlineMeta({ symbol: item.symbol || '', name: item.name || '', pair, chain: 'solana' });
+      await fetchKline(pair, interval);
+    } catch (e) {
+      console.error('解析交易对失败:', e);
+      setKlineError(e?.message || '未找到可用交易对');
+      setKlineData([]);
+    } finally {
+      setKlineLoading(false);
+    }
   };
 
-  const fetchKline = async (pair, interval) => {
+  // 根据条目信息（mint/token/symbol/name）搜索并解析可用的交易对id
+  const resolvePairFromItem = async (item) => {
+    const keyword = item?.mint || item?.token || item?.symbol || item?.name;
+    if (!keyword) throw new Error('缺少搜索关键字');
+    const searchParams = new URLSearchParams({ keyword, chain: 'solana', limit: '10' });
+    const res = await apiRequest(`/data/search?${searchParams.toString()}`);
+    const items = Array.isArray(res?.res) ? res.res : [];
+    if (items.length === 0) throw new Error('未搜索到匹配的交易对');
+    const dexRegex = /(pump|raydium|meteora|orca|heaven|amm|clmm|cpmm|dlmm|dyn)/i;
+    const candidate = items.find(it => it?.id && dexRegex.test(String(it.poolType || '')));
+    return (candidate?.id) || (items[0]?.id);
+  };
+
+  const fetchKline = async (pair, interval, fallbackInfo = null) => {
     setKlineLoading(true);
     setKlineError(null);
     try {
-      const params = new URLSearchParams({ chain: 'solana', pair, interval, limit: '120' });
+      const params = new URLSearchParams({ chain: 'solana', pair, interval, limit: '120', end: String(Date.now()) });
       const data = await apiRequest(`/kline/chart?${params.toString()}`);
       const list = Array.isArray(data?.res) ? data.res : [];
-      setKlineData(list);
+      if (list.length > 0) {
+        setKlineData(list);
+      } else if (fallbackInfo) {
+        // 回退：用 mint/token/symbol/name 搜索，取到有效pair再请求
+        const kw = fallbackInfo.mint || fallbackInfo.token || fallbackInfo.symbol || fallbackInfo.name;
+        if (kw) {
+          try {
+            const searchParams = new URLSearchParams({ keyword: kw, chain: 'solana', limit: '5' });
+            const searchRes = await apiRequest(`/data/search?${searchParams.toString()}`);
+            const items = Array.isArray(searchRes?.res) ? searchRes.res : [];
+            const candidate = items.find(it => it?.id) || null;
+            if (candidate?.id && candidate.id !== pair) {
+              setKlineMeta(prev => ({ ...prev, pair: candidate.id, symbol: candidate.symbol || prev.symbol, name: candidate.name || prev.name }));
+              const p2 = new URLSearchParams({ chain: 'solana', pair: candidate.id, interval, limit: '120', end: String(Date.now()) });
+              const data2 = await apiRequest(`/kline/chart?${p2.toString()}`);
+              const list2 = Array.isArray(data2?.res) ? data2.res : [];
+              setKlineData(list2);
+            } else {
+              setKlineData([]);
+            }
+          } catch (e2) {
+            console.error('K线回退搜索失败:', e2);
+            setKlineData([]);
+          }
+        } else {
+          setKlineData([]);
+        }
+      } else {
+        setKlineData([]);
+      }
     } catch (e) {
       console.error('获取K线失败:', e);
       setKlineError(e?.message || '获取K线失败');
