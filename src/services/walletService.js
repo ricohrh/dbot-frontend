@@ -36,10 +36,16 @@ export const walletService = {
   },
 
   // 获取钱包资产数据
-  async getWalletAssets(walletAddress, chain = 'solana') {
+  async getWalletAssets(walletAddress, chain = 'solana', opts = {}) {
     try {
-      console.log('正在获取钱包资产，地址:', walletAddress, '链:', chain);
-      const data = await apiRequest(`/wallet/assets?chain=${chain}&walletAddress=${walletAddress}`);
+      const { page, size, sortBy, sort } = opts || {};
+      const qs = new URLSearchParams({ chain, walletAddress });
+      if (page !== undefined) qs.set('page', String(page));
+      if (size !== undefined) qs.set('size', String(size));
+      if (sortBy) qs.set('sortBy', String(sortBy));
+      if (sort !== undefined) qs.set('sort', String(sort));
+      console.log('正在获取钱包资产，地址:', walletAddress, '链:', chain, '参数:', Object.fromEntries(qs));
+      const data = await apiRequest(`/wallet/assets?${qs.toString()}`);
       console.log('获取钱包资产成功:', data);
       
       // 添加调试信息

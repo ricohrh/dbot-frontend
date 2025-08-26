@@ -12,6 +12,8 @@ const PositionOverview = () => {
   const [totalChange24h, setTotalChange24h] = useState(0);
   const [sortBy, setSortBy] = useState('value'); // value, change24h, balance
   const [sortOrder, setSortOrder] = useState('desc'); // asc, desc
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(20);
   const [wallets, setWallets] = useState([]);
   const [selectedWallet, setSelectedWallet] = useState('');
   const [inputMode, setInputMode] = useState('manual'); // manual, select
@@ -40,7 +42,12 @@ const PositionOverview = () => {
     setError(null);
 
     try {
-      const response = await walletService.getWalletAssets(address);
+      const response = await walletService.getWalletAssets(address, 'solana', {
+        page,
+        size,
+        sortBy,
+        sort: sortOrder === 'desc' ? -1 : 1
+      });
       
       if (response.err) {
         setError(response.res || '获取钱包资产失败');
@@ -114,6 +121,9 @@ const PositionOverview = () => {
       setSortBy(field);
       setSortOrder('desc');
     }
+    // 重置至第一页并刷新
+    setPage(0);
+    setTimeout(() => fetchWalletAssets(), 0);
   };
 
   // 渲染排序图标
@@ -141,7 +151,16 @@ const PositionOverview = () => {
           >
             {loading ? '🔄 加载中...' : '🔄 刷新'}
           </button>
-          <button className="btn btn-outline">📊 导出</button>
+          <div className="pager">
+            <button className="btn btn-outline" disabled={page<=0||loading} onClick={()=>{setPage(p=>Math.max(0,p-1)); setTimeout(()=>fetchWalletAssets(),0);}}>上一页</button>
+            <span style={{margin:'0 8px'}}>第 {page+1} 页</span>
+            <button className="btn btn-outline" disabled={loading||assets.length<size} onClick={()=>{setPage(p=>p+1); setTimeout(()=>fetchWalletAssets(),0);}}>下一页</button>
+            <select value={size} onChange={(e)=>{setSize(Number(e.target.value)); setPage(0); setTimeout(()=>fetchWalletAssets(),0);}} style={{marginLeft:'8px'}}>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -261,26 +280,10 @@ const PositionOverview = () => {
         <div className="assets-section">
           <div className="section-subheader">
             <h3>资产列表</h3>
-            <div className="sort-controls">
-              <span>排序:</span>
-              <button 
-                className={`sort-btn ${sortBy === 'value' ? 'active' : ''}`}
-                onClick={() => handleSort('value')}
-              >
-                价值 {renderSortIcon('value')}
-              </button>
-              <button 
-                className={`sort-btn ${sortBy === 'change24h' ? 'active' : ''}`}
-                onClick={() => handleSort('change24h')}
-              >
-                24h变化 {renderSortIcon('change24h')}
-              </button>
-              <button 
-                className={`sort-btn ${sortBy === 'balance' ? 'active' : ''}`}
-                onClick={() => handleSort('balance')}
-              >
-                余额 {renderSortIcon('balance')}
-              </button>
+            <div className="table-controls">
+              <button className="sort-btn" onClick={() => handleSort('value')}>按持仓价值 {renderSortIcon('value')}</button>
+              <button className="sort-btn" onClick={() => handleSort('change24h')}>按24h涨跌 {renderSortIcon('change24h')}</button>
+              <button className="sort-btn" onClick={() => handleSort('balance')}>按代币数量 {renderSortIcon('balance')}</button>
             </div>
           </div>
 
