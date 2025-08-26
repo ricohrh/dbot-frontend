@@ -261,8 +261,8 @@ const StrategyScanner = () => {
               <div className="wallet-analysis-grid">
                 <div className="wallet-analysis-card">
                   <h4>风险等级</h4>
-                  <div className={`risk-badge ${walletAnalysis.analysis.risk_level.toLowerCase()}`}>
-                    {({ high: '高风险', medium: '中风险', low: '低风险', very_low: '很低' }[walletAnalysis.analysis.risk_level] || walletAnalysis.analysis.risk_level)}
+                  <div className={`risk-badge ${(walletAnalysis?.analysis?.risk_level || 'unknown').toLowerCase()}`}>
+                    {({ high: '高风险', medium: '中风险', low: '低风险', very_low: '很低', unknown: '未知' }[walletAnalysis?.analysis?.risk_level] || walletAnalysis?.analysis?.risk_level || '未知')}
                   </div>
                 </div>
                 
