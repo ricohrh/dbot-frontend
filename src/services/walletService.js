@@ -115,6 +115,22 @@ export const walletService = {
     }
   },
 
+  // 新增：获取浏览器中已连接的钱包地址（Phantom）
+  async getConnectedSolanaAddress() {
+    try {
+      const sol = typeof window !== 'undefined' ? window.solana : null;
+      if (!sol || !sol.isPhantom) {
+        throw new Error('未检测到 Phantom 钱包');
+      }
+      const resp = await sol.connect({ onlyIfTrusted: false });
+      const address = resp?.publicKey?.toString?.() || '';
+      if (!address) throw new Error('连接失败');
+      return address;
+    } catch (e) {
+      throw e;
+    }
+  },
+
   // 格式化资产数据
   formatAssetData(assets) {
     if (!assets || !Array.isArray(assets)) {
