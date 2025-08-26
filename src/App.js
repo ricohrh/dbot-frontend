@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import WalletManager from './components/WalletManager/WalletManager';
 import StrategyManager from './components/StrategyManager/StrategyManager';
+import StrategyScanner from './components/StrategyScanner/StrategyScanner';
 import MarketData from './components/MarketData/MarketData';
 import PositionOverview from './components/PositionOverview/PositionOverview';
 import './App.css';
 import './utils/clipboard.css';
 
 const App = () => {
-  const [activeTab, setActiveTab] = useState('strategy');
+  const [activeTab, setActiveTab] = useState('scanner');
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'scanner':
+        return <StrategyScanner />;
       case 'strategy':
         return <StrategyManager />;
       case 'position':
@@ -22,7 +25,7 @@ const App = () => {
       case 'market':
         return <MarketData />;
       default:
-        return <StrategyManager />;
+        return <StrategyScanner />;
     }
   };
 
@@ -34,6 +37,12 @@ const App = () => {
           <span className="version-badge">v4.4</span>
         </div>
         <div className="nav-tabs">
+          <button
+            className={`nav-tab ${activeTab === 'scanner' ? 'active' : ''}`}
+            onClick={() => setActiveTab('scanner')}
+          >
+            🎯 策略扫描
+          </button>
           <button
             className={`nav-tab ${activeTab === 'strategy' ? 'active' : ''}`}
             onClick={() => setActiveTab('strategy')}
