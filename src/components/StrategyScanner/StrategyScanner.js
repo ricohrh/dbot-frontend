@@ -310,24 +310,30 @@ const StrategyScanner = () => {
 
                 <div className="wallet-analysis-card">
                   <h4>持有者分布</h4>
-                  <div className="distribution-stats">
-                    <div className="stat-item">
-                      <span>总持有者:</span>
-                      <span>{walletAnalysis.total_holders}</span>
+                  {walletAnalysis?.analysis?.wallet_analysis?.distribution ? (
+                    <div className="distribution-stats">
+                      <div className="stat-item">
+                        <span>总持有者:</span>
+                        <span>{walletAnalysis.total_holders}</span>
+                      </div>
+                      <div className="stat-item">
+                        <span>鲸鱼数量:</span>
+                        <span>{walletAnalysis.analysis.wallet_analysis.distribution.whale_count}</span>
+                      </div>
+                      <div className="stat-item">
+                        <span>中等持有者:</span>
+                        <span>{walletAnalysis.analysis.wallet_analysis.distribution.medium_count}</span>
+                      </div>
+                      <div className="stat-item">
+                        <span>小持有者:</span>
+                        <span>{walletAnalysis.analysis.wallet_analysis.distribution.small_count}</span>
+                      </div>
                     </div>
-                    <div className="stat-item">
-                      <span>鲸鱼数量:</span>
-                      <span>{walletAnalysis?.analysis?.wallet_analysis?.distribution?.whale_count ?? 0}</span>
+                  ) : (
+                    <div className="distribution-stats">
+                      暂无分布数据
                     </div>
-                    <div className="stat-item">
-                      <span>中等持有者:</span>
-                      <span>{walletAnalysis?.analysis?.wallet_analysis?.distribution?.medium_count ?? 0}</span>
-                    </div>
-                    <div className="stat-item">
-                      <span>小持有者:</span>
-                      <span>{walletAnalysis?.analysis?.wallet_analysis?.distribution?.small_count ?? 0}</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
