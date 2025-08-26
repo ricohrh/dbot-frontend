@@ -317,15 +317,15 @@ const StrategyScanner = () => {
                     </div>
                     <div className="stat-item">
                       <span>鲸鱼数量:</span>
-                      <span>{walletAnalysis.analysis.wallet_analysis.distribution.whale_count}</span>
+                      <span>{walletAnalysis?.analysis?.wallet_analysis?.distribution?.whale_count ?? 0}</span>
                     </div>
                     <div className="stat-item">
                       <span>中等持有者:</span>
-                      <span>{walletAnalysis.analysis.wallet_analysis.distribution.medium_count}</span>
+                      <span>{walletAnalysis?.analysis?.wallet_analysis?.distribution?.medium_count ?? 0}</span>
                     </div>
                     <div className="stat-item">
                       <span>小持有者:</span>
-                      <span>{walletAnalysis.analysis.wallet_analysis.distribution.small_count}</span>
+                      <span>{walletAnalysis?.analysis?.wallet_analysis?.distribution?.small_count ?? 0}</span>
                     </div>
                   </div>
                 </div>
