@@ -63,9 +63,9 @@ const StrategyScanner = () => {
 
   const renderStrategyCard = (token) => {
     const score = token.strategy_score;
-    const scoreColor = score.total_score >= 80 ? '#00b894' : 
-                      score.total_score >= 70 ? '#fdcb6e' : 
-                      score.total_score >= 60 ? '#e17055' : '#d63031';
+    const scoreColor = score.total_score >= 85 ? '#00b894' : 
+                      score.total_score >= 75 ? '#fdcb6e' : 
+                      score.total_score >= 65 ? '#e17055' : '#d63031';
     
     return (
       <div key={token._id} className="strategy-token-card" onClick={() => handleTokenAnalysis(token)}>
@@ -102,6 +102,16 @@ const StrategyScanner = () => {
               {token.marketCapChangeRate5m?.toFixed(2)}%
             </span>
             <span className="score">({score.blue_chip_score})</span>
+          </div>
+          <div className="metric">
+            <span className="label">MEMERADAR</span>
+            <span className="value">{score.memeradar_score || 0}</span>
+            <span className="score">({score.memeradar_score || 0})</span>
+          </div>
+          <div className="metric">
+            <span className="label">鲸鱼分析</span>
+            <span className="value">{score.whale_analysis_score || 0}</span>
+            <span className="score">({score.whale_analysis_score || 0})</span>
           </div>
         </div>
         
@@ -152,6 +162,18 @@ const StrategyScanner = () => {
                   <span className="score">{tokenAnalysis.strategy_score.blue_chip_score}</span>
                 </div>
                 <div className="score-item">
+                  <span>MEMERADAR</span>
+                  <span className="score">{tokenAnalysis.strategy_score.memeradar_score || 0}</span>
+                </div>
+                <div className="score-item">
+                  <span>鲸鱼分析</span>
+                  <span className="score">{tokenAnalysis.strategy_score.whale_analysis_score || 0}</span>
+                </div>
+                <div className="score-item">
+                  <span>社交媒体</span>
+                  <span className="score">{tokenAnalysis.strategy_score.social_score || 0}</span>
+                </div>
+                <div className="score-item">
                   <span>风险</span>
                   <span className="score">{tokenAnalysis.strategy_score.risk_score}</span>
                 </div>
@@ -186,6 +208,11 @@ const StrategyScanner = () => {
                     代币年龄: {tokenAnalysis.risk_assessment.age_hours.toFixed(1)} 小时
                   </div>
                 )}
+                {tokenAnalysis.risk_assessment.market_per_holder && (
+                  <div className="age-info">
+                    市值/持有人比例: {tokenAnalysis.risk_assessment.market_per_holder.toFixed(2)}
+                  </div>
+                )}
               </div>
             </div>
             
@@ -217,6 +244,14 @@ const StrategyScanner = () => {
                 <span className={tokenAnalysis.token_info.priceChange24h >= 0 ? 'positive' : 'negative'}>
                   {tokenAnalysis.token_info.priceChange24h?.toFixed(2)}%
                 </span>
+              </div>
+              <div className="detail-item">
+                <span>MEMERADAR数据:</span>
+                <span>{tokenAnalysis.token_info.holderHasTags ? '✅ 有' : '❌ 无'}</span>
+              </div>
+              <div className="detail-item">
+                <span>社交媒体链接:</span>
+                <span>{tokenAnalysis.token_info.links?.length || 0} 个</span>
               </div>
             </div>
           </div>
