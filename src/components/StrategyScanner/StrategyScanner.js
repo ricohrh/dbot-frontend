@@ -289,14 +289,14 @@ const StrategyScanner = () => {
                       <span>Gini:</span>
                       <span>{(walletAnalysis.analysis.metrics?.gini || 0).toFixed(3)}</span>
                     </div>
-                    {walletAnalysis.analysis.suspicious_patterns?.find(p => (p.type === 'high_bundler_ratio' || p.type === 'medium_bundler_ratio')) && (
+                    {walletAnalysis?.analysis?.suspicious_patterns?.find(p => (p.type === 'high_bundler_ratio' || p.type === 'medium_bundler_ratio')) && (
                       <div className="bundler-addresses">
                         <button className="toggle-btn" onClick={() => setShowBundlerList(!showBundlerList)}>
-                          {showBundlerList ? '隐藏Bundler地址' : `显示Bundler地址 (${(walletAnalysis.analysis.suspicious_patterns.find(p => (p.type === 'high_bundler_ratio' || p.type === 'medium_bundler_ratio'))?.details?.bundler_addresses || []).length})`}
+                          {showBundlerList ? '隐藏Bundler地址' : `显示Bundler地址 (${(walletAnalysis?.analysis?.suspicious_patterns?.find(p => (p.type === 'high_bundler_ratio' || p.type === 'medium_bundler_ratio'))?.details?.bundler_addresses || []).length})`}
                         </button>
                         {showBundlerList && (
                           <div className="address-list">
-                            {(walletAnalysis.analysis.suspicious_patterns.find(p => (p.type === 'high_bundler_ratio' || p.type === 'medium_bundler_ratio'))?.details?.bundler_addresses || []).map((addr, i) => (
+                            {(walletAnalysis?.analysis?.suspicious_patterns?.find(p => (p.type === 'high_bundler_ratio' || p.type === 'medium_bundler_ratio'))?.details?.bundler_addresses || []).map((addr, i) => (
                               <div key={i} className="address-item">
                                 <CopyableAddress address={addr} />
                               </div>
