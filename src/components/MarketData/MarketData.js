@@ -125,6 +125,7 @@ const MarketData = () => {
 
   // 打开K线弹窗并加载数据
   const openKlineForItem = async (item, interval = '1m') => {
+    try { console.log('[KLINE] open for item:', { symbol: item?.symbol, name: item?.name, mint: item?.mint, id: item?.id, interval }); } catch {}
     setShowKline(true);
     setKlineInterval(interval);
     setKlineError(null);
@@ -132,6 +133,7 @@ const MarketData = () => {
 
     try {
       const pair = await resolvePairFromItem(item);
+      try { console.log('[KLINE] resolved pair:', pair); } catch {}
       setKlineMeta({ symbol: item.symbol || '', name: item.name || '', pair, chain: 'solana' });
       await fetchKline(pair, interval);
     } catch (e) {
@@ -148,12 +150,22 @@ const MarketData = () => {
     const keyword = item?.mint || item?.token || item?.symbol || item?.name;
     if (!keyword) throw new Error('缺少搜索关键字');
     const searchParams = new URLSearchParams({ keyword, chain: 'solana', limit: '10' });
+    try { console.log('[KLINE] search keyword:', keyword); } catch {}
     const res = await apiRequest(`/data/search?${searchParams.toString()}`);
     const items = Array.isArray(res?.res) ? res.res : [];
+    try { console.log('[KLINE] search results:', items?.slice?.(0,3)); } catch {}
     if (items.length === 0) throw new Error('未搜索到匹配的交易对');
+    // 1) 优先使用 mint 精确匹配 token 字段
+    if (item?.mint) {
+      const exact = items.find(it => String(it?.token || '').toLowerCase() === String(item.mint).toLowerCase());
+      if (exact?.id) return exact.id;
+    }
+    // 2) 按 DEX 类型优先
     const dexRegex = /(pump|raydium|meteora|orca|heaven|amm|clmm|cpmm|dlmm|dyn)/i;
     const candidate = items.find(it => it?.id && dexRegex.test(String(it.poolType || '')));
-    return (candidate?.id) || (items[0]?.id);
+    if (candidate?.id) return candidate.id;
+    // 3) 兜底第一条
+    return (items[0]?.id);
   };
 
   const fetchKline = async (pair, interval, fallbackInfo = null) => {
@@ -161,8 +173,10 @@ const MarketData = () => {
     setKlineError(null);
     try {
       const params = new URLSearchParams({ chain: 'solana', pair, interval, limit: '120', end: String(Date.now()) });
+      try { console.log('[KLINE] request chart:', `/kline/chart?${params.toString()}`); } catch {}
       const data = await apiRequest(`/kline/chart?${params.toString()}`);
       const list = Array.isArray(data?.res) ? data.res : [];
+      try { console.log('[KLINE] chart len:', list?.length, 'sample:', list?.slice?.(0,3)); } catch {}
       if (list.length > 0) {
         setKlineData(list);
       } else if (fallbackInfo) {
@@ -173,12 +187,15 @@ const MarketData = () => {
             const searchParams = new URLSearchParams({ keyword: kw, chain: 'solana', limit: '5' });
             const searchRes = await apiRequest(`/data/search?${searchParams.toString()}`);
             const items = Array.isArray(searchRes?.res) ? searchRes.res : [];
+            try { console.log('[KLINE] fallback search results:', items?.slice?.(0,3)); } catch {}
             const candidate = items.find(it => it?.id) || null;
             if (candidate?.id && candidate.id !== pair) {
               setKlineMeta(prev => ({ ...prev, pair: candidate.id, symbol: candidate.symbol || prev.symbol, name: candidate.name || prev.name }));
               const p2 = new URLSearchParams({ chain: 'solana', pair: candidate.id, interval, limit: '120', end: String(Date.now()) });
+              try { console.log('[KLINE] fallback request chart:', `/kline/chart?${p2.toString()}`); } catch {}
               const data2 = await apiRequest(`/kline/chart?${p2.toString()}`);
               const list2 = Array.isArray(data2?.res) ? data2.res : [];
+              try { console.log('[KLINE] fallback chart len:', list2?.length, 'sample:', list2?.slice?.(0,3)); } catch {}
               setKlineData(list2);
             } else {
               setKlineData([]);
