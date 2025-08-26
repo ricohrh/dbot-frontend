@@ -155,6 +155,7 @@ const StrategyScanner = () => {
           <h2>📊 {tokenAnalysis.token_info.symbol} 策略分析</h2>
           <div className="header-actions">
             <button 
+              type="button"
               className="wallet-analysis-btn"
               onClick={handleWalletAnalysis}
               disabled={walletLoading}
