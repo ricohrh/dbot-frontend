@@ -31,6 +31,19 @@ export const strategyService = {
     }
   },
 
+  // 分析持有者钱包风险
+  async analyzeHolderWallets(tokenAddress, chain = 'solana') {
+    try {
+      console.log('正在分析持有者钱包:', tokenAddress);
+      const data = await apiRequest(`/strategy/holder-analysis/${tokenAddress}?chain=${chain}`);
+      console.log('钱包分析成功:', data);
+      return data;
+    } catch (error) {
+      console.error('钱包分析失败:', error);
+      throw error;
+    }
+  },
+
   // 获取策略配置预设
   getStrategyPresets() {
     return {

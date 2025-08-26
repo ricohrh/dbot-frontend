@@ -18,6 +18,8 @@ const StrategyScanner = () => {
   const [selectedToken, setSelectedToken] = useState(null);
   const [tokenAnalysis, setTokenAnalysis] = useState(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [walletAnalysis, setWalletAnalysis] = useState(null);
+  const [walletLoading, setWalletLoading] = useState(false);
 
   const presets = strategyService.getStrategyPresets();
 
@@ -50,6 +52,7 @@ const StrategyScanner = () => {
     setSelectedToken(token);
     setAnalysisLoading(true);
     setTokenAnalysis(null);
+    setWalletAnalysis(null);
     
     try {
       const analysis = await strategyService.analyzeTokenStrategy(token.mint || token._id, strategyConfig.chain);
@@ -58,6 +61,22 @@ const StrategyScanner = () => {
       setError(err.message || '分析失败');
     } finally {
       setAnalysisLoading(false);
+    }
+  };
+
+  const handleWalletAnalysis = async () => {
+    if (!selectedToken) return;
+    
+    setWalletLoading(true);
+    setWalletAnalysis(null);
+    
+    try {
+      const analysis = await strategyService.analyzeHolderWallets(selectedToken.mint || selectedToken._id, strategyConfig.chain);
+      setWalletAnalysis(analysis);
+    } catch (err) {
+      setError(err.message || '钱包分析失败');
+    } finally {
+      setWalletLoading(false);
     }
   };
 
@@ -133,7 +152,16 @@ const StrategyScanner = () => {
       <div className="token-analysis-modal">
         <div className="modal-header">
           <h2>📊 {tokenAnalysis.token_info.symbol} 策略分析</h2>
-          <button className="close-btn" onClick={() => setSelectedToken(null)}>✕</button>
+          <div className="header-actions">
+            <button 
+              className="wallet-analysis-btn"
+              onClick={handleWalletAnalysis}
+              disabled={walletLoading}
+            >
+              {walletLoading ? '🔍 分析中...' : '🔍 钱包分析'}
+            </button>
+            <button className="close-btn" onClick={() => setSelectedToken(null)}>✕</button>
+          </div>
         </div>
         
         <div className="modal-content">
@@ -223,6 +251,80 @@ const StrategyScanner = () => {
               </div>
             </div>
           </div>
+
+          {/* 钱包分析结果 */}
+          {walletAnalysis && (
+            <div className="wallet-analysis-section">
+              <h3>🔍 钱包风险分析</h3>
+              <div className="wallet-analysis-grid">
+                <div className="wallet-analysis-card">
+                  <h4>风险等级</h4>
+                  <div className={`risk-badge ${walletAnalysis.analysis.risk_level.toLowerCase()}`}>
+                    {walletAnalysis.analysis.risk_level}
+                  </div>
+                </div>
+                
+                <div className="wallet-analysis-card">
+                  <h4>持有者分布</h4>
+                  <div className="distribution-stats">
+                    <div className="stat-item">
+                      <span>总持有者:</span>
+                      <span>{walletAnalysis.total_holders}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span>鲸鱼数量:</span>
+                      <span>{walletAnalysis.analysis.wallet_analysis.distribution.whale_count}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span>中等持有者:</span>
+                      <span>{walletAnalysis.analysis.wallet_analysis.distribution.medium_count}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span>小持有者:</span>
+                      <span>{walletAnalysis.analysis.wallet_analysis.distribution.small_count}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {walletAnalysis.analysis.suspicious_patterns.length > 0 && (
+                <div className="suspicious-patterns">
+                  <h4>🚨 可疑模式检测</h4>
+                  <div className="pattern-list">
+                    {walletAnalysis.analysis.suspicious_patterns.map((pattern, index) => (
+                      <div key={index} className="pattern-item">
+                        ⚠️ {pattern}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {walletAnalysis.analysis.risk_factors.length > 0 && (
+                <div className="risk-factors-section">
+                  <h4>⚠️ 风险因素</h4>
+                  <div className="risk-factors-list">
+                    {walletAnalysis.analysis.risk_factors.map((factor, index) => (
+                      <div key={index} className="risk-factor-item">
+                        {factor}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="wallet-recommendations">
+                <h4>💡 钱包分析建议</h4>
+                <div className="recommendations-list">
+                  {walletAnalysis.analysis.recommendations.map((rec, index) => (
+                    <div key={index} className="recommendation-item">
+                      {rec}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           
           <div className="token-details">
             <h3>📋 代币详情</h3>
