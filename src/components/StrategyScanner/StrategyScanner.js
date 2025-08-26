@@ -356,7 +356,7 @@ const StrategyScanner = () => {
                   <div className="risk-factors-list">
                     {walletAnalysis.analysis.risk_factors.map((factor, index) => (
                       <div key={index} className="risk-factor-item">
-                        {factor}
+                        {typeof factor === 'string' ? factor : (factor?.description || factor?.type || '风险因素')}
                       </div>
                     ))}
                   </div>
