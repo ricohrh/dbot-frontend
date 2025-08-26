@@ -20,6 +20,7 @@ const StrategyScanner = () => {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [walletAnalysis, setWalletAnalysis] = useState(null);
   const [walletLoading, setWalletLoading] = useState(false);
+  const [showBundlerList, setShowBundlerList] = useState(false);
 
   const presets = strategyService.getStrategyPresets();
 
@@ -260,10 +261,52 @@ const StrategyScanner = () => {
                 <div className="wallet-analysis-card">
                   <h4>风险等级</h4>
                   <div className={`risk-badge ${walletAnalysis.analysis.risk_level.toLowerCase()}`}>
-                    {walletAnalysis.analysis.risk_level}
+                    {({ high: '高风险', medium: '中风险', low: '低风险', very_low: '很低' }[walletAnalysis.analysis.risk_level] || walletAnalysis.analysis.risk_level)}
                   </div>
                 </div>
                 
+                <div className="wallet-analysis-card">
+                  <h4>集中度与Bundler</h4>
+                  <div className="distribution-stats">
+                    <div className="stat-item">
+                      <span>Bundler占比:</span>
+                      <span>{((walletAnalysis.analysis.metrics?.bundler_ratio || 0) * 100).toFixed(1)}% ({walletAnalysis.analysis.metrics?.bundler_count || 0}/20)</span>
+                    </div>
+                    <div className="stat-item">
+                      <span>Top10占比:</span>
+                      <span>{((walletAnalysis.analysis.metrics?.top10_ratio || 0) * 100).toFixed(2)}%</span>
+                    </div>
+                    <div className="stat-item">
+                      <span>Top20占比:</span>
+                      <span>{((walletAnalysis.analysis.metrics?.top20_ratio || 0) * 100).toFixed(2)}%</span>
+                    </div>
+                    <div className="stat-item">
+                      <span>HHI:</span>
+                      <span>{(walletAnalysis.analysis.metrics?.hhi || 0).toFixed(3)}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span>Gini:</span>
+                      <span>{(walletAnalysis.analysis.metrics?.gini || 0).toFixed(3)}</span>
+                    </div>
+                    {walletAnalysis.analysis.suspicious_patterns?.find(p => (p.type === 'high_bundler_ratio' || p.type === 'medium_bundler_ratio')) && (
+                      <div className="bundler-addresses">
+                        <button className="toggle-btn" onClick={() => setShowBundlerList(!showBundlerList)}>
+                          {showBundlerList ? '隐藏Bundler地址' : `显示Bundler地址 (${(walletAnalysis.analysis.suspicious_patterns.find(p => (p.type === 'high_bundler_ratio' || p.type === 'medium_bundler_ratio'))?.details?.bundler_addresses || []).length})`}
+                        </button>
+                        {showBundlerList && (
+                          <div className="address-list">
+                            {(walletAnalysis.analysis.suspicious_patterns.find(p => (p.type === 'high_bundler_ratio' || p.type === 'medium_bundler_ratio'))?.details?.bundler_addresses || []).map((addr, i) => (
+                              <div key={i} className="address-item">
+                                <CopyableAddress address={addr} />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="wallet-analysis-card">
                   <h4>持有者分布</h4>
                   <div className="distribution-stats">
