@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { marketDataService } from '../../services/marketDataService';
+import { apiRequest } from '../../services/api';
 import CopyableAddress from '../common/CopyableAddress';
 import AnalysisCards from '../AnalysisCards/AnalysisCards';
 import './MarketData.css';
@@ -12,6 +13,14 @@ const MarketData = () => {
   const [selectedToken, setSelectedToken] = useState(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [showCount, setShowCount] = useState(20);
+
+  // K线弹窗相关状态
+  const [showKline, setShowKline] = useState(false);
+  const [klineLoading, setKlineLoading] = useState(false);
+  const [klineError, setKlineError] = useState(null);
+  const [klineData, setKlineData] = useState([]);
+  const [klineInterval, setKlineInterval] = useState('1m');
+  const [klineMeta, setKlineMeta] = useState({ symbol: '', name: '', pair: '', chain: 'solana' });
 
   const categories = [
     {
@@ -112,6 +121,33 @@ const MarketData = () => {
   const handleTokenClick = (token) => {
     setSelectedToken(token);
     setShowAnalysis(true);
+  };
+
+  // 打开K线弹窗并加载数据
+  const openKlineForItem = async (item, interval = '1m') => {
+    const pair = item?.id;
+    if (!pair) return;
+    setShowKline(true);
+    setKlineInterval(interval);
+    setKlineMeta({ symbol: item.symbol || '', name: item.name || '', pair, chain: 'solana' });
+    await fetchKline(pair, interval);
+  };
+
+  const fetchKline = async (pair, interval) => {
+    setKlineLoading(true);
+    setKlineError(null);
+    try {
+      const params = new URLSearchParams({ chain: 'solana', pair, interval, limit: '120' });
+      const data = await apiRequest(`/kline/chart?${params.toString()}`);
+      const list = Array.isArray(data?.res) ? data.res : [];
+      setKlineData(list);
+    } catch (e) {
+      console.error('获取K线失败:', e);
+      setKlineError(e?.message || '获取K线失败');
+      setKlineData([]);
+    } finally {
+      setKlineLoading(false);
+    }
   };
 
   const handleCloseAnalysis = () => {
@@ -224,6 +260,16 @@ const MarketData = () => {
                       title="查看代币详情"
                     >
                       🔍
+                    </button>
+                    <button
+                      className="btn-chart"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openKlineForItem(item, '1m');
+                      }}
+                      title="看K线"
+                    >
+                      📊
                     </button>
                     <button 
                       className="btn-chart" 
@@ -378,6 +424,82 @@ const MarketData = () => {
                 tokenSymbol={selectedToken.symbol}
                 tokenName={selectedToken.name}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* K线弹窗 */}
+      {showKline && (
+        <div className="analysis-overlay">
+          <div className="analysis-modal" style={{ width: 'min(960px, 96vw)' }}>
+            <div className="analysis-modal-header">
+              <h2>📊 {klineMeta.symbol || klineMeta.name || 'K线'} — {klineMeta.pair}</h2>
+              <button className="close-analysis-btn" onClick={() => setShowKline(false)}>✕</button>
+            </div>
+            <div className="analysis-modal-content">
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                {['1m','5m','15m'].map(iv => (
+                  <button
+                    key={iv}
+                    className="btn-refresh"
+                    style={{ backgroundColor: iv === klineInterval ? '#4ecdc4' : undefined }}
+                    onClick={() => {
+                      setKlineInterval(iv);
+                      fetchKline(klineMeta.pair, iv);
+                    }}
+                  >
+                    {iv}
+                  </button>
+                ))}
+              </div>
+
+              {klineLoading && (
+                <div className="loading-container">
+                  <div className="loading-spinner-large"></div>
+                  <p>正在加载K线...</p>
+                </div>
+              )}
+              {klineError && (
+                <div className="error-container">
+                  <div className="error-icon-large">❌</div>
+                  <h3>获取K线失败</h3>
+                  <p>{klineError}</p>
+                </div>
+              )}
+              {!klineLoading && !klineError && (
+                <div style={{ maxHeight: 420, overflow: 'auto', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }}>
+                  <table className="market-data-table" style={{ width: '100%' }}>
+                    <thead>
+                      <tr>
+                        <th>时间</th>
+                        <th>开</th>
+                        <th>高</th>
+                        <th>低</th>
+                        <th>收</th>
+                        <th>量</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {klineData.slice(-120).map((c, idx) => (
+                        <tr key={idx}>
+                          <td>{new Date(c.time).toLocaleString()}</td>
+                          <td>{Number(c.open).toPrecision(6)}</td>
+                          <td>{Number(c.high).toPrecision(6)}</td>
+                          <td>{Number(c.low).toPrecision(6)}</td>
+                          <td>{Number(c.close).toPrecision(6)}</td>
+                          <td>{Number(c.volume).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                      {(!klineData || klineData.length === 0) && (
+                        <tr>
+                          <td colSpan={6} style={{ textAlign: 'center', opacity: 0.7 }}>暂无K线数据</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>
