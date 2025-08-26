@@ -3,15 +3,36 @@ import { apiRequest } from './api';
 // 钱包服务
 export const walletService = {
   // 获取钱包列表
-  async getWallets() {
+  async getWallets(includeBalance = false, chain = 'solana') {
     try {
       const data = await apiRequest('/account/wallets');
-      console.log('获取钱包列表成功:', data);
-      return data.res || [];
+      const list = data.res || [];
+
+      if (!includeBalance || list.length === 0) {
+        return list;
+      }
+
+      // 并发请求余额并合并
+      const enriched = await Promise.all(list.map(async (w) => {
+        try {
+          const bal = await this.getWalletBalance(w.address || w.id || w.walletAddress, chain);
+          const uiAmount = (bal && bal.res && (bal.res.uiAmount ?? bal.res.amount)) || 0;
+          return { ...w, balance: uiAmount };
+        } catch (e) {
+          return { ...w, balance: 0 };
+        }
+      }));
+      return enriched;
     } catch (error) {
       console.error('获取钱包列表失败:', error);
       throw error;
     }
+  },
+
+  // 新增：获取钱包余额
+  async getWalletBalance(walletAddress, chain = 'solana') {
+    const qs = `chain=${encodeURIComponent(chain)}&walletAddress=${encodeURIComponent(walletAddress)}`;
+    return apiRequest(`/wallet/balance?${qs}`);
   },
 
   // 获取钱包资产数据

@@ -34,6 +34,12 @@ const WalletCard = ({ wallet, onEdit, onDelete, onInfo }) => {
           <span className="label">排序:</span>
           <span className="value sort">{wallet.sort || 0}</span>
         </div>
+        {typeof wallet.balance !== 'undefined' && (
+          <div className="info-item">
+            <span className="label">余额(SOL):</span>
+            <span className="value balance">{Number(wallet.balance).toFixed(6)}</span>
+          </div>
+        )}
       </div>
       <div className="wallet-actions">
         <button 

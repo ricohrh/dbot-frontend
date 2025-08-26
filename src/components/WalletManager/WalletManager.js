@@ -17,7 +17,7 @@ const WalletManager = () => {
   const fetchWallets = async () => {
     try {
       setLoading(true);
-      const walletList = await walletService.getWallets();
+      const walletList = await walletService.getWallets(true, 'solana');
       setWallets(walletList);
     } catch (error) {
       setMessage(`获取钱包列表失败: ${error.message}`);
