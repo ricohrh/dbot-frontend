@@ -559,6 +559,10 @@
 .score-item .score {
   font-weight: bold;
   color: #00b894;
+  /* 调试：确保元素可见 */
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .score-item .actual-data {

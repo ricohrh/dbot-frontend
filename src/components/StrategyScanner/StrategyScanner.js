@@ -174,9 +174,21 @@ const StrategyScanner = () => {
                 <div className="score-item">
                   <span>总分</span>
                   <span className="score">
-                    {tokenAnalysis?.strategy_score?.total_score !== undefined && tokenAnalysis?.strategy_score?.total_score !== null 
-                      ? tokenAnalysis.strategy_score.total_score 
-                      : 0}
+                    {(() => {
+                      const score = tokenAnalysis?.strategy_score?.total_score;
+                      console.log('渲染总分 - 值:', score, '类型:', typeof score);
+                      console.log('tokenAnalysis:', tokenAnalysis);
+                      console.log('strategy_score:', tokenAnalysis?.strategy_score);
+                      
+                      // 强制显示，无论什么情况
+                      if (score !== undefined && score !== null) {
+                        console.log('显示总分:', score);
+                        return score;
+                      } else {
+                        console.log('显示默认值: 0');
+                        return '0 (默认)';
+                      }
+                    })()}
                   </span>
                 </div>
                 <div className="score-item">
