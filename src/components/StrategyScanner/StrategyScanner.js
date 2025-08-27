@@ -173,26 +173,26 @@ const StrategyScanner = () => {
               <div className="score-breakdown">
                 <div className="score-item">
                   <span>总分</span>
-                  <span className="score">{tokenAnalysis.strategy_score.total_score}</span>
+                  <span className="score">{tokenAnalysis.strategy_score.total_score || 0}</span>
                 </div>
                 <div className="score-item">
                   <span>持有人数</span>
-                  <span className="score">{tokenAnalysis.strategy_score.holders_score}</span>
+                  <span className="score">{tokenAnalysis.strategy_score.holders_score || 0}</span>
                   <span className="actual-data">({tokenAnalysis.token_info?.holders?.toLocaleString() || 0})</span>
                 </div>
                 <div className="score-item">
                   <span>交易量</span>
-                  <span className="score">{tokenAnalysis.strategy_score.volume_score}</span>
+                  <span className="score">{tokenAnalysis.strategy_score.volume_score || 0}</span>
                   <span className="actual-data">(${(tokenAnalysis.token_info?.buyAndSellVolume || 0).toLocaleString()})</span>
                 </div>
                 <div className="score-item">
                   <span>市值</span>
-                  <span className="score">{tokenAnalysis.strategy_score.market_cap_score}</span>
+                  <span className="score">{tokenAnalysis.strategy_score.market_cap_score || 0}</span>
                   <span className="actual-data">(${(tokenAnalysis.token_info?.marketCap || 0).toLocaleString()})</span>
                 </div>
                 <div className="score-item">
                   <span>蓝筹指数</span>
-                  <span className="score">{tokenAnalysis.strategy_score.blue_chip_score}</span>
+                  <span className="score">{tokenAnalysis.strategy_score.blue_chip_score || 0}</span>
                   <span className="actual-data">({tokenAnalysis.token_info?.rate || 0})</span>
                 </div>
                 <div className="score-item">
@@ -209,7 +209,7 @@ const StrategyScanner = () => {
                 </div>
                 <div className="score-item">
                   <span>风险</span>
-                  <span className="score">{tokenAnalysis.strategy_score.risk_score}</span>
+                  <span className="score">{tokenAnalysis.strategy_score.risk_score || 0}</span>
                 </div>
               </div>
             </div>
