@@ -70,11 +70,12 @@ export const strategyService = {
     }
   },
 
-  // 扫描交易机会
-  async scanTradingOpportunities(chain = 'solana', timeFilter = '3h', rsiFilter = 'oversold') {
+  // 扫描交易机会（支持 interval 与 rsi_threshold）
+  async scanTradingOpportunities(chain = 'solana', timeFilter = '6h', rsiFilter = 'none', interval = '5m', rsiThreshold = 35) {
     try {
-      console.log('正在扫描交易机会:', { chain, timeFilter, rsiFilter });
-      const data = await apiRequest(`/strategy/scan-opportunities?chain=${chain}&time_filter=${timeFilter}&rsi_filter=${rsiFilter}`);
+      console.log('正在扫描交易机会:', { chain, timeFilter, rsiFilter, interval, rsiThreshold });
+      const qs = `chain=${chain}&time_filter=${timeFilter}&rsi_filter=${rsiFilter}&interval=${interval}&rsi_threshold=${rsiThreshold}`;
+      const data = await apiRequest(`/strategy/scan-opportunities?${qs}`);
       console.log('交易机会扫描成功:', data);
       return data;
     } catch (error) {

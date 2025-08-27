@@ -30,6 +30,11 @@ const StrategyScanner = () => {
   const [opportunities, setOpportunities] = useState(null);
   const [opportunitiesLoading, setOpportunitiesLoading] = useState(false);
 
+  // 新增：RSI 二级筛选配置
+  const [rsiFilter, setRsiFilter] = useState('none'); // none | oversold | overbought
+  const [rsiThreshold, setRsiThreshold] = useState(35); // 30/35/40
+  const [rsiInterval, setRsiInterval] = useState('5m'); // 5m | 15m | 1h
+
   const presets = strategyService.getStrategyPresets();
 
   const handlePresetChange = (presetKey) => {
@@ -80,7 +85,13 @@ const StrategyScanner = () => {
     setOpportunities(null);
     
     try {
-      const result = await strategyService.scanTradingOpportunities(strategyConfig.chain, '3h', 'oversold');
+      const result = await strategyService.scanTradingOpportunities(
+        strategyConfig.chain,
+        '6h',
+        rsiFilter,
+        rsiInterval,
+        rsiThreshold
+      );
       setOpportunities(result);
     } catch (err) {
       setError(err.message || '交易机会扫描失败');
@@ -504,6 +515,31 @@ const StrategyScanner = () => {
               value={strategyConfig.minMarketCap}
               onChange={(e) => setStrategyConfig({...strategyConfig, minMarketCap: parseInt(e.target.value)})}
             />
+          </div>
+          {/* 新增：RSI 二级筛选 */}
+          <div className="config-group">
+            <label>RSI过滤:</label>
+            <select value={rsiFilter} onChange={(e) => setRsiFilter(e.target.value)}>
+              <option value="none">不筛选</option>
+              <option value="oversold">超卖(≤阈值)</option>
+              <option value="overbought">超买(≥100-阈值)</option>
+            </select>
+          </div>
+          <div className="config-group">
+            <label>RSI阈值:</label>
+            <select value={rsiThreshold} onChange={(e) => setRsiThreshold(parseInt(e.target.value))}>
+              <option value={30}>30</option>
+              <option value={35}>35</option>
+              <option value={40}>40</option>
+            </select>
+          </div>
+          <div className="config-group">
+            <label>K线周期:</label>
+            <select value={rsiInterval} onChange={(e) => setRsiInterval(e.target.value)}>
+              <option value="5m">5m</option>
+              <option value="15m">15m</option>
+              <option value="1h">1h</option>
+            </select>
           </div>
         </div>
 
