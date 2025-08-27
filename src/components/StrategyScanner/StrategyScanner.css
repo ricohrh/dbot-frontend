@@ -561,6 +561,13 @@
   color: #00b894;
 }
 
+.score-item .actual-data {
+  color: #3498db;
+  font-size: 12px;
+  font-weight: normal;
+  margin-left: 8px;
+}
+
 .recommendations {
   display: flex;
   flex-direction: column;

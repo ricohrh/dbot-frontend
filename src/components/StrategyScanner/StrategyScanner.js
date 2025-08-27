@@ -178,18 +178,22 @@ const StrategyScanner = () => {
                 <div className="score-item">
                   <span>持有人数</span>
                   <span className="score">{tokenAnalysis.strategy_score.holders_score}</span>
+                  <span className="actual-data">({tokenAnalysis.token_info?.holders?.toLocaleString() || 0})</span>
                 </div>
                 <div className="score-item">
                   <span>交易量</span>
                   <span className="score">{tokenAnalysis.strategy_score.volume_score}</span>
+                  <span className="actual-data">(${(tokenAnalysis.token_info?.buyAndSellVolume || 0).toLocaleString()})</span>
                 </div>
                 <div className="score-item">
                   <span>市值</span>
                   <span className="score">{tokenAnalysis.strategy_score.market_cap_score}</span>
+                  <span className="actual-data">(${(tokenAnalysis.token_info?.marketCap || 0).toLocaleString()})</span>
                 </div>
                 <div className="score-item">
                   <span>蓝筹指数</span>
                   <span className="score">{tokenAnalysis.strategy_score.blue_chip_score}</span>
+                  <span className="actual-data">({tokenAnalysis.token_info?.rate || 0})</span>
                 </div>
                 <div className="score-item">
                   <span>MEMERADAR</span>
