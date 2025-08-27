@@ -44,6 +44,58 @@ export const strategyService = {
     }
   },
 
+  // 获取综合交易决策分析
+  async getTradingDecision(tokenAddress, chain = 'solana') {
+    try {
+      console.log('正在获取交易决策分析:', tokenAddress);
+      const data = await apiRequest(`/strategy/trading-decision/${tokenAddress}?chain=${chain}`);
+      console.log('交易决策分析成功:', data);
+      return data;
+    } catch (error) {
+      console.error('交易决策分析失败:', error);
+      throw error;
+    }
+  },
+
+  // 批量扫描优质代币
+  async scanQualityTokens(chain = 'solana', minConfidence = 60, maxResults = 20) {
+    try {
+      console.log('正在扫描优质代币:', { chain, minConfidence, maxResults });
+      const data = await apiRequest(`/strategy/scan-quality?chain=${chain}&min_confidence=${minConfidence}&max_results=${maxResults}`);
+      console.log('优质代币扫描成功:', data);
+      return data;
+    } catch (error) {
+      console.error('优质代币扫描失败:', error);
+      throw error;
+    }
+  },
+
+  // 扫描交易机会
+  async scanTradingOpportunities(chain = 'solana', timeFilter = '3h', rsiFilter = 'oversold') {
+    try {
+      console.log('正在扫描交易机会:', { chain, timeFilter, rsiFilter });
+      const data = await apiRequest(`/strategy/scan-opportunities?chain=${chain}&time_filter=${timeFilter}&rsi_filter=${rsiFilter}`);
+      console.log('交易机会扫描成功:', data);
+      return data;
+    } catch (error) {
+      console.error('交易机会扫描失败:', error);
+      throw error;
+    }
+  },
+
+  // 监控捆绑交易活动
+  async monitorBundlerActivity(tokenAddress, chain = 'solana', timeWindow = '1h') {
+    try {
+      console.log('正在监控捆绑交易活动:', tokenAddress);
+      const data = await apiRequest(`/strategy/bundler-monitor/${tokenAddress}?chain=${chain}&time_window=${timeWindow}`);
+      console.log('捆绑交易监控成功:', data);
+      return data;
+    } catch (error) {
+      console.error('捆绑交易监控失败:', error);
+      throw error;
+    }
+  },
+
   // 获取策略配置预设
   getStrategyPresets() {
     return {

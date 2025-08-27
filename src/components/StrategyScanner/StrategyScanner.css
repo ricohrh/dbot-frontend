@@ -98,11 +98,11 @@
 .scan-btn {
   width: 100%;
   padding: 15px;
-  background: linear-gradient(45deg, #00b894, #00cec9);
-  color: white;
+  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
   border: none;
   border-radius: 10px;
-  font-size: 1.2em;
+  color: white;
+  font-size: 1.1em;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -115,8 +115,281 @@
 }
 
 .scan-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* 新增：扫描按钮组样式 */
+.scan-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.quality-scan-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(253,203,110,0.3);
+}
+
+.quality-scan-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(253,203,110,0.4);
+}
+
+.quality-scan-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.opportunities-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(108,92,231,0.3);
+}
+
+.opportunities-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(108,92,231,0.4);
+}
+
+.opportunities-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 新增：交易决策按钮样式 */
+.trading-decision-btn {
+  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  color: white;
+  font-size: 0.9em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-right: 10px;
+  box-shadow: 0 3px 10px rgba(0,184,148,0.3);
+}
+
+.trading-decision-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(0,184,148,0.4);
+}
+
+.trading-decision-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 新增：交易决策分析结果样式 */
+.trading-decision-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 2px solid #dee2e6;
+}
+
+.trading-decision-section h3 {
+  color: #2d3436;
+  margin-bottom: 15px;
+  font-size: 1.3em;
+}
+
+.decision-summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.decision-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1.1em;
+  text-align: center;
+  min-width: 120px;
+}
+
+.decision-badge.buy {
+  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+  color: white;
+}
+
+.decision-badge.hold {
+  background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+  color: white;
+}
+
+.decision-badge.sell {
+  background: linear-gradient(135deg, #e17055 0%, #d63031 100%);
+  color: white;
+}
+
+.confidence-score {
+  background: #6c5ce7;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.risk-level {
+  background: #636e72;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.decision-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.signals-section, .warnings-section, .recommendations-section {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  border-left: 4px solid;
+}
+
+.signals-section {
+  border-left-color: #00b894;
+}
+
+.warnings-section {
+  border-left-color: #fdcb6e;
+}
+
+.recommendations-section {
+  border-left-color: #6c5ce7;
+}
+
+.signals-section h4, .warnings-section h4, .recommendations-section h4 {
+  margin-bottom: 10px;
+  color: #2d3436;
+  font-size: 1.1em;
+}
+
+.signals-section ul, .warnings-section ul, .recommendations-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.signals-section li, .warnings-section li, .recommendations-section li {
+  padding: 5px 0;
+  color: #636e72;
+  font-size: 0.95em;
+}
+
+/* 新增：优质代币卡片样式 */
+.quality-card {
+  border: 2px solid #fdcb6e;
+  background: linear-gradient(135deg, #fff9e6 0%, #fff5e6 100%);
+}
+
+.quality-card .token-header {
+  border-bottom: 1px solid #fdcb6e;
+}
+
+.token-signals {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.token-signals .signals-section,
+.token-signals .warnings-section {
+  background: rgba(255,255,255,0.8);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-left: 3px solid;
+}
+
+.token-signals .signals-section {
+  border-left-color: #00b894;
+}
+
+.token-signals .warnings-section {
+  border-left-color: #fdcb6e;
+}
+
+.token-signals h4 {
+  margin: 0 0 8px 0;
+  font-size: 0.9em;
+  color: #2d3436;
+}
+
+.token-signals ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.token-signals li {
+  padding: 3px 0;
+  font-size: 0.85em;
+  color: #636e72;
+}
+
+/* 新增：市场数据样式 */
+.market-data {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.data-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 6px;
+  border-left: 3px solid #6c5ce7;
+}
+
+.data-item span:first-child {
+  font-weight: 500;
+  color: #636e72;
+  font-size: 0.9em;
+}
+
+.data-item span:last-child {
+  font-weight: bold;
+  color: #2d3436;
+}
+
+.data-item .positive {
+  color: #00b894;
+}
+
+.data-item .negative {
+  color: #e17055;
 }
 
 .error-message {
@@ -747,5 +1020,22 @@
   
   .wallet-analysis-section {
     padding: 20px;
+  }
+
+  .scan-buttons {
+    grid-template-columns: 1fr;
+  }
+  
+  .decision-summary {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .decision-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .market-data {
+    grid-template-columns: 1fr;
   }
 } 

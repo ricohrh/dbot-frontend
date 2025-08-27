@@ -21,6 +21,14 @@ const StrategyScanner = () => {
   const [walletAnalysis, setWalletAnalysis] = useState(null);
   const [walletLoading, setWalletLoading] = useState(false);
   const [showBundlerList, setShowBundlerList] = useState(false);
+  
+  // 新增状态
+  const [tradingDecision, setTradingDecision] = useState(null);
+  const [decisionLoading, setDecisionLoading] = useState(false);
+  const [qualityTokens, setQualityTokens] = useState(null);
+  const [qualityLoading, setQualityLoading] = useState(false);
+  const [opportunities, setOpportunities] = useState(null);
+  const [opportunitiesLoading, setOpportunitiesLoading] = useState(false);
 
   const presets = strategyService.getStrategyPresets();
 
@@ -49,11 +57,44 @@ const StrategyScanner = () => {
     }
   };
 
+  // 新增：扫描优质代币
+  const handleScanQuality = async () => {
+    setQualityLoading(true);
+    setError(null);
+    setQualityTokens(null);
+    
+    try {
+      const result = await strategyService.scanQualityTokens(strategyConfig.chain, 60, 10);
+      setQualityTokens(result);
+    } catch (err) {
+      setError(err.message || '优质代币扫描失败');
+    } finally {
+      setQualityLoading(false);
+    }
+  };
+
+  // 新增：扫描交易机会
+  const handleScanOpportunities = async () => {
+    setOpportunitiesLoading(true);
+    setError(null);
+    setOpportunities(null);
+    
+    try {
+      const result = await strategyService.scanTradingOpportunities(strategyConfig.chain, '3h', 'oversold');
+      setOpportunities(result);
+    } catch (err) {
+      setError(err.message || '交易机会扫描失败');
+    } finally {
+      setOpportunitiesLoading(false);
+    }
+  };
+
   const handleTokenAnalysis = async (token) => {
     setSelectedToken(token);
     setAnalysisLoading(true);
     setTokenAnalysis(null);
     setWalletAnalysis(null);
+    setTradingDecision(null);
     
     try {
       const analysis = await strategyService.analyzeTokenStrategy(token.mint || token._id, strategyConfig.chain);
@@ -62,6 +103,23 @@ const StrategyScanner = () => {
       setError(err.message || '分析失败');
     } finally {
       setAnalysisLoading(false);
+    }
+  };
+
+  // 新增：获取交易决策分析
+  const handleTradingDecision = async () => {
+    if (!selectedToken) return;
+    
+    setDecisionLoading(true);
+    setTradingDecision(null);
+    
+    try {
+      const decision = await strategyService.getTradingDecision(selectedToken.mint || selectedToken._id, strategyConfig.chain);
+      setTradingDecision(decision);
+    } catch (err) {
+      setError(err.message || '交易决策分析失败');
+    } finally {
+      setDecisionLoading(false);
     }
   };
 
@@ -146,6 +204,70 @@ const StrategyScanner = () => {
     );
   };
 
+  // 新增：渲染优质代币卡片
+  const renderQualityTokenCard = (token) => {
+    const confidenceColor = token.confidence >= 80 ? '#00b894' : 
+                           token.confidence >= 60 ? '#fdcb6e' : 
+                           token.confidence >= 40 ? '#e17055' : '#d63031';
+    
+    return (
+      <div key={token.token_mint} className="strategy-token-card quality-card">
+        <div className="token-header">
+          <div className="token-info">
+            <h3>{token.symbol}</h3>
+            <p>{token.name}</p>
+            <CopyableAddress address={token.token_mint} className="token-address" />
+          </div>
+          <div className="score-badge" style={{ backgroundColor: confidenceColor }}>
+            {token.confidence}%
+          </div>
+        </div>
+        
+        <div className="token-metrics">
+          <div className="metric">
+            <span className="label">决策</span>
+            <span className={`value ${token.decision === 'BUY' ? 'positive' : 'neutral'}`}>
+              {token.decision === 'BUY' ? '🟢 买入' : token.decision === 'HOLD' ? '🟡 观望' : '🔴 卖出'}
+            </span>
+          </div>
+          <div className="metric">
+            <span className="label">持有人数</span>
+            <span className="value">{token.holders?.toLocaleString()}</span>
+          </div>
+          <div className="metric">
+            <span className="label">市值</span>
+            <span className="value">${token.market_cap?.toLocaleString()}</span>
+          </div>
+          <div className="metric">
+            <span className="label">1h交易量</span>
+            <span className="value">${token.volume_1h?.toLocaleString()}</span>
+          </div>
+        </div>
+        
+        <div className="token-signals">
+          <div className="signals-section">
+            <h4>✅ 正面信号</h4>
+            <ul>
+              {token.signals?.slice(0, 3).map((signal, index) => (
+                <li key={index}>{signal}</li>
+              ))}
+            </ul>
+          </div>
+          {token.warnings?.length > 0 && (
+            <div className="warnings-section">
+              <h4>⚠️ 风险警告</h4>
+              <ul>
+                {token.warnings?.slice(0, 2).map((warning, index) => (
+                  <li key={index}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderTokenAnalysis = () => {
     if (!tokenAnalysis) return null;
     
@@ -154,6 +276,14 @@ const StrategyScanner = () => {
         <div className="modal-header">
           <h2>📊 {tokenAnalysis.token_info.symbol} 策略分析</h2>
           <div className="header-actions">
+            <button 
+              type="button"
+              className="trading-decision-btn"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleTradingDecision(); }}
+              disabled={decisionLoading}
+            >
+              {decisionLoading ? '🎯 分析中...' : '🎯 交易决策'}
+            </button>
             <button 
               type="button"
               className="wallet-analysis-btn"
@@ -167,6 +297,56 @@ const StrategyScanner = () => {
         </div>
         
         <div className="modal-content">
+          {/* 交易决策分析结果 */}
+          {tradingDecision && (
+            <div className="trading-decision-section">
+              <h3>🎯 综合交易决策分析</h3>
+              <div className="decision-summary">
+                <div className={`decision-badge ${tradingDecision.decision.decision === 'BUY' ? 'buy' : tradingDecision.decision.decision === 'HOLD' ? 'hold' : 'sell'}`}>
+                  {tradingDecision.decision.decision === 'BUY' ? '🟢 建议买入' : 
+                   tradingDecision.decision.decision === 'HOLD' ? '🟡 建议观望' : '🔴 建议卖出'}
+                </div>
+                <div className="confidence-score">
+                  置信度: {tradingDecision.decision.confidence}%
+                </div>
+                <div className="risk-level">
+                  风险等级: {tradingDecision.decision.risk_level}
+                </div>
+              </div>
+              
+              <div className="decision-details">
+                <div className="signals-section">
+                  <h4>✅ 正面信号</h4>
+                  <ul>
+                    {tradingDecision.decision.signals?.map((signal, index) => (
+                      <li key={index}>{signal}</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                {tradingDecision.decision.warnings?.length > 0 && (
+                  <div className="warnings-section">
+                    <h4>⚠️ 风险警告</h4>
+                    <ul>
+                      {tradingDecision.decision.warnings?.map((warning, index) => (
+                        <li key={index}>{warning}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                <div className="recommendations-section">
+                  <h4>💡 交易建议</h4>
+                  <ul>
+                    {tradingDecision.decision.recommendations?.map((rec, index) => (
+                      <li key={index}>{rec}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="analysis-grid">
             <div className="analysis-card">
               <h3>🎯 策略评分</h3>
@@ -199,17 +379,17 @@ const StrategyScanner = () => {
                 <div className="score-item">
                   <span>交易量</span>
                   <span className="score">{tokenAnalysis.strategy_score.volume_score || 0}</span>
-                  <span className="actual-data">(${(tokenAnalysis.token_info?.buyAndSellVolume || 0).toLocaleString()})</span>
+                  <span className="actual-data">(${tokenAnalysis.token_info?.buyAndSellVolume1h?.toLocaleString() || 0})</span>
                 </div>
                 <div className="score-item">
                   <span>市值</span>
                   <span className="score">{tokenAnalysis.strategy_score.market_cap_score || 0}</span>
-                  <span className="actual-data">(${(tokenAnalysis.token_info?.marketCap || 0).toLocaleString()})</span>
+                  <span className="actual-data">(${tokenAnalysis.token_info?.marketCap?.toLocaleString() || 0})</span>
                 </div>
                 <div className="score-item">
-                  <span>蓝筹指数</span>
+                  <span>蓝筹</span>
                   <span className="score">{tokenAnalysis.strategy_score.blue_chip_score || 0}</span>
-                  <span className="actual-data">({tokenAnalysis.token_info?.rate || 0})</span>
+                  <span className="actual-data">({tokenAnalysis.token_info?.marketCapChangeRate5m?.toFixed(2) || 0}%)</span>
                 </div>
                 <div className="score-item">
                   <span>MEMERADAR</span>
@@ -220,7 +400,7 @@ const StrategyScanner = () => {
                   <span className="score">{tokenAnalysis.strategy_score.whale_analysis_score || 0}</span>
                 </div>
                 <div className="score-item">
-                  <span>社交媒体</span>
+                  <span>社交</span>
                   <span className="score">{tokenAnalysis.strategy_score.social_score || 0}</span>
                 </div>
                 <div className="score-item">
@@ -229,200 +409,47 @@ const StrategyScanner = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="analysis-card">
-              <h3>💡 交易建议</h3>
-              <div className="recommendations">
-                {tokenAnalysis.trading_recommendations?.map((rec, index) => (
-                  <div key={index} className="recommendation-item">{rec}</div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="analysis-card">
-              <h3>⚠️ 风险评估</h3>
-              <div className="risk-info">
-                <div className="risk-level">
-                  <span>风险等级:</span>
-                  <span className={`level ${tokenAnalysis.risk_assessment.risk_level.toLowerCase()}`}>
-                    {tokenAnalysis.risk_assessment.risk_level}
+              <h3>📈 市场数据</h3>
+              <div className="market-data">
+                <div className="data-item">
+                  <span>当前价格</span>
+                  <span>${tokenAnalysis.token_info?.tokenPriceUsd?.toFixed(8) || 'N/A'}</span>
+                </div>
+                <div className="data-item">
+                  <span>24h涨跌</span>
+                  <span className={tokenAnalysis.token_info?.priceChange24h >= 0 ? 'positive' : 'negative'}>
+                    {tokenAnalysis.token_info?.priceChange24h?.toFixed(2) || 0}%
                   </span>
                 </div>
-                <div className="risk-factors">
-                  {tokenAnalysis.risk_assessment.risk_factors?.map((factor, index) => (
-                    <div key={index} className="risk-factor">{factor}</div>
-                  ))}
+                <div className="data-item">
+                  <span>1h涨跌</span>
+                  <span className={tokenAnalysis.token_info?.priceChange1h >= 0 ? 'positive' : 'negative'}>
+                    {tokenAnalysis.token_info?.priceChange1h?.toFixed(2) || 0}%
+                  </span>
                 </div>
-                {tokenAnalysis.risk_assessment.age_hours && (
-                  <div className="age-info">
-                    代币年龄: {tokenAnalysis.risk_assessment.age_hours.toFixed(1)} 小时
-                  </div>
-                )}
-                {tokenAnalysis.risk_assessment.market_per_holder && (
-                  <div className="age-info">
-                    市值/持有人比例: {tokenAnalysis.risk_assessment.market_per_holder.toFixed(2)}
-                  </div>
-                )}
+                <div className="data-item">
+                  <span>5m涨跌</span>
+                  <span className={tokenAnalysis.token_info?.priceChange5m >= 0 ? 'positive' : 'negative'}>
+                    {tokenAnalysis.token_info?.priceChange5m?.toFixed(2) || 0}%
+                  </span>
+                </div>
+                <div className="data-item">
+                  <span>代币年龄</span>
+                  <span>{tokenAnalysis.token_info?.age_hours?.toFixed(1) || 'N/A'} 小时</span>
+                </div>
+                <div className="data-item">
+                  <span>流动性池</span>
+                  <span>${tokenAnalysis.token_info?.currencyReserve?.toFixed(2) || 'N/A'}</span>
+                </div>
               </div>
             </div>
-            
+
             <div className="analysis-card">
-              <h3>⏰ 市场时机</h3>
-              <div className="timing-advice">
-                {tokenAnalysis.market_timing}
-              </div>
-            </div>
-          </div>
-
-          {/* 钱包分析结果 */}
-          {walletAnalysis && (
-            <div className="wallet-analysis-section">
-              <h3>🔍 钱包风险分析</h3>
-              <div className="wallet-analysis-grid">
-                <div className="wallet-analysis-card">
-                  <h4>风险等级</h4>
-                  <div className={`risk-badge ${(walletAnalysis?.analysis?.risk_level || 'unknown').toLowerCase()}`}>
-                    {({ high: '高风险', medium: '中风险', low: '低风险', very_low: '很低', unknown: '未知' }[walletAnalysis?.analysis?.risk_level] || walletAnalysis?.analysis?.risk_level || '未知')}
-                  </div>
-                </div>
-                
-                <div className="wallet-analysis-card">
-                  <h4>集中度与Bundler</h4>
-                  <div className="distribution-stats">
-                    <div className="stat-item">
-                      <span>Bundler占比:</span>
-                      <span>{((walletAnalysis.analysis.metrics?.bundler_ratio || 0) * 100).toFixed(1)}% ({walletAnalysis.analysis.metrics?.bundler_count || 0}/20)</span>
-                    </div>
-                    <div className="stat-item">
-                      <span>Top10占比:</span>
-                      <span>{((walletAnalysis.analysis.metrics?.top10_ratio || 0) * 100).toFixed(2)}%</span>
-                    </div>
-                    <div className="stat-item">
-                      <span>Top20占比:</span>
-                      <span>{((walletAnalysis.analysis.metrics?.top20_ratio || 0) * 100).toFixed(2)}%</span>
-                    </div>
-                    <div className="stat-item">
-                      <span>HHI:</span>
-                      <span>{(walletAnalysis.analysis.metrics?.hhi || 0).toFixed(3)}</span>
-                    </div>
-                    <div className="stat-item">
-                      <span>Gini:</span>
-                      <span>{(walletAnalysis.analysis.metrics?.gini || 0).toFixed(3)}</span>
-                    </div>
-                    {walletAnalysis?.analysis?.suspicious_patterns?.find(p => (p.type === 'high_bundler_ratio' || p.type === 'medium_bundler_ratio')) && (
-                      <div className="bundler-addresses">
-                        <button className="toggle-btn" onClick={() => setShowBundlerList(!showBundlerList)}>
-                          {showBundlerList ? '隐藏Bundler地址' : `显示Bundler地址 (${(walletAnalysis?.analysis?.suspicious_patterns?.find(p => (p.type === 'high_bundler_ratio' || p.type === 'medium_bundler_ratio'))?.details?.bundler_addresses || []).length})`}
-                        </button>
-                        {showBundlerList && (
-                          <div className="address-list">
-                            {(walletAnalysis?.analysis?.suspicious_patterns?.find(p => (p.type === 'high_bundler_ratio' || p.type === 'medium_bundler_ratio'))?.details?.bundler_addresses || []).map((addr, i) => (
-                              <div key={i} className="address-item">
-                                <CopyableAddress address={addr} />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="wallet-analysis-card">
-                  <h4>持有者分布</h4>
-                  {walletAnalysis?.analysis?.wallet_analysis?.distribution ? (
-                    <div className="distribution-stats">
-                      <div className="stat-item">
-                        <span>总持有者:</span>
-                        <span>{walletAnalysis.total_holders}</span>
-                      </div>
-                      <div className="stat-item">
-                        <span>鲸鱼数量:</span>
-                        <span>{walletAnalysis?.analysis?.wallet_analysis?.distribution?.whale_count ?? 0}</span>
-                      </div>
-                      <div className="stat-item">
-                        <span>中等持有者:</span>
-                        <span>{walletAnalysis?.analysis?.wallet_analysis?.distribution?.medium_count ?? 0}</span>
-                      </div>
-                      <div className="stat-item">
-                        <span>小持有者:</span>
-                        <span>{walletAnalysis?.analysis?.wallet_analysis?.distribution?.small_count ?? 0}</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="distribution-stats">
-                      暂无分布数据
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {walletAnalysis.analysis.suspicious_patterns.length > 0 && (
-                <div className="suspicious-patterns">
-                  <h4>🚨 可疑模式检测</h4>
-                  <div className="pattern-list">
-                    {walletAnalysis.analysis.suspicious_patterns.map((pattern, index) => (
-                      <div key={index} className="pattern-item">
-                        ⚠️ {typeof pattern === 'string' ? pattern : (pattern?.description || pattern?.type || '可疑模式')}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {walletAnalysis.analysis.risk_factors.length > 0 && (
-                <div className="risk-factors-section">
-                  <h4>⚠️ 风险因素</h4>
-                  <div className="risk-factors-list">
-                    {walletAnalysis.analysis.risk_factors.map((factor, index) => (
-                      <div key={index} className="risk-factor-item">
-                        {typeof factor === 'string' ? factor : (factor?.description || factor?.type || '风险因素')}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="wallet-recommendations">
-                <h4>💡 钱包分析建议</h4>
-                <div className="recommendations-list">
-                  {walletAnalysis.analysis.recommendations.map((rec, index) => (
-                    <div key={index} className="recommendation-item">
-                      {rec}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div className="token-details">
-            <h3>📋 代币详情</h3>
-            <div className="details-grid">
-              <div className="detail-item">
-                <span>持有人数:</span>
-                <span>{tokenAnalysis.token_info.holders?.toLocaleString()}</span>
-              </div>
-              <div className="detail-item">
-                <span>1h交易量:</span>
-                <span>${tokenAnalysis.token_info.buyAndSellVolume1h?.toLocaleString()}</span>
-              </div>
-              <div className="detail-item">
-                <span>市值:</span>
-                <span>${tokenAnalysis.token_info.marketCap?.toLocaleString()}</span>
-              </div>
-              <div className="detail-item">
-                <span>24h涨跌:</span>
-                <span className={tokenAnalysis.token_info.priceChange24h >= 0 ? 'positive' : 'negative'}>
-                  {tokenAnalysis.token_info.priceChange24h?.toFixed(2)}%
-                </span>
-              </div>
-              <div className="detail-item">
-                <span>MEMERADAR数据:</span>
-                <span>{tokenAnalysis.token_info.holderHasTags ? '✅ 有' : '❌ 无'}</span>
-              </div>
-              <div className="detail-item">
-                <span>社交媒体链接:</span>
+              <h3>🔗 社交媒体</h3>
+              <div className="social-links">
+                <span>官方链接:</span>
                 <span>{tokenAnalysis.token_info.links?.length || 0} 个</span>
               </div>
             </div>
@@ -480,9 +507,17 @@ const StrategyScanner = () => {
           </div>
         </div>
 
-        <button className="scan-btn" onClick={handleScan} disabled={loading}>
-          {loading ? '🔍 扫描中...' : '🚀 开始扫描'}
-        </button>
+        <div className="scan-buttons">
+          <button className="scan-btn" onClick={handleScan} disabled={loading}>
+            {loading ? '🔍 扫描中...' : '🚀 策略扫描'}
+          </button>
+          <button className="quality-scan-btn" onClick={handleScanQuality} disabled={qualityLoading}>
+            {qualityLoading ? '🔍 扫描中...' : '💎 优质代币'}
+          </button>
+          <button className="opportunities-btn" onClick={handleScanOpportunities} disabled={opportunitiesLoading}>
+            {opportunitiesLoading ? '🔍 扫描中...' : '⏰ 交易机会'}
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -491,10 +526,11 @@ const StrategyScanner = () => {
         </div>
       )}
 
+      {/* 策略扫描结果 */}
       {scanResults && (
         <div className="scan-results">
           <div className="results-header">
-            <h2>📊 扫描结果</h2>
+            <h2>📊 策略扫描结果</h2>
             <div className="results-stats">
               <span>扫描总数: {scanResults.total_scanned}</span>
               <span>符合条件: {scanResults.total_filtered}</span>
@@ -503,6 +539,42 @@ const StrategyScanner = () => {
           
           <div className="tokens-grid">
             {scanResults.tokens.map(renderStrategyCard)}
+          </div>
+        </div>
+      )}
+
+      {/* 优质代币扫描结果 */}
+      {qualityTokens && (
+        <div className="scan-results">
+          <div className="results-header">
+            <h2>💎 优质代币扫描结果</h2>
+            <div className="results-stats">
+              <span>扫描总数: {qualityTokens.scanned_count}</span>
+              <span>优质代币: {qualityTokens.quality_count}</span>
+              <span>最低置信度: {qualityTokens.min_confidence}%</span>
+            </div>
+          </div>
+          
+          <div className="tokens-grid">
+            {qualityTokens.tokens.map(renderQualityTokenCard)}
+          </div>
+        </div>
+      )}
+
+      {/* 交易机会扫描结果 */}
+      {opportunities && (
+        <div className="scan-results">
+          <div className="results-header">
+            <h2>⏰ 交易机会扫描结果</h2>
+            <div className="results-stats">
+              <span>时间筛选: {opportunities.time_filter}</span>
+              <span>RSI筛选: {opportunities.rsi_filter}</span>
+              <span>机会数量: {opportunities.opportunities_count}</span>
+            </div>
+          </div>
+          
+          <div className="tokens-grid">
+            {opportunities.opportunities.map(renderQualityTokenCard)}
           </div>
         </div>
       )}
