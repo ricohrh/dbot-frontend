@@ -173,7 +173,11 @@ const StrategyScanner = () => {
               <div className="score-breakdown">
                 <div className="score-item">
                   <span>总分</span>
-                  <span className="score">{tokenAnalysis.strategy_score.total_score || 0}</span>
+                  <span className="score">
+                    {tokenAnalysis?.strategy_score?.total_score !== undefined && tokenAnalysis?.strategy_score?.total_score !== null 
+                      ? tokenAnalysis.strategy_score.total_score 
+                      : 0}
+                  </span>
                 </div>
                 <div className="score-item">
                   <span>持有人数</span>
