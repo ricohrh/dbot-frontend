@@ -21,7 +21,7 @@ const StrategyScanner = () => {
   const [walletAnalysis, setWalletAnalysis] = useState(null);
   const [walletLoading, setWalletLoading] = useState(false);
   const [showBundlerList, setShowBundlerList] = useState(false);
-  
+
   // 新增状态
   const [tradingDecision, setTradingDecision] = useState(null);
   const [decisionLoading, setDecisionLoading] = useState(false);
@@ -325,6 +325,122 @@ const StrategyScanner = () => {
                 </div>
               </div>
               
+              {/* 新增：实时机会分析 */}
+              {tradingDecision.decision.analysis?.realtime_opportunity && (
+                <div className="realtime-opportunity-section">
+                  <h4>🔥 实时交易机会分析</h4>
+                  <div className="opportunity-summary">
+                    <div className={`opportunity-badge ${tradingDecision.decision.analysis.realtime_opportunity.is_hot_opportunity ? 'hot' : 'normal'}`}>
+                      {tradingDecision.decision.analysis.realtime_opportunity.is_hot_opportunity ? '🔥 热门机会' : '📊 一般机会'}
+                    </div>
+                    <div className="opportunity-score">
+                      机会评分: {tradingDecision.decision.analysis.realtime_opportunity.opportunity_score}
+                    </div>
+                    <div className="data-source">
+                      数据源: {tradingDecision.decision.analysis.realtime_opportunity.data_source === 'pair_info' ? '实时API' : '热门代币'}
+                    </div>
+                  </div>
+                  
+                  <div className="opportunity-description">
+                    {tradingDecision.decision.analysis.realtime_opportunity.opportunity_description}
+                  </div>
+                  
+                  <div className="realtime-metrics">
+                    <div className="metrics-row">
+                      <div className="metric-group">
+                        <h5>📊 1分钟数据</h5>
+                        <div className="metric-item">
+                          <span className="label">买入账户:</span>
+                          <span className="value">{tradingDecision.decision.analysis.realtime_opportunity.buy_accounts_1m}</span>
+                        </div>
+                        <div className="metric-item">
+                          <span className="label">买入交易量:</span>
+                          <span className="value">${tradingDecision.decision.analysis.realtime_opportunity.buy_volume_1m?.toLocaleString()}</span>
+                        </div>
+                        <div className="metric-item">
+                          <span className="label">价格变化:</span>
+                          <span className={`value ${tradingDecision.decision.analysis.realtime_opportunity.price_change_1m >= 0 ? 'positive' : 'negative'}`}>
+                            {(tradingDecision.decision.analysis.realtime_opportunity.price_change_1m * 100).toFixed(2)}%
+                          </span>
+                        </div>
+                        <div className="metric-item">
+                          <span className="label">买入次数:</span>
+                          <span className="value">{tradingDecision.decision.analysis.realtime_opportunity.buy_times_1m}</span>
+                        </div>
+                        <div className="metric-item">
+                          <span className="label">交易量激增:</span>
+                          <span className={`value ${tradingDecision.decision.analysis.realtime_opportunity.volume_surge_1m ? 'surge' : 'normal'}`}>
+                            {tradingDecision.decision.analysis.realtime_opportunity.volume_surge_1m ? '💥 是' : '📊 否'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="metric-group">
+                        <h5>📈 5分钟数据</h5>
+                        <div className="metric-item">
+                          <span className="label">买入账户:</span>
+                          <span className="value">{tradingDecision.decision.analysis.realtime_opportunity.buy_accounts_5m}</span>
+                        </div>
+                        <div className="metric-item">
+                          <span className="label">买入交易量:</span>
+                          <span className="value">${tradingDecision.decision.analysis.realtime_opportunity.buy_volume_5m?.toLocaleString()}</span>
+                        </div>
+                        <div className="metric-item">
+                          <span className="label">价格变化:</span>
+                          <span className={`value ${tradingDecision.decision.analysis.realtime_opportunity.price_change_5m >= 0 ? 'positive' : 'negative'}`}>
+                            {(tradingDecision.decision.analysis.realtime_opportunity.price_change_5m * 100).toFixed(2)}%
+                          </span>
+                        </div>
+                        <div className="metric-item">
+                          <span className="label">买入次数:</span>
+                          <span className="value">{tradingDecision.decision.analysis.realtime_opportunity.buy_times_5m}</span>
+                        </div>
+                        <div className="metric-item">
+                          <span className="label">交易量激增:</span>
+                          <span className={`value ${tradingDecision.decision.analysis.realtime_opportunity.volume_surge_5m ? 'surge' : 'normal'}`}>
+                            {tradingDecision.decision.analysis.realtime_opportunity.volume_surge_5m ? '💥 是' : '📊 否'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="metric-group">
+                        <h5>⏰ 1小时数据</h5>
+                        <div className="metric-item">
+                          <span className="label">买入账户:</span>
+                          <span className="value">{tradingDecision.decision.analysis.realtime_opportunity.buy_accounts_1h}</span>
+                        </div>
+                        <div className="metric-item">
+                          <span className="label">买入交易量:</span>
+                          <span className="value">${tradingDecision.decision.analysis.realtime_opportunity.buy_volume_1h?.toLocaleString()}</span>
+                        </div>
+                        <div className="metric-item">
+                          <span className="label">价格变化:</span>
+                          <span className={`value ${tradingDecision.decision.analysis.realtime_opportunity.price_change_1h >= 0 ? 'positive' : 'negative'}`}>
+                            {(tradingDecision.decision.analysis.realtime_opportunity.price_change_1h * 100).toFixed(2)}%
+                          </span>
+                        </div>
+                        <div className="metric-item">
+                          <span className="label">买入次数:</span>
+                          <span className="value">{tradingDecision.decision.analysis.realtime_opportunity.buy_times_1h}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 风险警告 */}
+                  {tradingDecision.decision.analysis.realtime_opportunity.risk_warnings?.length > 0 && (
+                    <div className="realtime-warnings">
+                      <h5>⚠️ 实时风险警告</h5>
+                      <ul>
+                        {tradingDecision.decision.analysis.realtime_opportunity.risk_warnings.map((warning, index) => (
+                          <li key={index}>{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+              
               <div className="decision-details">
                 <div className="signals-section">
                   <h4>✅ 正面信号</h4>
@@ -420,14 +536,14 @@ const StrategyScanner = () => {
                 </div>
               </div>
             </div>
-
+            
             <div className="analysis-card">
               <h3>📈 市场数据</h3>
               <div className="market-data">
                 <div className="data-item">
                   <span>当前价格</span>
                   <span>${tokenAnalysis.token_info?.tokenPriceUsd?.toFixed(8) || 'N/A'}</span>
-                </div>
+              </div>
                 <div className="data-item">
                   <span>24h涨跌</span>
                   <span className={tokenAnalysis.token_info?.priceChange24h >= 0 ? 'positive' : 'negative'}>
@@ -456,7 +572,7 @@ const StrategyScanner = () => {
                 </div>
               </div>
             </div>
-
+          
             <div className="analysis-card">
               <h3>🔗 社交媒体</h3>
               <div className="social-links">
@@ -544,7 +660,7 @@ const StrategyScanner = () => {
         </div>
 
         <div className="scan-buttons">
-          <button className="scan-btn" onClick={handleScan} disabled={loading}>
+        <button className="scan-btn" onClick={handleScan} disabled={loading}>
             {loading ? '🔍 扫描中...' : '🚀 策略扫描'}
           </button>
           <button className="quality-scan-btn" onClick={handleScanQuality} disabled={qualityLoading}>
@@ -552,7 +668,7 @@ const StrategyScanner = () => {
           </button>
           <button className="opportunities-btn" onClick={handleScanOpportunities} disabled={opportunitiesLoading}>
             {opportunitiesLoading ? '🔍 扫描中...' : '⏰ 交易机会'}
-          </button>
+        </button>
         </div>
       </div>
 
