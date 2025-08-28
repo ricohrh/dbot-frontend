@@ -255,6 +255,62 @@ const StrategyScanner = () => {
           </div>
         </div>
         
+        {/* 新增：实时机会分析数据 */}
+        {token.realtime_opportunity && (
+          <div className="realtime-metrics-preview">
+            <div className="metrics-row">
+              <div className="metric-group">
+                <h5>📊 1分钟数据</h5>
+                <div className="metric-item">
+                  <span className="label">买入账户:</span>
+                  <span className="value">{token.realtime_opportunity.buy_accounts_1m || 0}</span>
+                </div>
+                <div className="metric-item">
+                  <span className="label">买入交易量:</span>
+                  <span className="value">${(token.realtime_opportunity.buy_volume_1m || 0)?.toLocaleString()}</span>
+                </div>
+                <div className="metric-item">
+                  <span className="label">价格变化:</span>
+                  <span className={`value ${(token.realtime_opportunity.price_change_1m || 0) >= 0 ? 'positive' : 'negative'}`}>
+                    {((token.realtime_opportunity.price_change_1m || 0) * 100).toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+              
+              <div className="metric-group">
+                <h5>📈 5分钟数据</h5>
+                <div className="metric-item">
+                  <span className="label">买入账户:</span>
+                  <span className="value">{token.realtime_opportunity.buy_accounts_5m || 0}</span>
+                </div>
+                <div className="metric-item">
+                  <span className="label">买入交易量:</span>
+                  <span className="value">${(token.realtime_opportunity.buy_volume_5m || 0)?.toLocaleString()}</span>
+                </div>
+                <div className="metric-item">
+                  <span className="label">价格变化:</span>
+                  <span className={`value ${(token.realtime_opportunity.price_change_5m || 0) >= 0 ? 'positive' : 'negative'}`}>
+                    {((token.realtime_opportunity.price_change_5m || 0) * 100).toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            {/* 机会评分和状态 */}
+            <div className="opportunity-summary-preview">
+              <div className={`opportunity-badge ${token.realtime_opportunity.is_hot_opportunity ? 'hot' : 'normal'}`}>
+                {token.realtime_opportunity.is_hot_opportunity ? '🔥 热门机会' : '📊 一般机会'}
+              </div>
+              <div className="opportunity-score">
+                机会评分: {token.realtime_opportunity.opportunity_score || 0}
+              </div>
+              <div className="data-source">
+                数据源: {token.realtime_opportunity.data_source === 'pair_info' ? '实时API' : '热门代币'}
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="token-signals">
           <div className="signals-section">
             <h4>✅ 正面信号</h4>
