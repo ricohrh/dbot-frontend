@@ -259,7 +259,17 @@ const StrategyScanner = () => {
     }
   };
 
-  const handleTokenAnalysis = async (token) => {
+  const handleTokenAnalysis = async (tokenId) => {
+    // 从扫描结果中找到对应的代币对象
+    const token = scanResults.find(t => 
+      t.token_mint === tokenId || t._id === tokenId || t.mint === tokenId
+    );
+    
+    if (!token) {
+      setError('未找到指定代币');
+      return;
+    }
+    
     setSelectedToken(token);
     setAnalysisLoading(true);
     setTokenAnalysis(null);
@@ -267,7 +277,7 @@ const StrategyScanner = () => {
     setTradingDecision(null);
     
     try {
-      const analysis = await strategyService.analyzeTokenStrategy(token.mint || token._id, strategyConfig.chain);
+      const analysis = await strategyService.analyzeTokenStrategy(tokenId, strategyConfig.chain);
       setTokenAnalysis(analysis);
     } catch (err) {
       setError(err.message || '分析失败');
@@ -280,11 +290,17 @@ const StrategyScanner = () => {
   const handleTradingDecision = async () => {
     if (!selectedToken) return;
     
+    const tokenId = selectedToken.token_mint || selectedToken._id || selectedToken.mint;
+    if (!tokenId) {
+      setError('代币ID无效');
+      return;
+    }
+    
     setDecisionLoading(true);
     setTradingDecision(null);
     
     try {
-      const decision = await strategyService.getTradingDecision(selectedToken.mint || selectedToken._id, strategyConfig.chain);
+      const decision = await strategyService.getTradingDecision(tokenId, strategyConfig.chain);
       setTradingDecision(decision);
     } catch (err) {
       setError(err.message || '交易决策分析失败');
@@ -296,11 +312,17 @@ const StrategyScanner = () => {
   const handleWalletAnalysis = async () => {
     if (!selectedToken) return;
     
+    const tokenId = selectedToken.token_mint || selectedToken._id || selectedToken.mint;
+    if (!tokenId) {
+      setError('代币ID无效');
+      return;
+    }
+    
     setWalletLoading(true);
     setWalletAnalysis(null);
     
     try {
-      const analysis = await strategyService.analyzeHolderWallets(selectedToken.mint || selectedToken._id, strategyConfig.chain);
+      const analysis = await strategyService.analyzeHolderWallets(tokenId, strategyConfig.chain);
       setWalletAnalysis(analysis);
     } catch (err) {
       setError(err.message || '钱包分析失败');
@@ -316,7 +338,7 @@ const StrategyScanner = () => {
                       score.total_score >= 65 ? '#e17055' : '#d63031';
     
     return (
-      <div key={token._id} className="strategy-token-card" onClick={() => handleTokenAnalysis(token)}>
+      <div key={token._id} className="strategy-token-card" onClick={() => handleTokenAnalysis(token.mint || token._id)}>
         <div className="token-header">
           <div className="token-info">
             <h3>{token.symbol || token.name}</h3>
@@ -382,13 +404,16 @@ const StrategyScanner = () => {
     
     if (isOptimizedToken) {
       // 优化扫描代币卡片
-      const score = token.multi_dimensional_score || 0;
-      const scoreColor = score >= 85 ? '#00b894' : 
-                        score >= 75 ? '#fdcb6e' : 
-                        score >= 65 ? '#e17055' : '#d63031';
+      const multiScore = token.multi_dimensional_score || 0;
+      const scoreColor = multiScore >= 85 ? '#00b894' : 
+                        multiScore >= 75 ? '#fdcb6e' : 
+                        multiScore >= 65 ? '#e17055' : '#d63031';
+      
+      // 获取正确的代币ID
+      const tokenId = token.token_mint || token._id || token.mint || 'unknown';
       
       return (
-        <div key={token.token_mint || token._id} className="strategy-token-card optimized" onClick={() => handleTokenAnalysis(token)}>
+        <div key={tokenId} className="strategy-token-card optimized" onClick={() => handleTokenAnalysis(tokenId)}>
           <div className="token-header">
             <div className="token-info">
               <h3>{token.symbol || token.name}</h3>
@@ -396,7 +421,7 @@ const StrategyScanner = () => {
               <CopyableAddress address={token.token_mint || token._id} className="token-address" />
             </div>
             <div className="score-badge" style={{ backgroundColor: scoreColor }}>
-              {score}
+              {multiScore}
             </div>
           </div>
           
@@ -433,15 +458,18 @@ const StrategyScanner = () => {
       const volume = token.buyAndSellVolume1h || token.volume_1h || 'N/A';
       const marketCap = token.marketCap || token.market_cap || 'N/A';
       
+      // 获取正确的代币ID
+      const tokenId = token.token_mint || token._id || token.mint || 'unknown';
+      
       return (
-        <div key={token._id || token.token_mint} className="strategy-token-card original-scan" onClick={() => handleTokenAnalysis(token)}>
+        <div key={tokenId} className="strategy-token-card original-scan" onClick={() => handleTokenAnalysis(tokenId)}>
           {/* 代币基本信息 */}
           <div className="token-basic-info">
             <div className="token-name-section">
               <h3 className="token-symbol">{token.symbol || token.name}</h3>
               <p className="token-full-name">{token.name}</p>
               <div className="token-address-section">
-                <span className="token-address">{token.mint || token._id || token.token_mint}</span>
+                <span className="token-address">{token.token_mint || token.mint || token._id}</span>
                 <button className="copy-button">📋</button>
               </div>
             </div>
@@ -503,14 +531,17 @@ const StrategyScanner = () => {
         </div>
       );
     } else {
-      // 通用代币卡片（兼容性处理）
-      const displayScore = token.display_score || token.confidence || token.multi_dimensional_score || 0;
-      const scoreColor = displayScore >= 85 ? '#00b894' : 
-                        displayScore >= 75 ? '#fdcb6e' : 
-                        displayScore >= 65 ? '#e17055' : '#d63031';
+      // 通用代币卡片（其他情况）
+      const score = token.strategy_score?.total_score || token.confidence || token.multi_dimensional_score || 0;
+      const scoreColor = score >= 85 ? '#00b894' : 
+                        score >= 75 ? '#fdcb6e' : 
+                        score >= 65 ? '#e17055' : '#d63031';
+      
+      // 获取正确的代币ID
+      const tokenId = token.token_mint || token._id || token.mint || 'unknown';
       
       return (
-        <div key={token._id || token.token_mint} className="strategy-token-card generic" onClick={() => handleTokenAnalysis(token)}>
+        <div key={tokenId} className="strategy-token-card generic" onClick={() => handleTokenAnalysis(tokenId)}>
           <div className="token-header">
             <div className="token-info">
               <h3>{token.symbol || token.name}</h3>
@@ -518,14 +549,14 @@ const StrategyScanner = () => {
               <CopyableAddress address={token.mint || token._id || token.token_mint} className="token-address" />
             </div>
             <div className="score-badge" style={{ backgroundColor: scoreColor }}>
-              {displayScore}
+              {score}
             </div>
           </div>
           
           <div className="token-metrics">
             <div className="metric">
               <span className="label">评分</span>
-              <span className="value">{displayScore}</span>
+              <span className="value">{score}</span>
             </div>
             <div className="metric">
               <span className="label">扫描方法</span>
