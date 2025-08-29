@@ -41,6 +41,7 @@ const StrategyScanner = () => {
 
   // 新增：获取代币持有人数的状态
   const [tokenHolders, setTokenHolders] = useState({});
+  const [copyStatus, setCopyStatus] = useState({}); // 复制状态
 
   // 获取代币持有人数的函数
   const fetchTokenHolders = async (tokenId) => {
@@ -57,13 +58,15 @@ const StrategyScanner = () => {
       
       if (response.ok) {
         const data = await response.json();
+        console.log('持有人数API响应:', data); // 调试日志
         // 根据API响应结构获取持有人数
-        const holdersCount = data.holders_count || data.total_holders || data.count || 'N/A';
+        const holdersCount = data.holders_count || data.total_holders || data.count || data.holders || 'N/A';
         setTokenHolders(prev => ({
           ...prev,
           [tokenId]: holdersCount
         }));
       } else {
+        console.error('持有人数API响应失败:', response.status, response.statusText);
         setTokenHolders(prev => ({
           ...prev,
           [tokenId]: '获取失败'
@@ -89,6 +92,43 @@ const StrategyScanner = () => {
       });
     }
   }, [scanResults]);
+
+  // 复制地址到剪贴板
+  const copyAddress = async (address, tokenId) => {
+    try {
+      await navigator.clipboard.writeText(address);
+      // 设置复制成功状态
+      setCopyStatus(prev => ({
+        ...prev,
+        [tokenId]: true
+      }));
+      
+      // 3秒后重置状态
+      setTimeout(() => {
+        setCopyStatus(prev => ({
+          ...prev,
+          [tokenId]: false
+        }));
+      }, 3000);
+      
+      console.log('地址复制成功:', address);
+    } catch (err) {
+      console.error('复制失败:', err);
+      // 设置复制失败状态
+      setCopyStatus(prev => ({
+        ...prev,
+        [tokenId]: 'failed'
+      }));
+      
+      // 3秒后重置状态
+      setTimeout(() => {
+        setCopyStatus(prev => ({
+          ...prev,
+          [tokenId]: false
+        }));
+      }, 3000);
+    }
+  };
 
   const presets = strategyService.getStrategyPresets();
 
@@ -552,11 +592,11 @@ const StrategyScanner = () => {
                   className="copy-button" 
                   onClick={(e) => {
                     e.stopPropagation();
-                    copyAddress(token.token_mint || token.mint || token._id);
+                    copyAddress(token.token_mint || token.mint || token._id, tokenId);
                   }}
                   title="复制地址"
                 >
-                  📋
+                  {copyStatus[tokenId] === true ? '✅' : copyStatus[tokenId] === 'failed' ? '❌' : '📋'}
                 </button>
               </div>
             </div>
@@ -581,13 +621,27 @@ const StrategyScanner = () => {
               <div className="holders-details">
                 <div className="total-holders">
                   <span className="holders-label">全部:</span>
-                  <span className="holders-value">{totalHolders}</span>
+                  <span className="holders-value">
+                    {tokenHolders[tokenId] ? 
+                      (typeof tokenHolders[tokenId] === 'number' ? tokenHolders[tokenId].toLocaleString() : tokenHolders[tokenId]) : 
+                      '加载中...'
+                    }
+                  </span>
                 </div>
                 <div className="kol-holders">
                   <span className="holders-label">KOL:</span>
-                  <span className="holders-value">{typeof kolHolders === 'number' ? kolHolders.toLocaleString() : kolHolders}</span>
+                  <span className="holders-value">
+                    {typeof kolHolders === 'number' ? kolHolders.toLocaleString() : kolHolders}
+                  </span>
                 </div>
               </div>
+              {/* 调试信息 */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="debug-info">
+                  <small>TokenID: {tokenId}</small>
+                  <small>API状态: {tokenHolders[tokenId] ? '已获取' : '未获取'}</small>
+                </div>
+              )}
             </div>
           </div>
           
@@ -1076,7 +1130,7 @@ const StrategyScanner = () => {
 
         <div className="scan-buttons">
         <button className="scan-btn" onClick={handleScan} disabled={loading}>
-            {loading ? '�� 扫描中...' : '🚀 策略扫描'}
+            {loading ? '🔄 扫描中...' : '🚀 策略扫描'}
           </button>
           <button className="quality-scan-btn" onClick={handleScanQuality} disabled={qualityLoading}>
             {qualityLoading ? '🔍 扫描中...' : '💎 优质代币'}

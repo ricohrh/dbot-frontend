@@ -1801,6 +1801,25 @@
   border-color: #adb5bd;
 }
 
+/* 调试信息样式 */
+.debug-info {
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.debug-info small {
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+/* 复制按钮状态样式 */
 .copy-button {
   background: #f8f9fa;
   border: 1px solid #e0e0e0;
@@ -1828,6 +1847,20 @@
 .copy-button:active {
   transform: translateY(0);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 复制成功状态 */
+.copy-button:has(span:contains('✅')) {
+  background: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+/* 复制失败状态 */
+.copy-button:has(span:contains('❌')) {
+  background: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
 }
 
 .percentage-change {
