@@ -485,21 +485,49 @@ const StrategyScanner = () => {
       console.log(`🎯 使用时间波段: ${strategyConfig.timeRange} -> time_filter: ${timeFilter}`);
       
       if (useOptimizedScan) {
-        // 使用优化扫描
-        console.log('🚀 使用优化算法扫描交易机会...');
-        result = await strategyService.scanTradingOpportunitiesOptimized(
-          strategyConfig.chain,
-          timeFilter,
-          rsiFilter,
-          rsiInterval,
-          rsiThreshold
-        );
+        // 并行拉取 优化扫描 与 原始扫描，统一视图展示
+        console.log('🚀 使用优化算法扫描交易机会，同时获取原始扫描结果...');
+        const [optimizedRes, originalRes] = await Promise.all([
+          strategyService.scanTradingOpportunitiesOptimized(
+            strategyConfig.chain,
+            timeFilter,
+            rsiFilter,
+            rsiInterval,
+            rsiThreshold
+          ),
+          strategyService.scanTradingOpportunities(
+            strategyConfig.chain,
+            timeFilter,
+            rsiFilter,
+            rsiInterval,
+            rsiThreshold
+          )
+        ]);
         
-        // 提取优化信息
-        if (result && !result.error && result.optimization_info) {
-          setOptimizationInfo(result.optimization_info);
+        // 优化信息
+        if (optimizedRes && !optimizedRes.error && optimizedRes.optimization_info) {
+          setOptimizationInfo(optimizedRes.optimization_info);
         }
-        setOpportunities(result);
+        
+        // 设置优化结果到 opportunities（供交易机会区显示）
+        setOpportunities(optimizedRes);
+        
+        // 原始结果供统一视图合并
+        const markedOriginalOpportunities = (originalRes.opportunities || []).map(token => ({
+          ...token,
+          scan_method: 'original',
+          display_score: token.confidence || 0
+        }));
+        setScanResults(markedOriginalOpportunities);
+        
+        // 预取持有人数（两类一起）
+        const combinedForHolders = [
+          ...markedOriginalOpportunities,
+          ...(optimizedRes.opportunities || [])
+        ];
+        if (combinedForHolders.length > 0) {
+          fetchHotTokensAndUpdateHolders(combinedForHolders);
+        }
       } else {
         // 使用原始扫描
         console.log('🔍 使用原始算法扫描交易机会...');
