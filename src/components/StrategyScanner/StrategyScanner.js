@@ -1513,27 +1513,7 @@ const StrategyScanner = () => {
         </div>
       )}
 
-      {/* 策略扫描结果 */}
-      {scanResults && (
-        <div className="scan-results">
-          <div className="results-header">
-            <h2>🔍 原始扫描结果</h2>
-            <div className="header-actions">
-              <button className="force-refresh-btn" onClick={forceRefreshAllHolders} title="强制刷新所有持有人数">
-                🔄 刷新持有人数
-              </button>
-            </div>
-            <div className="results-stats">
-              <span>扫描总数: {scanResults.length}</span>
-              <span>符合条件: {scanResults.length}</span>
-            </div>
-          </div>
-          
-          <div className="tokens-grid">
-            {scanResults.map(renderQualityTokenCard)}
-          </div>
-        </div>
-      )}
+      {/* 原始扫描结果已合并进“交易机会扫描结果”，此区块不再显示 */}
 
       {/* 优质代币扫描结果 */}
       {qualityTokens && (
