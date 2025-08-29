@@ -1923,12 +1923,6 @@
   font-weight: 600;
 }
 
-.holders-value {
-  font-size: 16px;
-  color: #333;
-  font-weight: 600;
-}
-
 /* 市场指标 */
 .market-metrics {
   display: flex;
@@ -2031,13 +2025,13 @@
 
 .holders-label {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #333 !important; /* 强制使用深色字体 */
   font-weight: 500;
   min-width: 30px;
 }
 
 .holders-value {
   font-size: 14px;
-  color: #fff;
+  color: #333 !important; /* 强制使用深色字体 */
   font-weight: 600;
 } 

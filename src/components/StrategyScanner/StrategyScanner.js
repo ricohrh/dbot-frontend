@@ -43,13 +43,28 @@ const StrategyScanner = () => {
   const [tokenHolders, setTokenHolders] = useState({});
   const [copyStatus, setCopyStatus] = useState({}); // 复制状态
 
+  // 当扫描结果变化时，获取所有代币的持有人数
+  useEffect(() => {
+    if (scanResults && Array.isArray(scanResults) && scanResults.length > 0) {
+      scanResults.forEach(token => {
+        if (token && token.token_mint) {
+          const tokenId = token.token_mint || token._id || token.mint;
+          if (tokenId && tokenId !== 'unknown') {
+            fetchTokenHolders(tokenId);
+          }
+        }
+      });
+    }
+  }, [scanResults]);
+
   // 获取代币持有人数的函数
   const fetchTokenHolders = async (tokenId) => {
-    if (!tokenId || tokenId === 'unknown' || tokenHolders[tokenId]) {
+    if (!tokenId || tokenId === 'unknown' || (tokenHolders[tokenId] && tokenHolders[tokenId] !== '加载中...')) {
       return; // 已经获取过或无效ID
     }
 
     try {
+      console.log('正在获取持有人数:', tokenId);
       const response = await fetch(`https://api-data-v1.dbotx.com/kline/holders?chain=solana&token=${tokenId}`, {
         headers: {
           'x-api-key': 'hwxwzxlpdc6whlt9uwaipnp6jxpdfabw'
@@ -61,6 +76,7 @@ const StrategyScanner = () => {
         console.log('持有人数API响应:', data); // 调试日志
         // 根据API响应结构获取持有人数
         const holdersCount = data.holders_count || data.total_holders || data.count || data.holders || 'N/A';
+        console.log('解析的持有人数:', holdersCount);
         setTokenHolders(prev => ({
           ...prev,
           [tokenId]: holdersCount
@@ -80,18 +96,6 @@ const StrategyScanner = () => {
       }));
     }
   };
-
-  // 当扫描结果变化时，获取所有代币的持有人数
-  useEffect(() => {
-    if (scanResults && scanResults.length > 0) {
-      scanResults.forEach(token => {
-        const tokenId = token.token_mint || token._id || token.mint;
-        if (tokenId && tokenId !== 'unknown') {
-          fetchTokenHolders(tokenId);
-        }
-      });
-    }
-  }, [scanResults]);
 
   // 复制地址到剪贴板
   const copyAddress = async (address, tokenId) => {
@@ -352,9 +356,9 @@ const StrategyScanner = () => {
 
   const handleTokenAnalysis = async (tokenId) => {
     // 从扫描结果中找到对应的代币对象
-    const token = scanResults.find(t => 
+    const token = scanResults && scanResults.length > 0 ? scanResults.find(t => 
       t.token_mint === tokenId || t._id === tokenId || t.mint === tokenId
-    );
+    ) : null;
     
     if (!token) {
       setError('未找到指定代币');
