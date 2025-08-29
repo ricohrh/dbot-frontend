@@ -87,10 +87,24 @@ const StrategyScanner = () => {
 
   // 强制刷新所有持有人数
   const forceRefreshAllHolders = async () => {
-    console.log('🔄 强制刷新交易机会持有人数');
+    console.log('🔄 强制刷新持有人数');
+    let tokensToRefresh = [];
+    
+    // 检查交易机会
     if (opportunities && opportunities.opportunities && Array.isArray(opportunities.opportunities) && opportunities.opportunities.length > 0) {
+      tokensToRefresh = opportunities.opportunities;
+      console.log('🔄 刷新交易机会持有人数:', tokensToRefresh.length, '个代币');
+    }
+    
+    // 检查原始扫描结果
+    if (scanResults && Array.isArray(scanResults) && scanResults.length > 0) {
+      tokensToRefresh = scanResults;
+      console.log('🔄 刷新原始扫描持有人数:', tokensToRefresh.length, '个代币');
+    }
+    
+    if (tokensToRefresh.length > 0) {
       setTokenHolders({});
-      await fetchHotTokensAndUpdateHolders(opportunities.opportunities);
+      await fetchHotTokensAndUpdateHolders(tokensToRefresh);
     }
   };
 
@@ -417,6 +431,7 @@ const StrategyScanner = () => {
     setOpportunitiesLoading(true);
     setError(null);
     setOpportunities(null);
+    setScanResults(null);
     setOptimizationInfo(null);
     
     try {
@@ -458,6 +473,7 @@ const StrategyScanner = () => {
         if (result && !result.error && result.optimization_info) {
           setOptimizationInfo(result.optimization_info);
         }
+        setOpportunities(result);
       } else {
         // 使用原始扫描
         console.log('🔍 使用原始算法扫描交易机会...');
@@ -468,9 +484,15 @@ const StrategyScanner = () => {
           rsiInterval,
           rsiThreshold
         );
+        // 为原始扫描结果添加标识
+        const markedOriginalOpportunities = (result.opportunities || []).map(token => ({
+          ...token,
+          scan_method: 'original',
+          display_score: token.confidence || 0
+        }));
+        setScanResults(markedOriginalOpportunities);
       }
       
-      setOpportunities(result);
     } catch (err) {
       setError(err.message || '交易机会扫描失败');
     } finally {
@@ -482,7 +504,7 @@ const StrategyScanner = () => {
   const handleScanAllOpportunities = async () => {
     setOpportunitiesLoading(true);
     setError(null);
-    setScanResults([]);
+    setScanResults(null);
     setOptimizationInfo(null);
     
     try {
@@ -551,7 +573,15 @@ const StrategyScanner = () => {
       
       console.log('🎉 合并扫描完成: 原始' + originalOpportunities.length + '个 + 优化' + optimizedOpportunities.length + '个 = 总计' + uniqueTokens.length + '个');
       
-      setScanResults(uniqueTokens);
+      // 设置合并结果到opportunities，而不是scanResults
+      setOpportunities({
+        ...optimizedResult,
+        opportunities: uniqueTokens,
+        scan_method: 'combined',
+        original_count: originalOpportunities.length,
+        optimized_count: optimizedOpportunities.length,
+        opportunities_count: uniqueTokens.length
+      });
       setOptimizationInfo(optimizedResult.optimization_info);
       
       // 立即获取持有人数
@@ -1395,15 +1425,20 @@ const StrategyScanner = () => {
       {scanResults && (
         <div className="scan-results">
           <div className="results-header">
-            <h2>📊 策略扫描结果</h2>
+            <h2>🔍 原始扫描结果</h2>
+            <div className="header-actions">
+              <button className="force-refresh-btn" onClick={forceRefreshAllHolders} title="强制刷新所有持有人数">
+                🔄 刷新持有人数
+              </button>
+            </div>
             <div className="results-stats">
-              <span>扫描总数: {scanResults.total_scanned}</span>
-              <span>符合条件: {scanResults.total_filtered}</span>
+              <span>扫描总数: {scanResults.length}</span>
+              <span>符合条件: {scanResults.length}</span>
             </div>
           </div>
           
           <div className="tokens-grid">
-            {scanResults.tokens.map(renderStrategyCard)}
+            {scanResults.map(renderQualityTokenCard)}
           </div>
         </div>
       )}
