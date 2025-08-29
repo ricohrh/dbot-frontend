@@ -2058,3 +2058,26 @@
 .refresh-button:active {
   transform: rotate(360deg);
 } 
+
+/* 测试API按钮样式 */
+.test-api-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: #ff6b6b;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  margin-left: 4px;
+}
+
+.test-api-button:hover {
+  background: rgba(255, 107, 107, 0.1);
+  color: #ff4757;
+  transform: scale(1.1);
+}
+
+.test-api-button:active {
+  transform: scale(0.95);
+} 

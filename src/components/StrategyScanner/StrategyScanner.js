@@ -73,12 +73,6 @@ const StrategyScanner = () => {
       return;
     }
 
-    // 如果已经有数据且不是加载状态，跳过
-    if (tokenHolders[tokenId] && tokenHolders[tokenId] !== '加载中...') {
-      console.log('代币持有人数已存在，跳过:', tokenId, tokenHolders[tokenId]);
-      return;
-    }
-
     try {
       console.log('正在获取持有人数:', tokenId);
       
@@ -88,11 +82,21 @@ const StrategyScanner = () => {
         [tokenId]: '加载中...'
       }));
       
-      const response = await fetch(`https://api-data-v1.dbotx.com/kline/holders?chain=solana&token=${tokenId}`, {
+      // 测试API是否可访问
+      const testUrl = `https://api-data-v1.dbotx.com/kline/holders?chain=solana&token=${tokenId}`;
+      console.log('请求URL:', testUrl);
+      
+      const response = await fetch(testUrl, {
+        method: 'GET',
         headers: {
-          'x-api-key': 'hwxwzxlpdc6whlt9uwaipnp6jxpdfabw'
-        }
+          'x-api-key': 'hwxwzxlpdc6whlt9uwaipnp6jxpdfabw',
+          'Content-Type': 'application/json'
+        },
+        mode: 'cors'
       });
+      
+      console.log('API响应状态:', response.status, response.statusText);
+      console.log('API响应头:', response.headers);
       
       if (response.ok) {
         const data = await response.json();
@@ -103,10 +107,14 @@ const StrategyScanner = () => {
           const totalHoldersCount = data.res.length;
           console.log('计算的总持有人数:', totalHoldersCount, 'for token:', tokenId);
           
-          setTokenHolders(prev => ({
-            ...prev,
-            [tokenId]: totalHoldersCount
-          }));
+          setTokenHolders(prev => {
+            const newState = {
+              ...prev,
+              [tokenId]: totalHoldersCount
+            };
+            console.log('更新后的持有人数状态:', newState);
+            return newState;
+          });
         } else {
           console.error('API响应格式错误:', data);
           setTokenHolders(prev => ({
@@ -116,16 +124,19 @@ const StrategyScanner = () => {
         }
       } else {
         console.error('持有人数API响应失败:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('错误响应内容:', errorText);
         setTokenHolders(prev => ({
           ...prev,
-          [tokenId]: '获取失败'
+          [tokenId]: `获取失败: ${response.status}`
         }));
       }
     } catch (err) {
       console.error('获取持有人数失败:', err);
+      console.error('错误详情:', err.message, err.stack);
       setTokenHolders(prev => ({
         ...prev,
-        [tokenId]: '获取失败'
+        [tokenId]: `网络错误: ${err.message}`
       }));
     }
   };
@@ -164,6 +175,42 @@ const StrategyScanner = () => {
           [tokenId]: false
         }));
       }, 3000);
+    }
+  };
+
+  // 测试API函数
+  const testAPI = async (tokenId) => {
+    try {
+      console.log('🧪 开始测试API:', tokenId);
+      
+      // 测试1: 直接fetch
+      const response = await fetch(`https://api-data-v1.dbotx.com/kline/holders?chain=solana&token=${tokenId}`, {
+        headers: {
+          'x-api-key': 'hwxwzxlpdc6whlt9uwaipnp6jxpdfabw'
+        }
+      });
+      
+      console.log('🧪 API响应状态:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🧪 API响应数据:', data);
+        
+        if (data.err === false && data.res) {
+          console.log('🧪 持有人数量:', data.res.length);
+          alert(`API测试成功！\n持有人数量: ${data.res.length}\n请查看控制台获取详细信息`);
+        } else {
+          console.log('🧪 API响应格式错误:', data);
+          alert(`API响应格式错误: ${JSON.stringify(data)}`);
+        }
+      } else {
+        const errorText = await response.text();
+        console.log('🧪 API错误:', errorText);
+        alert(`API调用失败: ${response.status} ${response.statusText}\n${errorText}`);
+      }
+    } catch (err) {
+      console.error('🧪 API测试失败:', err);
+      alert(`API测试失败: ${err.message}`);
     }
   };
 
@@ -674,6 +721,17 @@ const StrategyScanner = () => {
                     title="刷新持有人数"
                   >
                     🔄
+                  </button>
+                  <button 
+                    className="test-api-button" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('测试API调用:', tokenId);
+                      testAPI(tokenId);
+                    }}
+                    title="测试API"
+                  >
+                    🧪
                   </button>
                 </div>
                 <div className="kol-holders">
