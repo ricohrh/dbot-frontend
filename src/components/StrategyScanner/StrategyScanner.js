@@ -1376,6 +1376,12 @@ const StrategyScanner = () => {
             <button className="quality-scan-btn" onClick={handleScanQuality} disabled={qualityLoading}>
               {qualityLoading ? '🔄 扫描中...' : '⭐ 质量扫描'}
             </button>
+            <button className="opportunity-scan-btn" onClick={handleScanOpportunities} disabled={opportunitiesLoading}>
+              {opportunitiesLoading ? '🔄 扫描中...' : '⏰ 机会扫描'}
+            </button>
+            <button className="combined-scan-btn" onClick={handleScanAllOpportunities} disabled={opportunitiesLoading}>
+              {opportunitiesLoading ? '🔄 合并扫描中...' : '🧪 合并机会扫描'}
+            </button>
             <button className="force-refresh-btn" onClick={forceRefreshAllHolders} title="强制刷新所有持有人数">
               🔄 刷新持有人数
             </button>
