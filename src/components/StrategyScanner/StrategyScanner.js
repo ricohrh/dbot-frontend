@@ -51,22 +51,83 @@ const StrategyScanner = () => {
       // 清空之前的持有人数状态
       setTokenHolders({});
       
-      scanResults.forEach((token, index) => {
-        if (token && token.token_mint) {
-          const tokenId = token.token_mint || token._id || token.mint;
-          if (tokenId && tokenId !== 'unknown') {
-            console.log(`准备获取代币 ${index + 1} 的持有人数:`, tokenId);
-            // 延迟调用，避免同时发起太多请求
-            setTimeout(() => {
-              fetchTokenHolders(tokenId);
-            }, index * 100);
-          }
-        }
-      });
+      // 先获取热门代币API数据
+      fetchHotTokensAndUpdateHolders(scanResults);
     }
   }, [scanResults]);
 
-  // 获取代币持有人数的函数
+  // 获取热门代币数据并更新持有人数
+  const fetchHotTokensAndUpdateHolders = async (tokens) => {
+    try {
+      console.log('开始获取热门代币数据...');
+      
+      const response = await fetch('https://api-data-v1.dbotx.com/kline/hot?chain=solana&sortBy=buyAndSellTimes&sort=-1&interval=1h', {
+        headers: {
+          'x-api-key': 'hwxwzxlpdc6whlt9uwaipnp6jxpdfabw'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('热门代币API响应成功，代币数量:', data.res?.length || 0);
+        
+        if (data.err === false && data.res && Array.isArray(data.res)) {
+          // 创建热门代币映射
+          const hotTokensMap = {};
+          data.res.forEach(token => {
+            if (token.mint && token.holders) {
+              hotTokensMap[token.mint] = token.holders;
+            }
+          });
+          
+          console.log('热门代币映射创建完成，包含代币数量:', Object.keys(hotTokensMap).length);
+          
+          // 更新所有扫描结果的持有人数
+          const newTokenHolders = {};
+          tokens.forEach((token, index) => {
+            if (token && token.token_mint) {
+              const tokenId = token.token_mint || token._id || token.mint;
+              if (tokenId && tokenId !== 'unknown') {
+                const holdersCount = hotTokensMap[tokenId];
+                if (holdersCount !== undefined) {
+                  newTokenHolders[tokenId] = holdersCount;
+                  console.log(`代币 ${index + 1} (${token.symbol}): ${holdersCount} 持有人`);
+                } else {
+                  console.log(`代币 ${index + 1} (${token.symbol}) 不在热门列表中，标记为未找到`);
+                  newTokenHolders[tokenId] = '未找到';
+                }
+              }
+            }
+          });
+          
+          // 批量更新状态
+          setTokenHolders(newTokenHolders);
+          console.log('持有人数状态更新完成:', newTokenHolders);
+          
+          // 对于未找到的代币，尝试使用原始API
+          tokens.forEach((token, index) => {
+            if (token && token.token_mint) {
+              const tokenId = token.token_mint || token._id || token.mint;
+              if (tokenId && tokenId !== 'unknown' && newTokenHolders[tokenId] === '未找到') {
+                console.log(`尝试为代币 ${index + 1} (${token.symbol}) 使用原始API`);
+                setTimeout(() => {
+                  fetchHoldersFromOriginalAPI(tokenId);
+                }, 1000 + index * 200); // 延迟调用避免API限流
+              }
+            }
+          });
+        } else {
+          console.error('热门代币API响应格式错误:', data);
+        }
+      } else {
+        console.error('热门代币API请求失败:', response.status, response.statusText);
+      }
+    } catch (err) {
+      console.error('获取热门代币数据失败:', err);
+    }
+  };
+
+  // 获取代币持有人数的函数（主要用于手动刷新）
   const fetchTokenHolders = async (tokenId) => {
     if (!tokenId || tokenId === 'unknown') {
       console.log('无效的tokenId:', tokenId);
@@ -74,7 +135,7 @@ const StrategyScanner = () => {
     }
 
     try {
-      console.log('正在获取持有人数:', tokenId);
+      console.log('手动刷新持有人数:', tokenId);
       
       // 先设置为加载状态
       setTokenHolders(prev => ({
@@ -82,24 +143,15 @@ const StrategyScanner = () => {
         [tokenId]: '加载中...'
       }));
       
-      // 使用热门代币API获取持有人数
-      const hotUrl = 'https://api-data-v1.dbotx.com/kline/hot?chain=solana&sortBy=buyAndSellTimes&sort=-1&interval=1h';
-      console.log('请求热门代币API:', hotUrl);
-      
-      const response = await fetch(hotUrl, {
-        method: 'GET',
+      // 先尝试热门代币API
+      const response = await fetch('https://api-data-v1.dbotx.com/kline/hot?chain=solana&sortBy=buyAndSellTimes&sort=-1&interval=1h', {
         headers: {
-          'x-api-key': 'hwxwzxlpdc6whlt9uwaipnp6jxpdfabw',
-          'Content-Type': 'application/json'
-        },
-        mode: 'cors'
+          'x-api-key': 'hwxwzxlpdc6whlt9uwaipnp6jxpdfabw'
+        }
       });
-      
-      console.log('API响应状态:', response.status, response.statusText);
       
       if (response.ok) {
         const data = await response.json();
-        console.log('热门代币API响应:', data); // 调试日志
         
         if (data.err === false && data.res && Array.isArray(data.res)) {
           // 在热门代币列表中查找对应的代币
@@ -109,38 +161,21 @@ const StrategyScanner = () => {
             const holdersCount = token.holders;
             console.log('找到代币持有人数:', holdersCount, 'for token:', tokenId);
             
-            setTokenHolders(prev => {
-              const newState = {
-                ...prev,
-                [tokenId]: holdersCount
-              };
-              console.log('更新后的持有人数状态:', newState);
-              return newState;
-            });
-          } else {
-            console.log('在热门代币列表中未找到代币:', tokenId);
-            // 如果不在热门列表中，尝试使用原来的API
-            await fetchHoldersFromOriginalAPI(tokenId);
+            setTokenHolders(prev => ({
+              ...prev,
+              [tokenId]: holdersCount
+            }));
+            return;
           }
-        } else {
-          console.error('API响应格式错误:', data);
-          setTokenHolders(prev => ({
-            ...prev,
-            [tokenId]: '格式错误'
-          }));
         }
-      } else {
-        console.error('热门代币API响应失败:', response.status, response.statusText);
-        const errorText = await response.text();
-        console.error('错误响应内容:', errorText);
-        setTokenHolders(prev => ({
-          ...prev,
-          [tokenId]: `获取失败: ${response.status}`
-        }));
       }
+      
+      // 如果热门API没有找到，使用原始API
+      console.log('热门API未找到，尝试原始API:', tokenId);
+      await fetchHoldersFromOriginalAPI(tokenId);
+      
     } catch (err) {
       console.error('获取持有人数失败:', err);
-      console.error('错误详情:', err.message, err.stack);
       setTokenHolders(prev => ({
         ...prev,
         [tokenId]: `网络错误: ${err.message}`
