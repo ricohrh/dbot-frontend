@@ -43,6 +43,11 @@ const StrategyScanner = () => {
   const [tokenHolders, setTokenHolders] = useState({});
   const [copyStatus, setCopyStatus] = useState({}); // 复制状态
 
+  // 调试：监听持有人数状态变化
+  useEffect(() => {
+    console.log('📊 持有人数状态变化:', tokenHolders);
+  }, [tokenHolders]);
+
   // 当扫描结果变化时，获取所有代币的持有人数
   useEffect(() => {
     console.log('🔍 扫描结果变化，开始获取持有人数:', scanResults);
@@ -56,10 +61,22 @@ const StrategyScanner = () => {
       // 清空之前的持有人数状态
       setTokenHolders({});
       
-      // 立即获取热门代币数据
-      fetchHotTokensAndUpdateHolders(scanResults);
+      // 延迟一点再获取，确保状态已清空
+      setTimeout(() => {
+        console.log('⏰ 延迟后开始获取持有人数');
+        fetchHotTokensAndUpdateHolders(scanResults);
+      }, 100);
     }
   }, [scanResults]);
+
+  // 强制刷新所有持有人数
+  const forceRefreshAllHolders = async () => {
+    console.log('🔄 强制刷新所有持有人数');
+    if (scanResults && Array.isArray(scanResults) && scanResults.length > 0) {
+      setTokenHolders({});
+      await fetchHotTokensAndUpdateHolders(scanResults);
+    }
+  };
 
   // 获取热门代币数据并更新持有人数
   const fetchHotTokensAndUpdateHolders = async (tokens) => {
@@ -1358,16 +1375,16 @@ const StrategyScanner = () => {
         </div>
 
         <div className="scan-buttons">
-        <button className="scan-btn" onClick={handleScan} disabled={loading}>
-            {loading ? '🔄 扫描中...' : '🚀 策略扫描'}
-          </button>
-          <button className="quality-scan-btn" onClick={handleScanQuality} disabled={qualityLoading}>
-            {qualityLoading ? '🔍 扫描中...' : '💎 优质代币'}
-          </button>
-          <button className="opportunities-btn" onClick={handleScanAllOpportunities} disabled={opportunitiesLoading}>
-            {opportunitiesLoading ? '🔍 扫描中...' : '⏰ 交易机会'}
-        </button>
-        </div>
+            <button className="scan-btn" onClick={handleScan} disabled={loading}>
+              {loading ? '🔄 扫描中...' : '🚀 策略扫描'}
+            </button>
+            <button className="quality-scan-btn" onClick={handleScanQuality} disabled={qualityLoading}>
+              {qualityLoading ? '🔄 扫描中...' : '⭐ 质量扫描'}
+            </button>
+            <button className="force-refresh-btn" onClick={forceRefreshAllHolders} title="强制刷新所有持有人数">
+              🔄 刷新持有人数
+            </button>
+          </div>
       </div>
 
       {error && (
