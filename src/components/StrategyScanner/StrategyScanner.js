@@ -39,6 +39,32 @@ const StrategyScanner = () => {
   const [useOptimizedScan, setUseOptimizedScan] = useState(true); // 默认使用优化扫描
   const [optimizationInfo, setOptimizationInfo] = useState(null); // 优化信息
 
+  // 新增：统一视图过滤开关
+  const [showOriginal, setShowOriginal] = useState(true);
+  const [showOptimized, setShowOptimized] = useState(true);
+
+  // 统一机会列表（原始 + 优化/合并）
+  const getUnifiedTokens = () => {
+    const fromOriginal = Array.isArray(scanResults) ? scanResults.map(t => ({ ...t, scan_method: t.scan_method || 'original' })) : [];
+    const fromOpportunities = opportunities && Array.isArray(opportunities.opportunities)
+      ? opportunities.opportunities.map(t => ({ ...t, scan_method: t.scan_method || 'optimized' }))
+      : [];
+    const merged = [...fromOriginal, ...fromOpportunities];
+    // 过滤开关
+    const filtered = merged.filter(t => (t.scan_method === 'original' ? showOriginal : showOptimized));
+    // 去重（按mint）
+    const seen = new Set();
+    const unique = [];
+    filtered.forEach(t => {
+      const mint = t.token_mint || t._id || t.mint;
+      if (mint && !seen.has(mint)) {
+        seen.add(mint);
+        unique.push(t);
+      }
+    });
+    return unique;
+  };
+
   // 新增：获取代币持有人数的状态
   const [tokenHolders, setTokenHolders] = useState({});
   const [copyStatus, setCopyStatus] = useState({}); // 复制状态
@@ -1412,6 +1438,31 @@ const StrategyScanner = () => {
           </div>
         </div>
 
+        {/* 新增：统一视图过滤开关 */}
+        <div className="unified-view-filters">
+          <div className="config-group">
+            <label>显示:</label>
+            <div className="filter-options">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={showOriginal}
+                  onChange={(e) => setShowOriginal(e.target.checked)}
+                />
+                原始扫描
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={showOptimized}
+                  onChange={(e) => setShowOptimized(e.target.checked)}
+                />
+                优化扫描
+              </label>
+            </div>
+          </div>
+        </div>
+
         <div className="scan-buttons">
             <button className="scan-btn" onClick={handleScan} disabled={loading}>
               {loading ? '🔄 扫描中...' : '🚀 策略扫描'}
@@ -1554,7 +1605,7 @@ const StrategyScanner = () => {
           )}
           
           <div className="tokens-grid">
-            {opportunities.opportunities.map(renderQualityTokenCard)}
+            {getUnifiedTokens().map(renderQualityTokenCard)}
           </div>
         </div>
       )}
