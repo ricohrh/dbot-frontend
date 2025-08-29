@@ -118,7 +118,7 @@ const StrategyScanner = () => {
         console.log('🚀 使用优化算法扫描交易机会...');
         result = await strategyService.scanTradingOpportunitiesOptimized(
           strategyConfig.chain,
-          timeFilter,  // 使用动态确定的时间筛选参数
+          timeFilter,
           rsiFilter,
           rsiInterval,
           rsiThreshold
@@ -133,7 +133,7 @@ const StrategyScanner = () => {
         console.log('🔍 使用原始算法扫描交易机会...');
         result = await strategyService.scanTradingOpportunities(
           strategyConfig.chain,
-          timeFilter,  // 使用动态确定的时间筛选参数
+          timeFilter,
           rsiFilter,
           rsiInterval,
           rsiThreshold
@@ -143,6 +143,117 @@ const StrategyScanner = () => {
       setOpportunities(result);
     } catch (err) {
       setError(err.message || '交易机会扫描失败');
+    } finally {
+      setOpportunitiesLoading(false);
+    }
+  };
+
+  // 新增：扫描所有机会（原始+优化）
+  const handleScanAllOpportunities = async () => {
+    setOpportunitiesLoading(true);
+    setError(null);
+    setOpportunities(null);
+    setOptimizationInfo(null);
+    
+    try {
+      // 根据用户选择的时间波段确定time_filter参数
+      let timeFilter;
+      switch (strategyConfig.timeRange) {
+        case '3h-6h':
+          timeFilter = '3h';
+          break;
+        case '6h-12h':
+          timeFilter = '6h';
+          break;
+        case '12h-24h':
+          timeFilter = '12h';
+          break;
+        case '24h+':
+          timeFilter = '24h';
+          break;
+        default:
+          timeFilter = '6h';
+      }
+      
+      console.log(`🎯 扫描所有机会，时间波段: ${strategyConfig.timeRange} -> time_filter: ${timeFilter}`);
+      
+      // 并行调用两个API
+      const [originalResult, optimizedResult] = await Promise.all([
+        strategyService.scanTradingOpportunities(
+          strategyConfig.chain,
+          timeFilter,
+          rsiFilter,
+          rsiInterval,
+          rsiThreshold
+        ),
+        strategyService.scanTradingOpportunitiesOptimized(
+          strategyConfig.chain,
+          timeFilter,
+          rsiFilter,
+          rsiInterval,
+          rsiThreshold
+        )
+      ]);
+      
+      // 合并结果
+      let combinedResult = {
+        error: false,
+        time_filter: timeFilter,
+        rsi_filter: rsiFilter,
+        interval: rsiInterval,
+        rsi_threshold: rsiThreshold,
+        opportunities_count: 0,
+        opportunities: [],
+        scan_method: 'combined',
+        original_count: 0,
+        optimized_count: 0
+      };
+      
+      // 处理原始扫描结果
+      if (originalResult && !originalResult.error) {
+        const originalOpportunities = originalResult.opportunities || [];
+        combinedResult.original_count = originalOpportunities.length;
+        combinedResult.opportunities_count += originalOpportunities.length;
+        
+        // 为原始扫描结果添加标识
+        const markedOriginalOpportunities = originalOpportunities.map(opp => ({
+          ...opp,
+          scan_method: 'original',
+          display_score: opp.confidence || opp.strategy_score?.total_score || 0
+        }));
+        
+        combinedResult.opportunities.push(...markedOriginalOpportunities);
+      }
+      
+      // 处理优化扫描结果
+      if (optimizedResult && !optimizedResult.error) {
+        const optimizedOpportunities = optimizedResult.opportunities || [];
+        combinedResult.optimized_count = optimizedOpportunities.length;
+        combinedResult.opportunities_count += optimizedOpportunities.length;
+        
+        // 为优化扫描结果添加标识
+        const markedOptimizedOpportunities = optimizedOpportunities.map(opp => ({
+          ...opp,
+          scan_method: 'optimized',
+          display_score: opp.multi_dimensional_score || opp.confidence || 0
+        }));
+        
+        combinedResult.opportunities.push(...markedOptimizedOpportunities);
+        
+        // 提取优化信息
+        if (optimizedResult.optimization_info) {
+          setOptimizationInfo(optimizedResult.optimization_info);
+        }
+      }
+      
+      // 按评分排序
+      combinedResult.opportunities.sort((a, b) => b.display_score - a.display_score);
+      
+      console.log(`🎉 合并扫描完成: 原始${combinedResult.original_count}个 + 优化${combinedResult.optimized_count}个 = 总计${combinedResult.opportunities_count}个`);
+      
+      setOpportunities(combinedResult);
+    } catch (err) {
+      setError(err.message || '扫描所有机会失败');
     } finally {
       setOpportunitiesLoading(false);
     }
@@ -266,22 +377,23 @@ const StrategyScanner = () => {
   // 新增：渲染优质代币卡片
   const renderQualityTokenCard = (token) => {
     // 检查是否为优化扫描的代币
-    const isOptimizedToken = useOptimizedScan && token.multi_dimensional_score !== undefined;
+    const isOptimizedToken = token.scan_method === 'optimized' || token.multi_dimensional_score !== undefined;
+    const isOriginalToken = token.scan_method === 'original' || token.strategy_score !== undefined;
     
     if (isOptimizedToken) {
       // 优化扫描代币卡片
-      const score = token.multi_dimensional_score;
+      const score = token.multi_dimensional_score || 0;
       const scoreColor = score >= 85 ? '#00b894' : 
                         score >= 75 ? '#fdcb6e' : 
                         score >= 65 ? '#e17055' : '#d63031';
       
       return (
-        <div key={token.token_mint} className="strategy-token-card optimized" onClick={() => handleTokenAnalysis(token)}>
+        <div key={token.token_mint || token._id} className="strategy-token-card optimized" onClick={() => handleTokenAnalysis(token)}>
           <div className="token-header">
             <div className="token-info">
               <h3>{token.symbol || token.name}</h3>
               <p>{token.name}</p>
-              <CopyableAddress address={token.token_mint} className="token-address" />
+              <CopyableAddress address={token.token_mint || token._id} className="token-address" />
             </div>
             <div className="score-badge" style={{ backgroundColor: scoreColor }}>
               {score}
@@ -291,15 +403,15 @@ const StrategyScanner = () => {
           <div className="token-metrics">
             <div className="metric">
               <span className="label">数据源</span>
-              <span className="value">{token.data_source}</span>
+              <span className="value">{token.data_source || 'N/A'}</span>
             </div>
             <div className="metric">
               <span className="label">时间衰减</span>
-              <span className="value">{token.time_decay_applied}</span>
+              <span className="value">{token.time_decay_applied || 1.0}</span>
             </div>
             <div className="metric">
               <span className="label">多样性</span>
-              <span className="value">{token.diversity_info}</span>
+              <span className="value">{token.diversity_info || 'N/A'}</span>
             </div>
           </div>
           
@@ -308,41 +420,82 @@ const StrategyScanner = () => {
           </div>
         </div>
       );
-    } else {
-      // 原始扫描代币卡片（保持原有逻辑）
-      const score = token.strategy_score;
-      const scoreColor = score.total_score >= 85 ? '#00b894' : 
-                        score.total_score >= 75 ? '#fdcb6e' : 
-                        score.total_score >= 65 ? '#e17055' : '#d63031';
+    } else if (isOriginalToken) {
+      // 原始扫描代币卡片（添加安全检查）
+      const score = token.strategy_score || {};
+      const totalScore = score.total_score || token.confidence || 0;
+      const scoreColor = totalScore >= 85 ? '#00b894' : 
+                        totalScore >= 75 ? '#fdcb6e' : 
+                        totalScore >= 65 ? '#e17055' : '#d63031';
       
       return (
-        <div key={token._id} className="strategy-token-card" onClick={() => handleTokenAnalysis(token)}>
+        <div key={token._id || token.token_mint} className="strategy-token-card" onClick={() => handleTokenAnalysis(token)}>
           <div className="token-header">
             <div className="token-info">
               <h3>{token.symbol || token.name}</h3>
               <p>{token.name}</p>
-              <CopyableAddress address={token.mint || token._id} className="token-address" />
+              <CopyableAddress address={token.mint || token._id || token.token_mint} className="token-address" />
             </div>
             <div className="score-badge" style={{ backgroundColor: scoreColor }}>
-              {score.total_score}
+              {totalScore}
             </div>
           </div>
           
           <div className="token-metrics">
             <div className="metric">
               <span className="label">持有人数</span>
-              <span className="value">{token.holders?.toLocaleString()}</span>
-              <span className="score">({score.holders_score})</span>
+              <span className="value">{token.holders?.toLocaleString() || 'N/A'}</span>
+              <span className="score">({score.holders_score || 'N/A'})</span>
             </div>
             <div className="metric">
               <span className="label">1h交易量</span>
-              <span className="value">${token.buyAndSellVolume1h?.toLocaleString()}</span>
-              <span className="score">({score.volume_score})</span>
+              <span className="value">${token.buyAndSellVolume1h?.toLocaleString() || 'N/A'}</span>
+              <span className="score">({score.volume_score || 'N/A'})</span>
             </div>
             <div className="metric">
               <span className="label">市值</span>
-              <span className="value">${token.marketCap?.toLocaleString()}</span>
-              <span className="score">({score.market_cap_score})</span>
+              <span className="value">${token.marketCap?.toLocaleString() || 'N/A'}</span>
+              <span className="score">({score.market_cap_score || 'N/A'})</span>
+            </div>
+          </div>
+          
+          <div className="original-badge">
+            🔍 原始扫描
+          </div>
+        </div>
+      );
+    } else {
+      // 通用代币卡片（兼容性处理）
+      const displayScore = token.display_score || token.confidence || token.multi_dimensional_score || 0;
+      const scoreColor = displayScore >= 85 ? '#00b894' : 
+                        displayScore >= 75 ? '#fdcb6e' : 
+                        displayScore >= 65 ? '#e17055' : '#d63031';
+      
+      return (
+        <div key={token._id || token.token_mint} className="strategy-token-card generic" onClick={() => handleTokenAnalysis(token)}>
+          <div className="token-header">
+            <div className="token-info">
+              <h3>{token.symbol || token.name}</h3>
+              <p>{token.name}</p>
+              <CopyableAddress address={token.mint || token._id || token.token_mint} className="token-address" />
+            </div>
+            <div className="score-badge" style={{ backgroundColor: scoreColor }}>
+              {displayScore}
+            </div>
+          </div>
+          
+          <div className="token-metrics">
+            <div className="metric">
+              <span className="label">评分</span>
+              <span className="value">{displayScore}</span>
+            </div>
+            <div className="metric">
+              <span className="label">扫描方法</span>
+              <span className="value">{token.scan_method || 'unknown'}</span>
+            </div>
+            <div className="metric">
+              <span className="label">代币地址</span>
+              <span className="value">{(token.mint || token._id || token.token_mint || '').substring(0, 8)}...</span>
             </div>
           </div>
         </div>
@@ -759,7 +912,7 @@ const StrategyScanner = () => {
           <button className="quality-scan-btn" onClick={handleScanQuality} disabled={qualityLoading}>
             {qualityLoading ? '🔍 扫描中...' : '💎 优质代币'}
           </button>
-          <button className="opportunities-btn" onClick={handleScanOpportunities} disabled={opportunitiesLoading}>
+          <button className="opportunities-btn" onClick={handleScanAllOpportunities} disabled={opportunitiesLoading}>
             {opportunitiesLoading ? '🔍 扫描中...' : '⏰ 交易机会'}
         </button>
         </div>
@@ -815,6 +968,12 @@ const StrategyScanner = () => {
               <span>时间筛选: {opportunities.time_filter}</span>
               <span>RSI筛选: {opportunities.rsi_filter}</span>
               <span>机会数量: {opportunities.opportunities_count}</span>
+              {opportunities.scan_method === 'combined' && (
+                <>
+                  <span>原始扫描: {opportunities.original_count}</span>
+                  <span>优化扫描: {opportunities.optimized_count}</span>
+                </>
+              )}
               {useOptimizedScan && opportunities.total_tokens_scanned && (
                 <span>总扫描: {opportunities.total_tokens_scanned}</span>
               )}
@@ -845,6 +1004,30 @@ const StrategyScanner = () => {
                       <li key={index}>{improvement}</li>
                     ))}
                   </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 新增：合并扫描信息 */}
+          {opportunities.scan_method === 'combined' && (
+            <div className="combined-scan-info">
+              <h3>🎯 合并扫描信息</h3>
+              <div className="combined-details">
+                <div className="combined-item">
+                  <strong>扫描策略:</strong> 原始扫描 + 优化扫描
+                </div>
+                <div className="combined-item">
+                  <strong>原始扫描:</strong> {opportunities.original_count} 个机会 (基于策略评分)
+                </div>
+                <div className="combined-item">
+                  <strong>优化扫描:</strong> {opportunities.optimized_count} 个机会 (基于多维度评分)
+                </div>
+                <div className="combined-item">
+                  <strong>总计:</strong> {opportunities.opportunities_count} 个机会 (按评分排序)
+                </div>
+                <div className="combined-item">
+                  <strong>优势:</strong> 结合两种算法的优势，发现更多样化的交易机会
                 </div>
               </div>
             </div>
