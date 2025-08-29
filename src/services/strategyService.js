@@ -84,6 +84,38 @@ export const strategyService = {
     }
   },
 
+  // 优化的扫描交易机会（解决总是推荐相同币种的问题）
+  async scanTradingOpportunitiesOptimized(chain = 'solana', timeFilter = '6h', rsiFilter = 'none', interval = '5m', rsiThreshold = 35) {
+    try {
+      console.log('🚀 正在使用优化算法扫描交易机会:', { chain, timeFilter, rsiFilter, interval, rsiThreshold });
+      const qs = `chain=${chain}&time_filter=${timeFilter}&rsi_filter=${rsiFilter}&interval=${interval}&rsi_threshold=${rsiThreshold}`;
+      const data = await apiRequest(`/strategy/scan-opportunities-optimized?${qs}`);
+      console.log('✅ 优化交易机会扫描成功:', data);
+      
+      // 添加优化信息到返回数据
+      if (data && !data.error) {
+        data.optimization_info = {
+          method: 'optimized_scan',
+          improvements: [
+            '扩大数据源 - 从多个API获取代币数据',
+            '动态调整筛选条件 - 根据市场情况智能调整',
+            '增加随机性 - 在评分相近的代币中随机选择',
+            '时间衰减机制 - 避免重复推荐相同代币',
+            '多维度筛选 - 综合考虑多个因素'
+          ],
+          data_sources: data.data_sources_used || [],
+          total_scanned: data.total_tokens_scanned || 0,
+          filters_applied: data.filters_applied || {}
+        };
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('❌ 优化交易机会扫描失败:', error);
+      throw error;
+    }
+  },
+
   // 监控捆绑交易活动
   async monitorBundlerActivity(tokenAddress, chain = 'solana', timeWindow = '1h') {
     try {

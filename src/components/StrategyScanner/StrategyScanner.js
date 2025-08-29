@@ -35,6 +35,10 @@ const StrategyScanner = () => {
   const [rsiThreshold, setRsiThreshold] = useState(35); // 30/35/40
   const [rsiInterval, setRsiInterval] = useState('5m'); // 5m | 15m | 1h
 
+  // 新增：优化扫描配置
+  const [useOptimizedScan, setUseOptimizedScan] = useState(true); // 默认使用优化扫描
+  const [optimizationInfo, setOptimizationInfo] = useState(null); // 优化信息
+
   const presets = strategyService.getStrategyPresets();
 
   const handlePresetChange = (presetKey) => {
@@ -83,15 +87,59 @@ const StrategyScanner = () => {
     setOpportunitiesLoading(true);
     setError(null);
     setOpportunities(null);
+    setOptimizationInfo(null);
     
     try {
-      const result = await strategyService.scanTradingOpportunities(
-        strategyConfig.chain,
-        '6h',
-        rsiFilter,
-        rsiInterval,
-        rsiThreshold
-      );
+      let result;
+      
+      // 根据用户选择的时间波段确定time_filter参数
+      let timeFilter;
+      switch (strategyConfig.timeRange) {
+        case '3h-6h':
+          timeFilter = '3h';
+          break;
+        case '6h-12h':
+          timeFilter = '6h';
+          break;
+        case '12h-24h':
+          timeFilter = '12h';
+          break;
+        case '24h+':
+          timeFilter = '24h';
+          break;
+        default:
+          timeFilter = '6h'; // 默认值
+      }
+      
+      console.log(`🎯 使用时间波段: ${strategyConfig.timeRange} -> time_filter: ${timeFilter}`);
+      
+      if (useOptimizedScan) {
+        // 使用优化扫描
+        console.log('🚀 使用优化算法扫描交易机会...');
+        result = await strategyService.scanTradingOpportunitiesOptimized(
+          strategyConfig.chain,
+          timeFilter,  // 使用动态确定的时间筛选参数
+          rsiFilter,
+          rsiInterval,
+          rsiThreshold
+        );
+        
+        // 提取优化信息
+        if (result && !result.error && result.optimization_info) {
+          setOptimizationInfo(result.optimization_info);
+        }
+      } else {
+        // 使用原始扫描
+        console.log('🔍 使用原始算法扫描交易机会...');
+        result = await strategyService.scanTradingOpportunities(
+          strategyConfig.chain,
+          timeFilter,  // 使用动态确定的时间筛选参数
+          rsiFilter,
+          rsiInterval,
+          rsiThreshold
+        );
+      }
+      
       setOpportunities(result);
     } catch (err) {
       setError(err.message || '交易机会扫描失败');
@@ -217,122 +265,89 @@ const StrategyScanner = () => {
 
   // 新增：渲染优质代币卡片
   const renderQualityTokenCard = (token) => {
-    const confidenceColor = token.confidence >= 80 ? '#00b894' : 
-                           token.confidence >= 60 ? '#fdcb6e' : 
-                           token.confidence >= 40 ? '#e17055' : '#d63031';
+    // 检查是否为优化扫描的代币
+    const isOptimizedToken = useOptimizedScan && token.multi_dimensional_score !== undefined;
     
-    return (
-      <div key={token.token_mint} className="strategy-token-card quality-card">
-        <div className="token-header">
-          <div className="token-info">
-            <h3>{token.symbol}</h3>
-            <p>{token.name}</p>
-            <CopyableAddress address={token.token_mint} className="token-address" />
-          </div>
-          <div className="score-badge" style={{ backgroundColor: confidenceColor }}>
-            {token.confidence}%
-          </div>
-        </div>
-        
-        <div className="token-metrics">
-          <div className="metric">
-            <span className="label">决策</span>
-            <span className={`value ${token.decision === 'BUY' ? 'positive' : 'neutral'}`}>
-              {token.decision === 'BUY' ? '🟢 买入' : token.decision === 'HOLD' ? '🟡 观望' : '🔴 卖出'}
-            </span>
-          </div>
-          <div className="metric">
-            <span className="label">持有人数</span>
-            <span className="value">{token.holders?.toLocaleString()}</span>
-          </div>
-          <div className="metric">
-            <span className="label">市值</span>
-            <span className="value">${token.market_cap?.toLocaleString()}</span>
-          </div>
-          <div className="metric">
-            <span className="label">1h交易量</span>
-            <span className="value">${token.volume_1h?.toLocaleString()}</span>
-          </div>
-        </div>
-        
-        {/* 新增：实时机会分析数据 */}
-        {token.realtime_opportunity && (
-          <div className="realtime-metrics-preview">
-            <div className="metrics-row">
-              <div className="metric-group">
-                <h5>📊 1分钟数据</h5>
-                <div className="metric-item">
-                  <span className="label">买入账户:</span>
-                  <span className="value">{token.realtime_opportunity.buy_accounts_1m || 0}</span>
-                </div>
-                <div className="metric-item">
-                  <span className="label">买入交易量:</span>
-                  <span className="value">${(token.realtime_opportunity.buy_volume_1m || 0)?.toLocaleString()}</span>
-                </div>
-                <div className="metric-item">
-                  <span className="label">价格变化:</span>
-                  <span className={`value ${(token.realtime_opportunity.price_change_1m || 0) >= 0 ? 'positive' : 'negative'}`}>
-                    {((token.realtime_opportunity.price_change_1m || 0) * 100).toFixed(2)}%
-                  </span>
-                </div>
-              </div>
-              
-              <div className="metric-group">
-                <h5>📈 5分钟数据</h5>
-                <div className="metric-item">
-                  <span className="label">买入账户:</span>
-                  <span className="value">{token.realtime_opportunity.buy_accounts_5m || 0}</span>
-                </div>
-                <div className="metric-item">
-                  <span className="label">买入交易量:</span>
-                  <span className="value">${(token.realtime_opportunity.buy_volume_5m || 0)?.toLocaleString()}</span>
-                </div>
-                <div className="metric-item">
-                  <span className="label">价格变化:</span>
-                  <span className={`value ${(token.realtime_opportunity.price_change_5m || 0) >= 0 ? 'positive' : 'negative'}`}>
-                    {((token.realtime_opportunity.price_change_5m || 0) * 100).toFixed(2)}%
-                  </span>
-                </div>
-              </div>
+    if (isOptimizedToken) {
+      // 优化扫描代币卡片
+      const score = token.multi_dimensional_score;
+      const scoreColor = score >= 85 ? '#00b894' : 
+                        score >= 75 ? '#fdcb6e' : 
+                        score >= 65 ? '#e17055' : '#d63031';
+      
+      return (
+        <div key={token.token_mint} className="strategy-token-card optimized" onClick={() => handleTokenAnalysis(token)}>
+          <div className="token-header">
+            <div className="token-info">
+              <h3>{token.symbol || token.name}</h3>
+              <p>{token.name}</p>
+              <CopyableAddress address={token.token_mint} className="token-address" />
             </div>
-            
-            {/* 机会评分和状态 */}
-            <div className="opportunity-summary-preview">
-              <div className={`opportunity-badge ${token.realtime_opportunity.is_hot_opportunity ? 'hot' : 'normal'}`}>
-                {token.realtime_opportunity.is_hot_opportunity ? '🔥 热门机会' : '📊 一般机会'}
-              </div>
-              <div className="opportunity-score">
-                机会评分: {token.realtime_opportunity.opportunity_score || 0}
-              </div>
-              <div className="data-source">
-                数据源: {token.realtime_opportunity.data_source === 'pair_info' ? '实时API' : '热门代币'}
-              </div>
+            <div className="score-badge" style={{ backgroundColor: scoreColor }}>
+              {score}
             </div>
           </div>
-        )}
-        
-        <div className="token-signals">
-          <div className="signals-section">
-            <h4>✅ 正面信号</h4>
-            <ul>
-              {token.signals?.slice(0, 3).map((signal, index) => (
-                <li key={index}>{signal}</li>
-              ))}
-            </ul>
-          </div>
-          {token.warnings?.length > 0 && (
-            <div className="warnings-section">
-              <h4>⚠️ 风险警告</h4>
-              <ul>
-                {token.warnings?.slice(0, 2).map((warning, index) => (
-                  <li key={index}>{warning}</li>
-                ))}
-              </ul>
+          
+          <div className="token-metrics">
+            <div className="metric">
+              <span className="label">数据源</span>
+              <span className="value">{token.data_source}</span>
             </div>
-          )}
+            <div className="metric">
+              <span className="label">时间衰减</span>
+              <span className="value">{token.time_decay_applied}</span>
+            </div>
+            <div className="metric">
+              <span className="label">多样性</span>
+              <span className="value">{token.diversity_info}</span>
+            </div>
+          </div>
+          
+          <div className="optimization-badge">
+            🚀 优化扫描
+          </div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      // 原始扫描代币卡片（保持原有逻辑）
+      const score = token.strategy_score;
+      const scoreColor = score.total_score >= 85 ? '#00b894' : 
+                        score.total_score >= 75 ? '#fdcb6e' : 
+                        score.total_score >= 65 ? '#e17055' : '#d63031';
+      
+      return (
+        <div key={token._id} className="strategy-token-card" onClick={() => handleTokenAnalysis(token)}>
+          <div className="token-header">
+            <div className="token-info">
+              <h3>{token.symbol || token.name}</h3>
+              <p>{token.name}</p>
+              <CopyableAddress address={token.mint || token._id} className="token-address" />
+            </div>
+            <div className="score-badge" style={{ backgroundColor: scoreColor }}>
+              {score.total_score}
+            </div>
+          </div>
+          
+          <div className="token-metrics">
+            <div className="metric">
+              <span className="label">持有人数</span>
+              <span className="value">{token.holders?.toLocaleString()}</span>
+              <span className="score">({score.holders_score})</span>
+            </div>
+            <div className="metric">
+              <span className="label">1h交易量</span>
+              <span className="value">${token.buyAndSellVolume1h?.toLocaleString()}</span>
+              <span className="score">({score.volume_score})</span>
+            </div>
+            <div className="metric">
+              <span className="label">市值</span>
+              <span className="value">${token.marketCap?.toLocaleString()}</span>
+              <span className="score">({score.market_cap_score})</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
   };
 
   const renderTokenAnalysis = () => {
@@ -688,18 +703,20 @@ const StrategyScanner = () => {
               onChange={(e) => setStrategyConfig({...strategyConfig, minMarketCap: parseInt(e.target.value)})}
             />
           </div>
-          {/* 新增：RSI 二级筛选 */}
+        </div>
+
+        <div className="rsi-config">
           <div className="config-group">
-            <label>RSI过滤:</label>
+            <label>RSI筛选:</label>
             <select value={rsiFilter} onChange={(e) => setRsiFilter(e.target.value)}>
               <option value="none">不筛选</option>
-              <option value="oversold">超卖(≤阈值)</option>
-              <option value="overbought">超买(≥100-阈值)</option>
+              <option value="oversold">超卖</option>
+              <option value="overbought">超买</option>
             </select>
           </div>
           <div className="config-group">
             <label>RSI阈值:</label>
-            <select value={rsiThreshold} onChange={(e) => setRsiThreshold(parseInt(e.target.value))}>
+            <select value={rsiThreshold} onChange={(e) => setRsiThreshold(Number(e.target.value))}>
               <option value={30}>30</option>
               <option value={35}>35</option>
               <option value={40}>40</option>
@@ -715,9 +732,29 @@ const StrategyScanner = () => {
           </div>
         </div>
 
+        {/* 新增：优化扫描配置 */}
+        <div className="optimization-config">
+          <div className="config-group">
+            <label className="optimization-label">
+              <input
+                type="checkbox"
+                checked={useOptimizedScan}
+                onChange={(e) => setUseOptimizedScan(e.target.checked)}
+              />
+              🚀 使用优化扫描算法
+            </label>
+            <div className="optimization-description">
+              {useOptimizedScan ? 
+                '✅ 启用：扩大数据源、动态筛选、时间衰减、多维度评分' : 
+                '❌ 禁用：使用原始扫描算法'
+              }
+            </div>
+          </div>
+        </div>
+
         <div className="scan-buttons">
         <button className="scan-btn" onClick={handleScan} disabled={loading}>
-            {loading ? '🔍 扫描中...' : '🚀 策略扫描'}
+            {loading ? '�� 扫描中...' : '🚀 策略扫描'}
           </button>
           <button className="quality-scan-btn" onClick={handleScanQuality} disabled={qualityLoading}>
             {qualityLoading ? '🔍 扫描中...' : '💎 优质代币'}
@@ -778,8 +815,40 @@ const StrategyScanner = () => {
               <span>时间筛选: {opportunities.time_filter}</span>
               <span>RSI筛选: {opportunities.rsi_filter}</span>
               <span>机会数量: {opportunities.opportunities_count}</span>
+              {useOptimizedScan && opportunities.total_tokens_scanned && (
+                <span>总扫描: {opportunities.total_tokens_scanned}</span>
+              )}
+              {useOptimizedScan && opportunities.filtered_tokens_count && (
+                <span>筛选后: {opportunities.filtered_tokens_count}</span>
+              )}
             </div>
           </div>
+
+          {/* 新增：优化信息显示 */}
+          {useOptimizedScan && optimizationInfo && (
+            <div className="optimization-info">
+              <h3>🚀 优化算法信息</h3>
+              <div className="optimization-details">
+                <div className="optimization-item">
+                  <strong>使用数据源:</strong> {optimizationInfo.data_sources.join(', ')}
+                </div>
+                <div className="optimization-item">
+                  <strong>扫描总数:</strong> {optimizationInfo.total_scanned} 个代币
+                </div>
+                <div className="optimization-item">
+                  <strong>应用筛选条件:</strong> {Object.keys(optimizationInfo.filters_applied).length} 个
+                </div>
+                <div className="optimization-item">
+                  <strong>优化改进:</strong>
+                  <ul>
+                    {optimizationInfo.improvements.map((improvement, index) => (
+                      <li key={index}>{improvement}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
           
           <div className="tokens-grid">
             {opportunities.opportunities.map(renderQualityTokenCard)}
