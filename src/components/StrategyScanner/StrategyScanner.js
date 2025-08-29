@@ -489,7 +489,7 @@ const StrategyScanner = () => {
         console.log('🚀 使用优化算法扫描交易机会，同时获取原始扫描结果...');
         const [optimizedRes, originalRes] = await Promise.all([
           strategyService.scanTradingOpportunitiesOptimized(
-            strategyConfig.chain,
+        strategyConfig.chain,
             timeFilter,
             rsiFilter,
             rsiInterval,
@@ -534,10 +534,10 @@ const StrategyScanner = () => {
         result = await strategyService.scanTradingOpportunities(
           strategyConfig.chain,
           timeFilter,
-          rsiFilter,
-          rsiInterval,
-          rsiThreshold
-        );
+        rsiFilter,
+        rsiInterval,
+        rsiThreshold
+      );
         // 为原始扫描结果添加标识
         const markedOriginalOpportunities = (result.opportunities || []).map(token => ({
           ...token,
@@ -831,30 +831,30 @@ const StrategyScanner = () => {
         if (!address || address.length < 16) return address;
         return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`;
       };
-      
-      return (
+    
+    return (
         <div key={tokenId} className="strategy-token-card optimized" onClick={() => handleTokenAnalysis(tokenId)}>
-          <div className="token-header">
-            <div className="token-info">
+        <div className="token-header">
+          <div className="token-info">
               <h3>{token.symbol || token.name}</h3>
-              <p>{token.name}</p>
+            <p>{token.name}</p>
               <CopyableAddress address={tokenId} className="token-address" />
-            </div>
+          </div>
             <div className="score-badge" style={{ backgroundColor: scoreColor }}>
               {multiScore}
-            </div>
           </div>
-          
+        </div>
+        
           {/* 与原始卡片一致的核心信息区域 */}
           <div className="decision-holders-row">
             <div className="decision-section">
               <span className="label">评分</span>
               <div className="decision-value">
                 <span className="decision-text">{multiScore}</span>
-              </div>
+          </div>
             </div>
             <div className="holders-section">
-              <span className="label">持有人数</span>
+            <span className="label">持有人数</span>
               <div className="holders-details">
                 <div className="total-holders">
                   <span className="holders-label">全部:</span>
@@ -866,26 +866,26 @@ const StrategyScanner = () => {
                   >
                     🔄
                   </button>
-                </div>
+          </div>
                 <div className="kol-holders">
                   <span className="holders-label">KOL:</span>
                   <span className="holders-value">{typeof kolHolders === 'number' ? kolHolders.toLocaleString() : kolHolders}</span>
-                </div>
-              </div>
-            </div>
           </div>
-          
+              </div>
+          </div>
+        </div>
+        
           {/* 市场指标（如可用） */}
           <div className="market-metrics">
-            <div className="metric-item">
+                <div className="metric-item">
               <span className="metric-label">市值</span>
               <span className="metric-value">${typeof marketCap === 'number' ? marketCap.toLocaleString() : marketCap}</span>
-            </div>
-            <div className="metric-item">
+                </div>
+                <div className="metric-item">
               <span className="metric-label">1h交易量</span>
               <span className="metric-value">${typeof volume === 'number' ? volume.toLocaleString() : volume}</span>
-            </div>
-          </div>
+                </div>
+                </div>
           
           {/* 正面信号（若有则展示） */}
           {mergedSignals.length > 0 && (
@@ -907,8 +907,8 @@ const StrategyScanner = () => {
           
           <div className="optimization-badge">
             🚀 优化扫描
-          </div>
-        </div>
+                </div>
+                </div>
       );
     } else if (isOriginalToken) {
       // 原始扫描代币卡片（简化显示，只显示必要数据）
@@ -968,7 +968,7 @@ const StrategyScanner = () => {
               <div className="token-address-section">
                 <span className="token-address" title={token.token_mint || token.mint || token._id}>
                   {formatAddress(token.token_mint || token.mint || token._id)}
-                </span>
+                  </span>
                 <button 
                   className="copy-button" 
                   onClick={(e) => {
@@ -979,13 +979,13 @@ const StrategyScanner = () => {
                 >
                   {copyStatus[tokenId] === true ? '✅' : copyStatus[tokenId] === 'failed' ? '❌' : '📋'}
                 </button>
+                </div>
               </div>
-            </div>
             <div className="percentage-change">
               {token.percentage_change || '0'}%
             </div>
-          </div>
-          
+            </div>
+            
           <hr className="divider" />
           
           {/* 决策和持有人数 */}
@@ -996,7 +996,7 @@ const StrategyScanner = () => {
                 <span className="decision-dot buy"></span>
                 <span className="decision-text">买入</span>
               </div>
-            </div>
+              </div>
             <div className="holders-section">
               <span className="label">持有人数</span>
               <div className="holders-details">
@@ -1030,13 +1030,13 @@ const StrategyScanner = () => {
                   >
                     🧪
                   </button>
-                </div>
+              </div>
                 <div className="kol-holders">
                   <span className="holders-label">KOL:</span>
                   <span className="holders-value">
                     {typeof kolHolders === 'number' ? kolHolders.toLocaleString() : kolHolders}
                   </span>
-                </div>
+            </div>
               </div>
               {/* 调试信息 */}
               {process.env.NODE_ENV === 'development' && (
@@ -1044,8 +1044,8 @@ const StrategyScanner = () => {
                   <small>TokenID: {tokenId}</small>
                   <small>API状态: {tokenHolders[tokenId] ? '已获取' : '未获取'}</small>
                   <small>持有人数: {tokenHolders[tokenId]}</small>
-                </div>
-              )}
+          </div>
+        )}
             </div>
           </div>
           
@@ -1054,7 +1054,7 @@ const StrategyScanner = () => {
             <div className="metric-item">
               <span className="metric-label">市值</span>
               <span className="metric-value">${typeof marketCap === 'number' ? marketCap.toLocaleString() : marketCap}</span>
-            </div>
+          </div>
             <div className="metric-item">
               <span className="metric-label">1h交易量</span>
               <span className="metric-value">${typeof volume === 'number' ? volume.toLocaleString() : volume}</span>
@@ -1081,9 +1081,9 @@ const StrategyScanner = () => {
           
           <div className="original-badge">
             🔍 原始扫描
-          </div>
         </div>
-      );
+      </div>
+    );
     } else {
       // 通用代币卡片（其他情况）
       const score = token.strategy_score?.total_score || token.confidence || token.multi_dimensional_score || 0;
@@ -1558,19 +1558,19 @@ const StrategyScanner = () => {
         </div>
 
         <div className="scan-buttons">
-            <button className="scan-btn" onClick={handleScan} disabled={loading}>
+        <button className="scan-btn" onClick={handleScan} disabled={loading}>
               {loading ? '🔄 扫描中...' : '🚀 策略扫描'}
-            </button>
-            <button className="quality-scan-btn" onClick={handleScanQuality} disabled={qualityLoading}>
+          </button>
+          <button className="quality-scan-btn" onClick={handleScanQuality} disabled={qualityLoading}>
               {qualityLoading ? '🔄 扫描中...' : '⭐ 质量扫描'}
-            </button>
+          </button>
             <button className="opportunity-scan-btn" onClick={handleScanOpportunities} disabled={opportunitiesLoading}>
               {opportunitiesLoading ? '🔄 扫描中...' : '⏰ 机会扫描'}
             </button>
             <button className="combined-scan-btn" onClick={handleScanAllOpportunities} disabled={opportunitiesLoading}>
               {opportunitiesLoading ? '🔄 合并扫描中...' : '🧪 合并机会扫描'}
-            </button>
-          </div>
+        </button>
+        </div>
       </div>
 
       {error && (
