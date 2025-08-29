@@ -421,12 +421,17 @@ const StrategyScanner = () => {
         </div>
       );
     } else if (isOriginalToken) {
-      // 原始扫描代币卡片（添加安全检查）
+      // 原始扫描代币卡片（修复字段名称匹配）
       const score = token.strategy_score || {};
       const totalScore = score.total_score || token.confidence || 0;
       const scoreColor = totalScore >= 85 ? '#00b894' : 
                         totalScore >= 75 ? '#fdcb6e' : 
                         totalScore >= 65 ? '#e17055' : '#d63031';
+      
+      // 获取正确的数据字段
+      const holders = token.holders || token.holderCount || token.community_count || 'N/A';
+      const volume = token.buyAndSellVolume1h || token.volume_1h || 'N/A';
+      const marketCap = token.marketCap || token.market_cap || 'N/A';
       
       return (
         <div key={token._id || token.token_mint} className="strategy-token-card" onClick={() => handleTokenAnalysis(token)}>
@@ -444,68 +449,90 @@ const StrategyScanner = () => {
           <div className="token-metrics">
             <div className="metric">
               <span className="label">持有人数</span>
-              <span className="value">{token.holders?.toLocaleString() || token.holderCount?.toLocaleString() || 'N/A'}</span>
+              <span className="value">{typeof holders === 'number' ? holders.toLocaleString() : holders}</span>
               <span className="score">({score.holders_score || 'N/A'})</span>
             </div>
             <div className="metric">
               <span className="label">1h交易量</span>
-              <span className="value">${token.buyAndSellVolume1h?.toLocaleString() || token.volume_1h?.toLocaleString() || 'N/A'}</span>
+              <span className="value">${typeof volume === 'number' ? volume.toLocaleString() : volume}</span>
               <span className="score">({score.volume_score || 'N/A'})</span>
             </div>
             <div className="metric">
               <span className="label">市值</span>
-              <span className="value">${token.marketCap?.toLocaleString() || token.market_cap?.toLocaleString() || 'N/A'}</span>
+              <span className="value">${typeof marketCap === 'number' ? marketCap.toLocaleString() : marketCap}</span>
               <span className="score">({score.market_cap_score || 'N/A'})</span>
             </div>
           </div>
           
-          {/* 新增：显示信号和警告信息 */}
+          {/* 显示信号信息（使用原始扫描的信号格式） */}
           {token.signals && token.signals.length > 0 && (
             <div className="token-signals">
               <div className="signals-section">
                 <h4>✅ 正面信号</h4>
-                <ul>
-                  {token.signals.slice(0, 3).map((signal, index) => (
-                    <li key={index}>{signal}</li>
+                <div className="signals-grid">
+                  {token.signals.map((signal, index) => (
+                    <div key={index} className="signal-item">
+                      <span className="signal-checkbox">✅</span>
+                      <span className="signal-text">{signal}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             </div>
           )}
           
-          {token.warnings && token.warnings.length > 0 && (
-            <div className="token-warnings">
-              <div className="warnings-section">
-                <h4>⚠️ 风险警告</h4>
-                <ul>
-                  {token.warnings.slice(0, 2).map((warning, index) => (
-                    <li key={index}>{warning}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-          
-          {/* 新增：显示MEMERADAR信号 */}
+          {/* 显示MEMERADAR信号 */}
           {token.memeradar_signals && token.memeradar_signals.length > 0 && (
             <div className="memeradar-signals">
               <div className="signals-section">
                 <h4>📡 MEMERADAR信号</h4>
-                <ul>
-                  {token.memeradar_signals.slice(0, 3).map((signal, index) => (
-                    <li key={index}>{signal}</li>
+                <div className="signals-grid">
+                  {token.memeradar_signals.map((signal, index) => (
+                    <div key={index} className="signal-item">
+                      <span className="signal-checkbox">📡</span>
+                      <span className="signal-text">{signal}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             </div>
           )}
           
-          {/* 新增：显示实时机会数据 */}
+          {/* 显示其他重要信息 */}
+          <div className="token-additional-info">
+            <div className="info-row">
+              <div className="info-item">
+                <span className="label">代币年龄:</span>
+                <span className="value">{token.age_hours || 'N/A'} 小时</span>
+              </div>
+              <div className="info-item">
+                <span className="label">RSI值:</span>
+                <span className="value">{token.rsi || 'N/A'}</span>
+              </div>
+            </div>
+            <div className="info-row">
+              <div className="info-item">
+                <span className="label">信号数量:</span>
+                <span className="value">{token.signal_count || 'N/A'}</span>
+              </div>
+              <div className="info-item">
+                <span className="label">热度等级:</span>
+                <span className="value">{token.heat_level || 'N/A'}</span>
+              </div>
+            </div>
+            {token.has_chainzhi && (
+              <div className="chainzhi-badge">
+                🔗 包含链智信号
+              </div>
+            )}
+          </div>
+          
+          {/* 显示实时机会数据 */}
           {token.realtime_opportunity && (
             <div className="realtime-metrics-preview">
               <div className="metrics-row">
                 <div className="metric-group">
-                  <h5>📊 1分钟数据</h5>
+                  <h5>📊 实时数据</h5>
                   <div className="metric-item">
                     <span className="label">买入账户:</span>
                     <span className="value">{token.realtime_opportunity.buy_accounts_1m || 0}</span>
@@ -521,24 +548,6 @@ const StrategyScanner = () => {
                     </span>
                   </div>
                 </div>
-                
-                <div className="metric-group">
-                  <h5>📈 5分钟数据</h5>
-                  <div className="metric-item">
-                    <span className="label">买入账户:</span>
-                    <span className="value">{token.realtime_opportunity.buy_accounts_5m || 0}</span>
-                  </div>
-                  <div className="metric-item">
-                    <span className="label">买入交易量:</span>
-                    <span className="value">${(token.realtime_opportunity.buy_volume_5m || 0)?.toLocaleString()}</span>
-                  </div>
-                  <div className="metric-item">
-                    <span className="label">价格变化:</span>
-                    <span className={`value ${(token.realtime_opportunity.price_change_5m || 0) >= 0 ? 'positive' : 'negative'}`}>
-                      {((token.realtime_opportunity.price_change_5m || 0) * 100).toFixed(2)}%
-                    </span>
-                  </div>
-                </div>
               </div>
               
               {/* 机会评分和状态 */}
@@ -548,9 +557,6 @@ const StrategyScanner = () => {
                 </div>
                 <div className="opportunity-score">
                   机会评分: {token.realtime_opportunity.opportunity_score || 0}
-                </div>
-                <div className="data-source">
-                  数据源: {token.realtime_opportunity.data_source === 'pair_info' ? '实时API' : '热门代币'}
                 </div>
               </div>
             </div>
