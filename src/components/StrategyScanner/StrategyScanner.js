@@ -50,8 +50,9 @@ const StrategyScanner = () => {
 
   // 当扫描结果变化时，获取所有代币的持有人数
   useEffect(() => {
-    console.log('🔍 扫描结果变化，开始获取持有人数:', scanResults);
+    console.log('🔍 扫描结果变化，scanResults:', scanResults);
     
+    // 只有当scanResults不为null且有数据时才处理
     if (scanResults && Array.isArray(scanResults) && scanResults.length > 0) {
       console.log('📊 扫描到代币数量:', scanResults.length);
       scanResults.forEach((token, index) => {
@@ -61,13 +62,28 @@ const StrategyScanner = () => {
       // 清空之前的持有人数状态
       setTokenHolders({});
       
-      // 延迟一点再获取，确保状态已清空
-      setTimeout(() => {
-        console.log('⏰ 延迟后开始获取持有人数');
-        fetchHotTokensAndUpdateHolders(scanResults);
-      }, 100);
+      // 立即获取持有人数，不使用延迟
+      console.log('🚀 立即开始获取持有人数');
+      fetchHotTokensAndUpdateHolders(scanResults);
+    } else {
+      console.log('❌ scanResults无效或为空:', scanResults);
     }
   }, [scanResults]);
+
+  // 监听扫描完成事件
+  useEffect(() => {
+    // 当扫描完成且有结果时，强制获取持有人数
+    if (scanResults && Array.isArray(scanResults) && scanResults.length > 0 && !loading && !opportunitiesLoading) {
+      console.log('🎯 扫描完成，强制获取持有人数');
+      // 延迟一点确保状态稳定
+      setTimeout(() => {
+        if (Object.keys(tokenHolders).length === 0) {
+          console.log('🔄 持有人数状态为空，重新获取');
+          fetchHotTokensAndUpdateHolders(scanResults);
+        }
+      }, 500);
+    }
+  }, [scanResults, loading, opportunitiesLoading, tokenHolders]);
 
   // 强制刷新所有持有人数
   const forceRefreshAllHolders = async () => {
@@ -466,7 +482,7 @@ const StrategyScanner = () => {
   const handleScanAllOpportunities = async () => {
     setOpportunitiesLoading(true);
     setError(null);
-    setOpportunities(null);
+    setScanResults([]);
     setOptimizationInfo(null);
     
     try {
@@ -489,85 +505,64 @@ const StrategyScanner = () => {
           timeFilter = '6h';
       }
       
-      console.log(`🎯 扫描所有机会，时间波段: ${strategyConfig.timeRange} -> time_filter: ${timeFilter}`);
+      console.log('🎯 扫描所有机会，时间波段:', strategyConfig.timeRange, '-> time_filter:', timeFilter);
       
-      // 并行调用两个API
+      // 并行调用原始扫描和优化扫描
       const [originalResult, optimizedResult] = await Promise.all([
-        strategyService.scanTradingOpportunities(
-          strategyConfig.chain,
-          timeFilter,
-          rsiFilter,
-          rsiInterval,
-          rsiThreshold
-        ),
-        strategyService.scanTradingOpportunitiesOptimized(
-          strategyConfig.chain,
-          timeFilter,
-          rsiFilter,
-          rsiInterval,
-          rsiThreshold
-        )
+        strategyService.scanTradingOpportunities(strategyConfig),
+        strategyService.scanTradingOpportunitiesOptimized(strategyConfig)
       ]);
       
+      console.log('✅ 原始扫描结果:', originalResult);
+      console.log('✅ 优化扫描结果:', optimizedResult);
+      
       // 合并结果
-      let combinedResult = {
-        error: false,
-        time_filter: timeFilter,
-        rsi_filter: rsiFilter,
-        interval: rsiInterval,
-        rsi_threshold: rsiThreshold,
-        opportunities_count: 0,
-        opportunities: [],
-        scan_method: 'combined',
-        original_count: 0,
-        optimized_count: 0
-      };
+      const originalOpportunities = originalResult.opportunities || [];
+      const optimizedOpportunities = optimizedResult.opportunities || [];
       
-      // 处理原始扫描结果
-      if (originalResult && !originalResult.error) {
-        const originalOpportunities = originalResult.opportunities || [];
-        combinedResult.original_count = originalOpportunities.length;
-        combinedResult.opportunities_count += originalOpportunities.length;
-        
-        // 为原始扫描结果添加标识
-        const markedOriginalOpportunities = originalOpportunities.map(opp => ({
-          ...opp,
-          scan_method: 'original',
-          display_score: opp.confidence || opp.strategy_score?.total_score || 0
-        }));
-        
-        combinedResult.opportunities.push(...markedOriginalOpportunities);
-      }
+      // 为每个代币添加来源标识
+      const markedOriginal = originalOpportunities.map(token => ({
+        ...token,
+        scan_method: 'original',
+        display_score: token.confidence || 0
+      }));
       
-      // 处理优化扫描结果
-      if (optimizedResult && !optimizedResult.error) {
-        const optimizedOpportunities = optimizedResult.opportunities || [];
-        combinedResult.optimized_count = optimizedOpportunities.length;
-        combinedResult.opportunities_count += optimizedOpportunities.length;
-        
-        // 为优化扫描结果添加标识
-        const markedOptimizedOpportunities = optimizedOpportunities.map(opp => ({
-          ...opp,
-          scan_method: 'optimized',
-          display_score: opp.multi_dimensional_score || opp.confidence || 0
-        }));
-        
-        combinedResult.opportunities.push(...markedOptimizedOpportunities);
-        
-        // 提取优化信息
-        if (optimizedResult.optimization_info) {
-          setOptimizationInfo(optimizedResult.optimization_info);
+      const markedOptimized = optimizedOpportunities.map(token => ({
+        ...token,
+        scan_method: 'optimized',
+        display_score: token.multi_dimensional_score || 0
+      }));
+      
+      // 合并并去重（基于token_mint）
+      const allTokens = [...markedOriginal, ...markedOptimized];
+      const uniqueTokens = [];
+      const seenMints = new Set();
+      
+      allTokens.forEach(token => {
+        const mint = token.token_mint || token._id || token.mint;
+        if (mint && !seenMints.has(mint)) {
+          seenMints.add(mint);
+          uniqueTokens.push(token);
         }
-      }
+      });
       
       // 按评分排序
-      combinedResult.opportunities.sort((a, b) => b.display_score - a.display_score);
+      uniqueTokens.sort((a, b) => (b.display_score || 0) - (a.display_score || 0));
       
-      console.log(`🎉 合并扫描完成: 原始${combinedResult.original_count}个 + 优化${combinedResult.optimized_count}个 = 总计${combinedResult.opportunities_count}个`);
+      console.log('🎉 合并扫描完成: 原始' + originalOpportunities.length + '个 + 优化' + optimizedOpportunities.length + '个 = 总计' + uniqueTokens.length + '个');
       
-      setOpportunities(combinedResult);
+      setScanResults(uniqueTokens);
+      setOptimizationInfo(optimizedResult.optimization_info);
+      
+      // 立即获取持有人数
+      console.log('🚀 扫描完成，立即获取持有人数');
+      setTimeout(() => {
+        fetchHotTokensAndUpdateHolders(uniqueTokens);
+      }, 100);
+      
     } catch (err) {
-      setError(err.message || '扫描所有机会失败');
+      console.error('扫描失败:', err);
+      setError(err.message || '扫描失败');
     } finally {
       setOpportunitiesLoading(false);
     }
