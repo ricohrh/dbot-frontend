@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { strategyService } from '../../services/strategyService';
 import CopyableAddress from '../common/CopyableAddress';
 import './StrategyScanner.css';
@@ -68,6 +68,8 @@ const StrategyScanner = () => {
   // 新增：获取代币持有人数的状态
   const [tokenHolders, setTokenHolders] = useState({});
   const [copyStatus, setCopyStatus] = useState({}); // 复制状态
+  // 记录已为哪些机会列表触发过批量拉取，避免重复触发造成卡顿
+  const lastOppHoldersKeyRef = useRef('');
 
   // 调试：监听持有人数状态变化
   useEffect(() => {
@@ -1437,6 +1439,33 @@ const StrategyScanner = () => {
     );
   };
 
+  useEffect(() => {
+    // 交易机会变化时，自动批量获取持有人数（兼容合并/优化结果）
+    if (opportunities && Array.isArray(opportunities.opportunities) && opportunities.opportunities.length > 0) {
+      const tokens = opportunities.opportunities;
+      // 生成当前机会集的唯一 key（按 mint 排序拼接）
+      const key = tokens
+        .map(t => t.token_mint || t._id || t.mint)
+        .filter(Boolean)
+        .sort()
+        .join('|');
+      if (key && key === lastOppHoldersKeyRef.current) {
+        // 已处理过同一批机会，跳过
+        return;
+      }
+      lastOppHoldersKeyRef.current = key;
+      // 预先填充"加载中..."占位，避免界面长期 undefined
+      const placeholders = {};
+      tokens.forEach(t => {
+        const tid = t.token_mint || t._id || t.mint;
+        if (tid) placeholders[tid] = '加载中...';
+      });
+      setTokenHolders(placeholders);
+      // 异步批量获取
+      fetchHotTokensAndUpdateHolders(tokens);
+    }
+  }, [opportunities]);
+
   return (
     <div className="strategy-scanner">
       <div className="scanner-header">
@@ -1579,7 +1608,7 @@ const StrategyScanner = () => {
         </div>
       )}
 
-      {/* 原始扫描结果已合并进“交易机会扫描结果”，此区块不再显示 */}
+      {/* 原始扫描结果已合并进"交易机会扫描结果"，此区块不再显示 */}
 
       {/* 优质代币扫描结果 */}
       {qualityTokens && (
