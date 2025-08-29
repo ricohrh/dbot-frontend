@@ -45,12 +45,21 @@ const StrategyScanner = () => {
 
   // 当扫描结果变化时，获取所有代币的持有人数
   useEffect(() => {
+    console.log('扫描结果变化，开始获取持有人数:', scanResults);
+    
     if (scanResults && Array.isArray(scanResults) && scanResults.length > 0) {
-      scanResults.forEach(token => {
+      // 清空之前的持有人数状态
+      setTokenHolders({});
+      
+      scanResults.forEach((token, index) => {
         if (token && token.token_mint) {
           const tokenId = token.token_mint || token._id || token.mint;
           if (tokenId && tokenId !== 'unknown') {
-            fetchTokenHolders(tokenId);
+            console.log(`准备获取代币 ${index + 1} 的持有人数:`, tokenId);
+            // 延迟调用，避免同时发起太多请求
+            setTimeout(() => {
+              fetchTokenHolders(tokenId);
+            }, index * 100);
           }
         }
       });
@@ -59,12 +68,26 @@ const StrategyScanner = () => {
 
   // 获取代币持有人数的函数
   const fetchTokenHolders = async (tokenId) => {
-    if (!tokenId || tokenId === 'unknown' || (tokenHolders[tokenId] && tokenHolders[tokenId] !== '加载中...')) {
-      return; // 已经获取过或无效ID
+    if (!tokenId || tokenId === 'unknown') {
+      console.log('无效的tokenId:', tokenId);
+      return;
+    }
+
+    // 如果已经有数据且不是加载状态，跳过
+    if (tokenHolders[tokenId] && tokenHolders[tokenId] !== '加载中...') {
+      console.log('代币持有人数已存在，跳过:', tokenId, tokenHolders[tokenId]);
+      return;
     }
 
     try {
       console.log('正在获取持有人数:', tokenId);
+      
+      // 先设置为加载状态
+      setTokenHolders(prev => ({
+        ...prev,
+        [tokenId]: '加载中...'
+      }));
+      
       const response = await fetch(`https://api-data-v1.dbotx.com/kline/holders?chain=solana&token=${tokenId}`, {
         headers: {
           'x-api-key': 'hwxwzxlpdc6whlt9uwaipnp6jxpdfabw'
@@ -78,7 +101,7 @@ const StrategyScanner = () => {
         if (data.err === false && data.res && Array.isArray(data.res)) {
           // 计算总持有人数量
           const totalHoldersCount = data.res.length;
-          console.log('计算的总持有人数:', totalHoldersCount);
+          console.log('计算的总持有人数:', totalHoldersCount, 'for token:', tokenId);
           
           setTokenHolders(prev => ({
             ...prev,
@@ -641,6 +664,17 @@ const StrategyScanner = () => {
                       '加载中...'
                     }
                   </span>
+                  <button 
+                    className="refresh-button" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('手动刷新持有人数:', tokenId);
+                      fetchTokenHolders(tokenId);
+                    }}
+                    title="刷新持有人数"
+                  >
+                    🔄
+                  </button>
                 </div>
                 <div className="kol-holders">
                   <span className="holders-label">KOL:</span>
@@ -654,6 +688,7 @@ const StrategyScanner = () => {
                 <div className="debug-info">
                   <small>TokenID: {tokenId}</small>
                   <small>API状态: {tokenHolders[tokenId] ? '已获取' : '未获取'}</small>
+                  <small>持有人数: {tokenHolders[tokenId]}</small>
                 </div>
               )}
             </div>

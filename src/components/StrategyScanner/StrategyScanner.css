@@ -2035,3 +2035,26 @@
   color: #333 !important; /* 强制使用深色字体 */
   font-weight: 600;
 } 
+
+/* 刷新按钮样式 */
+.refresh-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+}
+
+.refresh-button:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+  transform: rotate(180deg);
+}
+
+.refresh-button:active {
+  transform: rotate(360deg);
+} 
