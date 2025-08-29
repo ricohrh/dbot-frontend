@@ -87,10 +87,10 @@ const StrategyScanner = () => {
 
   // 强制刷新所有持有人数
   const forceRefreshAllHolders = async () => {
-    console.log('🔄 强制刷新所有持有人数');
-    if (scanResults && Array.isArray(scanResults) && scanResults.length > 0) {
+    console.log('🔄 强制刷新交易机会持有人数');
+    if (opportunities && opportunities.opportunities && Array.isArray(opportunities.opportunities) && opportunities.opportunities.length > 0) {
       setTokenHolders({});
-      await fetchHotTokensAndUpdateHolders(scanResults);
+      await fetchHotTokensAndUpdateHolders(opportunities.opportunities);
     }
   };
 
@@ -722,7 +722,7 @@ const StrategyScanner = () => {
       const tokenId = token.token_mint || token._id || token.mint || 'unknown';
       
       // 获取持有人数
-      const totalHolders = tokenHolders[tokenId] || '加载中...';
+      const totalHolders = tokenHolders[tokenId] || (opportunities ? '加载中...' : 'N/A');
       
       return (
         <div key={tokenId} className="strategy-token-card optimized" onClick={() => handleTokenAnalysis(tokenId)}>
@@ -793,7 +793,7 @@ const StrategyScanner = () => {
       };
       
       // 获取全部持有人数
-      const totalHolders = tokenHolders[tokenId] || '加载中...';
+      const totalHolders = tokenHolders[tokenId] || (opportunities ? '加载中...' : 'N/A');
       
       return (
         <div key={tokenId} className="strategy-token-card original-scan" onClick={() => handleTokenAnalysis(tokenId)}>
@@ -842,7 +842,7 @@ const StrategyScanner = () => {
                   <span className="holders-value">
                     {tokenHolders[tokenId] ? 
                       (typeof tokenHolders[tokenId] === 'number' ? tokenHolders[tokenId].toLocaleString() : tokenHolders[tokenId]) : 
-                      '加载中...'
+                      (opportunities ? '加载中...' : 'N/A')
                     }
                   </span>
                   <button 
@@ -932,7 +932,7 @@ const StrategyScanner = () => {
       const tokenId = token.token_mint || token._id || token.mint || 'unknown';
       
       // 获取持有人数
-      const totalHolders = tokenHolders[tokenId] || '加载中...';
+      const totalHolders = tokenHolders[tokenId] || (opportunities ? '加载中...' : 'N/A');
       
       return (
         <div key={tokenId} className="strategy-token-card generic" onClick={() => handleTokenAnalysis(tokenId)}>
@@ -1382,9 +1382,6 @@ const StrategyScanner = () => {
             <button className="combined-scan-btn" onClick={handleScanAllOpportunities} disabled={opportunitiesLoading}>
               {opportunitiesLoading ? '🔄 合并扫描中...' : '🧪 合并机会扫描'}
             </button>
-            <button className="force-refresh-btn" onClick={forceRefreshAllHolders} title="强制刷新所有持有人数">
-              🔄 刷新持有人数
-            </button>
           </div>
       </div>
 
@@ -1434,6 +1431,11 @@ const StrategyScanner = () => {
         <div className="scan-results">
           <div className="results-header">
             <h2>⏰ 交易机会扫描结果</h2>
+            <div className="header-actions">
+              <button className="force-refresh-btn" onClick={forceRefreshAllHolders} title="强制刷新所有持有人数">
+                🔄 刷新持有人数
+              </button>
+            </div>
             <div className="results-stats">
               <span>时间筛选: {opportunities.time_filter}</span>
               <span>RSI筛选: {opportunities.rsi_filter}</span>
