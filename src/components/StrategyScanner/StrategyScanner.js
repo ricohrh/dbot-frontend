@@ -74,13 +74,23 @@ const StrategyScanner = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('持有人数API响应:', data); // 调试日志
-        // 根据API响应结构获取持有人数
-        const holdersCount = data.holders_count || data.total_holders || data.count || data.holders || 'N/A';
-        console.log('解析的持有人数:', holdersCount);
-        setTokenHolders(prev => ({
-          ...prev,
-          [tokenId]: holdersCount
-        }));
+        
+        if (data.err === false && data.res && Array.isArray(data.res)) {
+          // 计算总持有人数量
+          const totalHoldersCount = data.res.length;
+          console.log('计算的总持有人数:', totalHoldersCount);
+          
+          setTokenHolders(prev => ({
+            ...prev,
+            [tokenId]: totalHoldersCount
+          }));
+        } else {
+          console.error('API响应格式错误:', data);
+          setTokenHolders(prev => ({
+            ...prev,
+            [tokenId]: '格式错误'
+          }));
+        }
       } else {
         console.error('持有人数API响应失败:', response.status, response.statusText);
         setTokenHolders(prev => ({
