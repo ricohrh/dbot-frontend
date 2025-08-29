@@ -805,8 +805,32 @@ const StrategyScanner = () => {
       // 获取正确的代币ID
       const tokenId = token.token_mint || token._id || token.mint || 'unknown';
       
-      // 获取持有人数
+      // 获取基本数据（尽量向原始卡片对齐）
+      const kolHolders = token.community_count || token.holders || token.holderCount || 'N/A';
+      const volume = token.buyAndSellVolume1h || token.volume_1h || 'N/A';
+      const marketCap = token.marketCap || token.market_cap || 'N/A';
+      
+      // 获取总持有人数（统一从批量/热门接口填充）
       const totalHolders = tokenHolders[tokenId] || (opportunities ? '加载中...' : 'N/A');
+      
+      // 合并正面信号（原始signals + MEMERADAR细项）
+      const baseSignals = Array.isArray(token.signals) ? token.signals : [];
+      const radarSignalsRaw = Array.isArray(token.memeradar_signals) ? token.memeradar_signals : [];
+      const radarSignals = radarSignalsRaw.map((s) => {
+        if (typeof s === 'string') return `MEMERADAR: ${s}`;
+        if (s && typeof s === 'object') return `MEMERADAR: ${s.name || s.label || JSON.stringify(s)}`;
+        return null;
+      }).filter(Boolean);
+      const mergedSignals = Array.from(new Set([...
+        baseSignals,
+        ...radarSignals
+      ]));
+      
+      // 地址格式化
+      const formatAddress = (address) => {
+        if (!address || address.length < 16) return address;
+        return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`;
+      };
       
       return (
         <div key={tokenId} className="strategy-token-card optimized" onClick={() => handleTokenAnalysis(tokenId)}>
@@ -821,23 +845,65 @@ const StrategyScanner = () => {
             </div>
           </div>
           
-          <div className="token-metrics">
-            <div className="metric">
+          {/* 与原始卡片一致的核心信息区域 */}
+          <div className="decision-holders-row">
+            <div className="decision-section">
+              <span className="label">评分</span>
+              <div className="decision-value">
+                <span className="decision-text">{multiScore}</span>
+              </div>
+            </div>
+            <div className="holders-section">
               <span className="label">持有人数</span>
-              <span className="value">{totalHolders}</span>
-              <span className="score">({token.data_source || 'N/A'})</span>
-            </div>
-            <div className="metric">
-              <span className="label">多维评分</span>
-              <span className="value">{multiScore}</span>
-              <span className="score">({token.time_decay_applied || 'N/A'})</span>
-            </div>
-            <div className="metric">
-              <span className="label">数据源</span>
-              <span className="value">{token.data_source || 'N/A'}</span>
-              <span className="score">({token.diversity_info || 'N/A'})</span>
+              <div className="holders-details">
+                <div className="total-holders">
+                  <span className="holders-label">全部:</span>
+                  <span className="holders-value">{typeof totalHolders === 'number' ? totalHolders.toLocaleString() : totalHolders}</span>
+                  <button 
+                    className="refresh-button" 
+                    onClick={(e) => { e.stopPropagation(); fetchTokenHolders(tokenId); }}
+                    title="刷新持有人数"
+                  >
+                    🔄
+                  </button>
+                </div>
+                <div className="kol-holders">
+                  <span className="holders-label">KOL:</span>
+                  <span className="holders-value">{typeof kolHolders === 'number' ? kolHolders.toLocaleString() : kolHolders}</span>
+                </div>
+              </div>
             </div>
           </div>
+          
+          {/* 市场指标（如可用） */}
+          <div className="market-metrics">
+            <div className="metric-item">
+              <span className="metric-label">市值</span>
+              <span className="metric-value">${typeof marketCap === 'number' ? marketCap.toLocaleString() : marketCap}</span>
+            </div>
+            <div className="metric-item">
+              <span className="metric-label">1h交易量</span>
+              <span className="metric-value">${typeof volume === 'number' ? volume.toLocaleString() : volume}</span>
+            </div>
+          </div>
+          
+          {/* 正面信号（若有则展示） */}
+          {mergedSignals.length > 0 && (
+            <div className="positive-signals-section">
+              <div className="signals-header">
+                <span className="signals-icon">✅</span>
+                <span className="signals-title">正面信号</span>
+              </div>
+              <div className="signals-list">
+                {mergedSignals.map((signal, index) => (
+                  <div key={index} className="signal-item">
+                    <span className="signal-checkbox">✅</span>
+                    <span className="signal-text">{signal}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           
           <div className="optimization-badge">
             🚀 优化扫描
