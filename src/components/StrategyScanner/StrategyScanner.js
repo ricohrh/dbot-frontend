@@ -39,6 +39,57 @@ const StrategyScanner = () => {
   const [useOptimizedScan, setUseOptimizedScan] = useState(true); // 默认使用优化扫描
   const [optimizationInfo, setOptimizationInfo] = useState(null); // 优化信息
 
+  // 新增：获取代币持有人数的状态
+  const [tokenHolders, setTokenHolders] = useState({});
+
+  // 获取代币持有人数的函数
+  const fetchTokenHolders = async (tokenId) => {
+    if (!tokenId || tokenId === 'unknown' || tokenHolders[tokenId]) {
+      return; // 已经获取过或无效ID
+    }
+
+    try {
+      const response = await fetch(`https://api-data-v1.dbotx.com/kline/holders?chain=solana&token=${tokenId}`, {
+        headers: {
+          'x-api-key': 'hwxwzxlpdc6whlt9uwaipnp6jxpdfabw'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // 根据API响应结构获取持有人数
+        const holdersCount = data.holders_count || data.total_holders || data.count || 'N/A';
+        setTokenHolders(prev => ({
+          ...prev,
+          [tokenId]: holdersCount
+        }));
+      } else {
+        setTokenHolders(prev => ({
+          ...prev,
+          [tokenId]: '获取失败'
+        }));
+      }
+    } catch (err) {
+      console.error('获取持有人数失败:', err);
+      setTokenHolders(prev => ({
+        ...prev,
+        [tokenId]: '获取失败'
+      }));
+    }
+  };
+
+  // 当扫描结果变化时，获取所有代币的持有人数
+  useEffect(() => {
+    if (scanResults && scanResults.length > 0) {
+      scanResults.forEach(token => {
+        const tokenId = token.token_mint || token._id || token.mint;
+        if (tokenId && tokenId !== 'unknown') {
+          fetchTokenHolders(tokenId);
+        }
+      });
+    }
+  }, [scanResults]);
+
   const presets = strategyService.getStrategyPresets();
 
   const handlePresetChange = (presetKey) => {
@@ -412,13 +463,16 @@ const StrategyScanner = () => {
       // 获取正确的代币ID
       const tokenId = token.token_mint || token._id || token.mint || 'unknown';
       
+      // 获取持有人数
+      const totalHolders = tokenHolders[tokenId] || '加载中...';
+      
       return (
         <div key={tokenId} className="strategy-token-card optimized" onClick={() => handleTokenAnalysis(tokenId)}>
           <div className="token-header">
             <div className="token-info">
               <h3>{token.symbol || token.name}</h3>
               <p>{token.name}</p>
-              <CopyableAddress address={token.token_mint || token._id} className="token-address" />
+              <CopyableAddress address={tokenId} className="token-address" />
             </div>
             <div className="score-badge" style={{ backgroundColor: scoreColor }}>
               {multiScore}
@@ -427,16 +481,19 @@ const StrategyScanner = () => {
           
           <div className="token-metrics">
             <div className="metric">
+              <span className="label">持有人数</span>
+              <span className="value">{totalHolders}</span>
+              <span className="score">({token.data_source || 'N/A'})</span>
+            </div>
+            <div className="metric">
+              <span className="label">多维评分</span>
+              <span className="value">{multiScore}</span>
+              <span className="score">({token.time_decay_applied || 'N/A'})</span>
+            </div>
+            <div className="metric">
               <span className="label">数据源</span>
               <span className="value">{token.data_source || 'N/A'}</span>
-            </div>
-            <div className="metric">
-              <span className="label">时间衰减</span>
-              <span className="value">{token.time_decay_applied || 1.0}</span>
-            </div>
-            <div className="metric">
-              <span className="label">多样性</span>
-              <span className="value">{token.diversity_info || 'N/A'}</span>
+              <span className="score">({token.diversity_info || 'N/A'})</span>
             </div>
           </div>
           
@@ -454,12 +511,31 @@ const StrategyScanner = () => {
                         totalScore >= 65 ? '#e17055' : '#d63031';
       
       // 获取基本数据
-      const holders = token.holders || token.holderCount || token.community_count || 'N/A';
+      const kolHolders = token.community_count || token.holders || token.holderCount || 'N/A';
       const volume = token.buyAndSellVolume1h || token.volume_1h || 'N/A';
       const marketCap = token.marketCap || token.market_cap || 'N/A';
       
       // 获取正确的代币ID
       const tokenId = token.token_mint || token._id || token.mint || 'unknown';
+      
+      // 格式化地址显示（缩短地址）
+      const formatAddress = (address) => {
+        if (!address || address.length < 16) return address;
+        return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`;
+      };
+      
+      // 复制地址到剪贴板
+      const copyAddress = async (address) => {
+        try {
+          await navigator.clipboard.writeText(address);
+          // 可以添加一个提示
+        } catch (err) {
+          console.error('复制失败:', err);
+        }
+      };
+      
+      // 获取全部持有人数
+      const totalHolders = tokenHolders[tokenId] || '加载中...';
       
       return (
         <div key={tokenId} className="strategy-token-card original-scan" onClick={() => handleTokenAnalysis(tokenId)}>
@@ -469,8 +545,19 @@ const StrategyScanner = () => {
               <h3 className="token-symbol">{token.symbol || token.name}</h3>
               <p className="token-full-name">{token.name}</p>
               <div className="token-address-section">
-                <span className="token-address">{token.token_mint || token.mint || token._id}</span>
-                <button className="copy-button">📋</button>
+                <span className="token-address" title={token.token_mint || token.mint || token._id}>
+                  {formatAddress(token.token_mint || token.mint || token._id)}
+                </span>
+                <button 
+                  className="copy-button" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    copyAddress(token.token_mint || token.mint || token._id);
+                  }}
+                  title="复制地址"
+                >
+                  📋
+                </button>
               </div>
             </div>
             <div className="percentage-change">
@@ -491,7 +578,16 @@ const StrategyScanner = () => {
             </div>
             <div className="holders-section">
               <span className="label">持有人数</span>
-              <span className="holders-value">{typeof holders === 'number' ? holders.toLocaleString() : holders}</span>
+              <div className="holders-details">
+                <div className="total-holders">
+                  <span className="holders-label">全部:</span>
+                  <span className="holders-value">{totalHolders}</span>
+                </div>
+                <div className="kol-holders">
+                  <span className="holders-label">KOL:</span>
+                  <span className="holders-value">{typeof kolHolders === 'number' ? kolHolders.toLocaleString() : kolHolders}</span>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -540,13 +636,16 @@ const StrategyScanner = () => {
       // 获取正确的代币ID
       const tokenId = token.token_mint || token._id || token.mint || 'unknown';
       
+      // 获取持有人数
+      const totalHolders = tokenHolders[tokenId] || '加载中...';
+      
       return (
         <div key={tokenId} className="strategy-token-card generic" onClick={() => handleTokenAnalysis(tokenId)}>
           <div className="token-header">
             <div className="token-info">
               <h3>{token.symbol || token.name}</h3>
               <p>{token.name}</p>
-              <CopyableAddress address={token.mint || token._id || token.token_mint} className="token-address" />
+              <CopyableAddress address={tokenId} className="token-address" />
             </div>
             <div className="score-badge" style={{ backgroundColor: scoreColor }}>
               {score}
@@ -555,17 +654,18 @@ const StrategyScanner = () => {
           
           <div className="token-metrics">
             <div className="metric">
+              <span className="label">持有人数</span>
+              <span className="value">{totalHolders}</span>
+              <span className="score">({score})</span>
+            </div>
+            <div className="metric">
               <span className="label">评分</span>
               <span className="value">{score}</span>
             </div>
-            <div className="metric">
-              <span className="label">扫描方法</span>
-              <span className="value">{token.scan_method || 'unknown'}</span>
-            </div>
-            <div className="metric">
-              <span className="label">代币地址</span>
-              <span className="value">{(token.mint || token._id || token.token_mint || '').substring(0, 8)}...</span>
-            </div>
+          </div>
+          
+          <div className="generic-badge">
+            📊 通用扫描
           </div>
         </div>
       );
