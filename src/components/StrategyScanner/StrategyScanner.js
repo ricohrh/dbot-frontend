@@ -825,6 +825,19 @@ const StrategyScanner = () => {
       // 获取全部持有人数
       const totalHolders = tokenHolders[tokenId] || (opportunities ? '加载中...' : 'N/A');
       
+      // 合并正面信号（原始signals + MEMERADAR细项）
+      const baseSignals = Array.isArray(token.signals) ? token.signals : [];
+      const radarSignalsRaw = Array.isArray(token.memeradar_signals) ? token.memeradar_signals : [];
+      const radarSignals = radarSignalsRaw.map((s) => {
+        if (typeof s === 'string') return `MEMERADAR: ${s}`;
+        if (s && typeof s === 'object') return `MEMERADAR: ${s.name || s.label || JSON.stringify(s)}`;
+        return null;
+      }).filter(Boolean);
+      const mergedSignals = Array.from(new Set([...
+        baseSignals,
+        ...radarSignals
+      ]));
+      
       return (
         <div key={tokenId} className="strategy-token-card original-scan" onClick={() => handleTokenAnalysis(tokenId)}>
           {/* 代币基本信息 */}
@@ -860,8 +873,8 @@ const StrategyScanner = () => {
             <div className="decision-section">
               <span className="label">决策</span>
               <div className="decision-value">
-                <span className="decision-dot sell"></span>
-                <span className="decision-text">卖出</span>
+                <span className="decision-dot buy"></span>
+                <span className="decision-text">买入</span>
               </div>
             </div>
             <div className="holders-section">
@@ -928,15 +941,15 @@ const StrategyScanner = () => {
             </div>
           </div>
           
-          {/* 正面信号 */}
-          {token.signals && token.signals.length > 0 && (
+          {/* 正面信号（合并后） */}
+          {mergedSignals.length > 0 && (
             <div className="positive-signals-section">
               <div className="signals-header">
                 <span className="signals-icon">✅</span>
                 <span className="signals-title">正面信号</span>
               </div>
               <div className="signals-list">
-                {token.signals.map((signal, index) => (
+                {mergedSignals.map((signal, index) => (
                   <div key={index} className="signal-item">
                     <span className="signal-checkbox">✅</span>
                     <span className="signal-text">{signal}</span>
