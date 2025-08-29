@@ -171,7 +171,7 @@ const StrategyScanner = () => {
           let notFoundCount = 0;
           
           tokens.forEach((token, index) => {
-            if (token && token.token_mint) {
+            if (token) {
               const tokenId = token.token_mint || token._id || token.mint;
               if (tokenId && tokenId !== 'unknown') {
                 const holdersCount = hotTokensMap[tokenId];
@@ -198,11 +198,10 @@ const StrategyScanner = () => {
           
           // 对于未找到的代币，立即使用原始API
           tokens.forEach((token, index) => {
-            if (token && token.token_mint) {
+            if (token) {
               const tokenId = token.token_mint || token._id || token.mint;
               if (tokenId && tokenId !== 'unknown' && newTokenHolders[tokenId] === '未找到') {
                 console.log(`🔄 尝试为代币 ${index + 1} (${token.symbol}) 使用原始API`);
-                // 立即调用，不使用setTimeout
                 fetchHoldersFromOriginalAPI(tokenId);
               }
             }
