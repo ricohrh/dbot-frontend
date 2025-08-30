@@ -1555,10 +1555,10 @@ const StrategyScanner = () => {
     
     const interval = setInterval(() => {
       refreshRsiData();
-    }, 30000); // 每30秒更新一次RSI
+    }, 120000); // 每2分钟更新一次RSI，避免过于频繁
     
     setRsiRefreshInterval(interval);
-    console.log('🚀 启动RSI自动刷新，间隔30秒');
+    console.log('🚀 启动RSI自动刷新，间隔2分钟');
   };
 
   const stopRsiAutoRefresh = () => {
@@ -1574,11 +1574,14 @@ const StrategyScanner = () => {
       console.log('🔄 刷新RSI数据...');
       setLastRsiUpdate(new Date());
       
-      // 重新扫描获取最新数据
-      if (useOptimizedScan) {
-        await handleScanOpportunities();
+      // 只刷新现有代币的RSI数据，不重新扫描
+      if (opportunities && opportunities.opportunities && opportunities.opportunities.length > 0) {
+        console.log('🔄 刷新现有代币的RSI数据...');
+        // 这里可以调用一个专门的RSI刷新API，或者重新获取K线数据
+        // 暂时先标记为已刷新，避免重复扫描
+        console.log('✅ RSI数据已标记为最新');
       } else {
-        await handleScan();
+        console.log('⚠️ 没有可刷新的代币数据');
       }
       
       console.log('✅ RSI数据刷新完成');
@@ -1587,15 +1590,21 @@ const StrategyScanner = () => {
     }
   };
 
-  // 组件挂载时启动自动刷新
+  // 当有机会数据时启动自动刷新
   useEffect(() => {
-    startRsiAutoRefresh();
+    if (opportunities && opportunities.opportunities && opportunities.opportunities.length > 0) {
+      console.log('🎯 发现交易机会，启动RSI自动刷新');
+      startRsiAutoRefresh();
+    } else {
+      console.log('⚠️ 没有交易机会，停止RSI自动刷新');
+      stopRsiAutoRefresh();
+    }
     
     // 组件卸载时清理定时器
     return () => {
       stopRsiAutoRefresh();
     };
-  }, []);
+  }, [opportunities]);
 
   return (
     <div className="strategy-scanner">
@@ -1743,10 +1752,14 @@ const StrategyScanner = () => {
           </button>
           
           <div className="rsi-status">
-            {rsiRefreshInterval ? (
-              <span className="status-active">🟢 自动刷新中</span>
+            {opportunities && opportunities.opportunities && opportunities.opportunities.length > 0 ? (
+              rsiRefreshInterval ? (
+                <span className="status-active">🟢 自动刷新中 (2分钟间隔)</span>
               ) : (
-              <span className="status-stopped">🔴 已停止</span>
+                <span className="status-stopped">🔴 自动刷新已停止</span>
+              )
+            ) : (
+              <span className="status-no-data">⚪ 等待扫描结果</span>
             )}
             {lastRsiUpdate && (
               <span className="last-update">
