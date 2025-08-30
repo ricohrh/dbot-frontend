@@ -1555,10 +1555,10 @@ const StrategyScanner = () => {
     
     const interval = setInterval(() => {
       refreshRsiData();
-    }, 120000); // 每2分钟更新一次RSI，避免过于频繁
+    }, 25000); // 每25秒更新一次RSI，保持实时性
     
     setRsiRefreshInterval(interval);
-    console.log('🚀 启动RSI自动刷新，间隔2分钟');
+    console.log('🚀 启动RSI自动刷新，间隔25秒');
   };
 
   const stopRsiAutoRefresh = () => {
@@ -1783,7 +1783,7 @@ const StrategyScanner = () => {
           <div className="rsi-status">
             {opportunities && opportunities.opportunities && opportunities.opportunities.length > 0 ? (
               rsiRefreshInterval ? (
-                <span className="status-active">🟢 自动刷新中 (2分钟间隔)</span>
+                <span className="status-active">🟢 自动刷新中 (25秒间隔)</span>
               ) : (
                 <span className="status-stopped">🔴 自动刷新已停止</span>
               )
