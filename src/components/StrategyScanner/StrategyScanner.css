@@ -2106,3 +2106,80 @@
   transform: translateY(0);
   box-shadow: 0 2px 6px rgba(102, 126, 234, 0.4);
 } 
+
+/* RSI技术指标样式 */
+.rsi-metrics {
+  margin-top: 15px;
+  padding: 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.rsi-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.rsi-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+  min-width: 40px;
+}
+
+.rsi-value {
+  font-size: 18px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid currentColor;
+  min-width: 50px;
+  text-align: center;
+}
+
+.rsi-signal {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 60px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* RSI状态特定样式 */
+.rsi-value.rsi-oversold {
+  color: #00b894;
+  border-color: #00b894;
+}
+
+.rsi-value.rsi-neutral {
+  color: #fdcb6e;
+  border-color: #fdcb6e;
+}
+
+.rsi-value.rsi-overbought {
+  color: #e17055;
+  border-color: #e17055;
+}
+
+.rsi-signal.rsi-signal-oversold {
+  background-color: #00b894;
+  color: white;
+}
+
+.rsi-signal.rsi-signal-neutral {
+  background-color: #fdcb6e;
+  color: white;
+}
+
+.rsi-signal.rsi-signal-overbought {
+  background-color: #e17055;
+  color: white;
+}

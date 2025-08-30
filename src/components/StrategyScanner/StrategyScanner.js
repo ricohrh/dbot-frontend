@@ -4,6 +4,26 @@ import CopyableAddress from '../common/CopyableAddress';
 import './StrategyScanner.css';
 
 const StrategyScanner = () => {
+  // RSI辅助函数
+  const getRsiSignalClass = (rsi) => {
+    if (rsi <= 30) return 'oversold';
+    if (rsi >= 70) return 'overbought';
+    return 'neutral';
+  };
+
+  const getRsiSignalText = (rsiSignal) => {
+    if (rsiSignal === 'OVERSOLD') return '超卖';
+    if (rsiSignal === 'OVERBOUGHT') return '超买';
+    if (rsiSignal === 'NEUTRAL') return '中性';
+    return '中性';
+  };
+
+  const getRsiColor = (rsi) => {
+    if (rsi <= 30) return '#00b894'; // 绿色 - 超卖
+    if (rsi >= 70) return '#e17055'; // 红色 - 超买
+    return '#fdcb6e'; // 黄色 - 中性
+  };
+
   const [strategyConfig, setStrategyConfig] = useState({
     timeRange: '3h-6h',
     minHolders: 1200,
@@ -887,6 +907,34 @@ const StrategyScanner = () => {
               <span className="metric-value">${typeof volume === 'number' ? volume.toLocaleString() : volume}</span>
                 </div>
                 </div>
+                
+          {/* 新增：RSI技术指标显示 */}
+          {token.rsi !== undefined && (
+            <div className="rsi-metrics">
+              <div className="rsi-item">
+                <span className="rsi-label">RSI</span>
+                <span 
+                  className="rsi-value" 
+                  style={{ color: getRsiColor(token.rsi), fontWeight: 'bold' }}
+                >
+                  {token.rsi}
+                </span>
+                <span 
+                  className="rsi-signal" 
+                  style={{ 
+                    backgroundColor: getRsiColor(token.rsi), 
+                    color: 'white',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {getRsiSignalText(token.rsi_signal || token.rsi)}
+                </span>
+              </div>
+            </div>
+          )}
           
           {/* 正面信号（若有则展示） */}
           {mergedSignals.length > 0 && (
@@ -1061,6 +1109,34 @@ const StrategyScanner = () => {
               <span className="metric-value">${typeof volume === 'number' ? volume.toLocaleString() : volume}</span>
             </div>
           </div>
+          
+          {/* 新增：RSI技术指标显示 */}
+          {token.rsi !== undefined && (
+            <div className="rsi-metrics">
+              <div className="rsi-item">
+                <span className="rsi-label">RSI</span>
+                <span 
+                  className="rsi-value" 
+                  style={{ color: getRsiColor(token.rsi), fontWeight: 'bold' }}
+                >
+                  {token.rsi}
+                </span>
+                <span 
+                  className="rsi-signal" 
+                  style={{ 
+                    backgroundColor: getRsiColor(token.rsi), 
+                    color: 'white',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {getRsiSignalText(token.rsi_signal || token.rsi)}
+                </span>
+              </div>
+            </div>
+          )}
           
           {/* 正面信号（合并后） */}
           {mergedSignals.length > 0 && (

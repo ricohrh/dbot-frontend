@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSI显示功能测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f6fa;
+        }
+        
+        .test-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-header h1 {
+            color: #2d3436;
+            margin-bottom: 10px;
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .test-section h2 {
+            color: #2d3436;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .token-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+        }
+        
+        .token-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .token-info h3 {
+            margin: 0;
+            color: #2d3436;
+            font-size: 1.4em;
+        }
+        
+        .token-info p {
+            margin: 5px 0 0 0;
+            color: #636e72;
+        }
+        
+        .score-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .market-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .metric-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .metric-label {
+            display: block;
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3436;
+        }
+        
+        /* RSI技术指标样式 */
+        .rsi-metrics {
+            margin-top: 15px;
+            padding: 12px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .rsi-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: space-between;
+        }
+        
+        .rsi-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            min-width: 40px;
+        }
+        
+        .rsi-value {
+            font-size: 18px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid currentColor;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .rsi-signal {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 60px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* RSI状态特定样式 */
+        .rsi-value.rsi-oversold {
+            color: #00b894;
+            border-color: #00b894;
+        }
+        
+        .rsi-value.rsi-neutral {
+            color: #fdcb6e;
+            border-color: #fdcb6e;
+        }
+        
+        .rsi-value.rsi-overbought {
+            color: #e17055;
+            border-color: #e17055;
+        }
+        
+        .rsi-signal.rsi-signal-oversold {
+            background-color: #00b894;
+            color: white;
+        }
+        
+        .rsi-signal.rsi-signal-neutral {
+            background-color: #fdcb6e;
+            color: white;
+        }
+        
+        .rsi-signal.rsi-signal-overbought {
+            background-color: #e17055;
+            color: white;
+        }
+        
+        .optimization-badge {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .original-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .test-buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .test-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>📊 RSI显示功能测试页面</h1>
+        <p>测试前端RSI值显示功能</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧪 测试功能</h2>
+        <div class="test-buttons">
+            <button class="test-btn" onclick="testOptimizedToken()">测试优化扫描代币</button>
+            <button class="test-btn" onclick="testOriginalToken()">测试原始扫描代币</button>
+            <button class="test-btn" onclick="testAllTokens()">测试所有代币</button>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🚀 优化扫描代币示例</h2>
+        <div id="optimized-tokens"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔍 原始扫描代币示例</h2>
+        <div id="original-tokens"></div>
+    </div>
+    
+    <script>
+        // RSI辅助函数
+        const getRsiSignalClass = (rsi) => {
+            if (rsi <= 30) return 'oversold';
+            if (rsi >= 70) return 'overbought';
+            return 'neutral';
+        };
+
+        const getRsiSignalText = (rsiSignal) => {
+            if (rsiSignal === 'OVERSOLD') return '超卖';
+            if (rsiSignal === 'OVERBOUGHT') return '超买';
+            if (rsiSignal === 'NEUTRAL') return '中性';
+            return '中性';
+        };
+
+        const getRsiColor = (rsi) => {
+            if (rsi <= 30) return '#00b894'; // 绿色 - 超卖
+            if (rsi >= 70) return '#e17055'; // 红色 - 超买
+            return '#fdcb6e'; // 黄色 - 中性
+        };
+
+        // 测试数据
+        const testOptimizedTokens = [
+            {
+                symbol: 'GOAT',
+                name: 'Goatcoin',
+                multi_dimensional_score: 93,
+                rsi: 28,
+                rsi_signal: 'OVERSOLD',
+                market_cap: 8313465,
+                volume_1h: 171069,
+                community_count: 8,
+                data_source: 'hot'
+            },
+            {
+                symbol: 'DORK',
+                name: 'DogeFork',
+                multi_dimensional_score: 90,
+                rsi: 50,
+                rsi_signal: 'NEUTRAL',
+                market_cap: 816511,
+                volume_1h: 117798,
+                community_count: 3,
+                data_source: 'hot'
+            },
+            {
+                symbol: 'RYS',
+                name: 'RefundYourSOL',
+                multi_dimensional_score: 87,
+                rsi: 72,
+                rsi_signal: 'OVERBOUGHT',
+                market_cap: 1726339,
+                volume_1h: 13918,
+                community_count: 1,
+                data_source: 'hot'
+            }
+        ];
+
+        const testOriginalTokens = [
+            {
+                symbol: 'RYS',
+                name: 'RefundYourSOL',
+                confidence: 84,
+                rsi: 50,
+                rsi_signal: 'NEUTRAL',
+                market_cap: 1727459,
+                volume_1h: 13742,
+                community_count: 1
+            }
+        ];
+
+        // 渲染优化扫描代币
+        const renderOptimizedToken = (token) => {
+            const scoreColor = token.multi_dimensional_score >= 85 ? '#00b894' : 
+                              token.multi_dimensional_score >= 75 ? '#fdcb6e' : 
+                              token.multi_dimensional_score >= 65 ? '#e17055' : '#d63031';
+            
+            return `
+                <div class="token-card">
+                    <div class="token-header">
+                        <div class="token-info">
+                            <h3>${token.symbol}</h3>
+                            <p>${token.name}</p>
+                        </div>
+                        <div class="score-badge" style="background: ${scoreColor}">
+                            ${token.multi_dimensional_score}
+                        </div>
+                    </div>
+                    
+                    <div class="market-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">市值</span>
+                            <span class="metric-value">$${token.market_cap.toLocaleString()}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">1h交易量</span>
+                            <span class="metric-value">$${token.volume_1h.toLocaleString()}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">社区关注</span>
+                            <span class="metric-value">${token.community_count}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- RSI技术指标显示 -->
+                    <div class="rsi-metrics">
+                        <div class="rsi-item">
+                            <span class="rsi-label">RSI</span>
+                            <span 
+                                class="rsi-value rsi-${getRsiSignalClass(token.rsi)}" 
+                                style="color: ${getRsiColor(token.rsi)}; border-color: ${getRsiColor(token.rsi)};"
+                            >
+                                ${token.rsi}
+                            </span>
+                            <span 
+                                class="rsi-signal rsi-signal-${getRsiSignalClass(token.rsi)}"
+                            >
+                                ${getRsiSignalText(token.rsi_signal)}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="optimization-badge">
+                        🚀 优化扫描 (${token.data_source})
+                    </div>
+                </div>
+            `;
+        };
+
+        // 渲染原始扫描代币
+        const renderOriginalToken = (token) => {
+            const scoreColor = token.confidence >= 85 ? '#00b894' : 
+                              token.confidence >= 75 ? '#fdcb6e' : 
+                              token.confidence >= 65 ? '#e17055' : '#d63031';
+            
+            return `
+                <div class="token-card">
+                    <div class="token-header">
+                        <div class="token-info">
+                            <h3>${token.symbol}</h3>
+                            <p>${token.name}</p>
+                        </div>
+                        <div class="score-badge" style="background: ${scoreColor}">
+                            ${token.confidence}
+                        </div>
+                    </div>
+                    
+                    <div class="market-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">市值</span>
+                            <span class="metric-value">$${token.market_cap.toLocaleString()}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">1h交易量</span>
+                            <span class="metric-value">$${token.volume_1h.toLocaleString()}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">社区关注</span>
+                            <span class="metric-value">${token.community_count}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- RSI技术指标显示 -->
+                    <div class="rsi-metrics">
+                        <div class="rsi-item">
+                            <span class="rsi-label">RSI</span>
+                            <span 
+                                class="rsi-value rsi-${getRsiSignalClass(token.rsi)}" 
+                                style="color: ${getRsiColor(token.rsi)}; border-color: ${getRsiColor(token.rsi)};"
+                            >
+                                ${token.rsi}
+                            </span>
+                            <span 
+                                class="rsi-signal rsi-signal-${getRsiSignalClass(token.rsi)}"
+                            >
+                                ${getRsiSignalText(token.rsi_signal)}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="original-badge">
+                        🔍 原始扫描
+                    </div>
+                </div>
+            `;
+        };
+
+        // 测试函数
+        const testOptimizedToken = () => {
+            const container = document.getElementById('optimized-tokens');
+            container.innerHTML = testOptimizedTokens.map(renderOptimizedToken).join('');
+        };
+
+        const testOriginalToken = () => {
+            const container = document.getElementById('original-tokens');
+            container.innerHTML = testOriginalTokens.map(renderOriginalToken).join('');
+        };
+
+        const testAllTokens = () => {
+            testOptimizedToken();
+            testOriginalToken();
+        };
+
+        // 页面加载时自动测试
+        window.onload = function() {
+            testAllTokens();
+        };
+    </script>
+</body>
+</html> 
