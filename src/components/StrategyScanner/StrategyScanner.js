@@ -1577,9 +1577,38 @@ const StrategyScanner = () => {
       // 只刷新现有代币的RSI数据，不重新扫描
       if (opportunities && opportunities.opportunities && opportunities.opportunities.length > 0) {
         console.log('🔄 刷新现有代币的RSI数据...');
-        // 这里可以调用一个专门的RSI刷新API，或者重新获取K线数据
-        // 暂时先标记为已刷新，避免重复扫描
-        console.log('✅ RSI数据已标记为最新');
+        
+        // 提取代币地址列表
+        const tokenMints = opportunities.opportunities.map(token => 
+          token.token_mint || token.mint || token._id
+        ).filter(Boolean);
+        
+        if (tokenMints.length > 0) {
+          // 调用专门的RSI刷新API
+          const response = await fetch('/api/strategy/refresh-rsi', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token_mints: tokenMints })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            console.log(`✅ RSI刷新成功: ${result.refreshed_count} 个成功, ${result.failed_count} 个失败`);
+            
+            // 更新本地RSI数据
+            if (result.refreshed_tokens && result.refreshed_tokens.length > 0) {
+              // 这里可以更新本地状态，显示新的RSI值
+              console.log('🔄 更新本地RSI数据显示...');
+            }
+          } else {
+            console.error('❌ RSI刷新API调用失败:', response.status);
+          }
+        } else {
+          console.log('⚠️ 没有有效的代币地址');
+        }
+        
       } else {
         console.log('⚠️ 没有可刷新的代币数据');
       }
