@@ -63,6 +63,10 @@ const StrategyScanner = () => {
   const [showOriginal, setShowOriginal] = useState(true);
   const [showOptimized, setShowOptimized] = useState(true);
 
+  // 实时RSI更新状态
+  const [rsiRefreshInterval, setRsiRefreshInterval] = useState(null);
+  const [lastRsiUpdate, setLastRsiUpdate] = useState(null);
+
   // 统一机会列表（原始 + 优化/合并）
   const getUnifiedTokens = () => {
     const fromOriginal = Array.isArray(scanResults) ? scanResults.map(t => ({ ...t, scan_method: t.scan_method || 'original' })) : [];
@@ -95,6 +99,8 @@ const StrategyScanner = () => {
   useEffect(() => {
     console.log('📊 持有人数状态变化:', tokenHolders);
   }, [tokenHolders]);
+
+
 
   // 当扫描结果变化时，获取所有代币的持有人数
   useEffect(() => {
@@ -1541,6 +1547,56 @@ const StrategyScanner = () => {
     }
   }, [opportunities]);
 
+  // 实时RSI更新功能
+  const startRsiAutoRefresh = () => {
+    if (rsiRefreshInterval) {
+      clearInterval(rsiRefreshInterval);
+    }
+    
+    const interval = setInterval(() => {
+      refreshRsiData();
+    }, 30000); // 每30秒更新一次RSI
+    
+    setRsiRefreshInterval(interval);
+    console.log('🚀 启动RSI自动刷新，间隔30秒');
+  };
+
+  const stopRsiAutoRefresh = () => {
+    if (rsiRefreshInterval) {
+      clearInterval(rsiRefreshInterval);
+      setRsiRefreshInterval(null);
+      console.log('⏹️ 停止RSI自动刷新');
+    }
+  };
+
+  const refreshRsiData = async () => {
+    try {
+      console.log('🔄 刷新RSI数据...');
+      setLastRsiUpdate(new Date());
+      
+      // 重新扫描获取最新数据
+      if (useOptimizedScan) {
+        await handleScanOpportunities();
+      } else {
+        await handleScan();
+      }
+      
+      console.log('✅ RSI数据刷新完成');
+    } catch (error) {
+      console.error('❌ RSI数据刷新失败:', error);
+    }
+  };
+
+  // 组件挂载时启动自动刷新
+  useEffect(() => {
+    startRsiAutoRefresh();
+    
+    // 组件卸载时清理定时器
+    return () => {
+      stopRsiAutoRefresh();
+    };
+  }, []);
+
   return (
     <div className="strategy-scanner">
       <div className="scanner-header">
@@ -1674,6 +1730,30 @@ const StrategyScanner = () => {
             <button className="combined-scan-btn" onClick={handleScanAllOpportunities} disabled={opportunitiesLoading}>
               {opportunitiesLoading ? '🔄 合并扫描中...' : '🧪 合并机会扫描'}
         </button>
+        </div>
+
+        {/* 新增：RSI实时更新控制 */}
+        <div className="rsi-refresh-controls">
+          <button 
+            onClick={refreshRsiData} 
+            className="refresh-rsi-button"
+            title="手动刷新RSI数据"
+          >
+            🔄 刷新RSI
+          </button>
+          
+          <div className="rsi-status">
+            {rsiRefreshInterval ? (
+              <span className="status-active">🟢 自动刷新中</span>
+              ) : (
+              <span className="status-stopped">🔴 已停止</span>
+            )}
+            {lastRsiUpdate && (
+              <span className="last-update">
+                最后更新: {lastRsiUpdate.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

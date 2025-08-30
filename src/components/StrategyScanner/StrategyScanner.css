@@ -2183,3 +2183,71 @@
   background-color: #e17055;
   color: white;
 }
+
+/* RSI刷新控制样式 */
+.rsi-refresh-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 15px;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.refresh-rsi-button {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.refresh-rsi-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.refresh-rsi-button:active {
+  transform: translateY(0);
+}
+
+.rsi-status {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: white;
+  font-size: 14px;
+}
+
+.status-active {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(0, 255, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.status-stopped {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(255, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.last-update {
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
