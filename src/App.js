@@ -4,14 +4,17 @@ import StrategyManager from './components/StrategyManager/StrategyManager';
 import StrategyScanner from './components/StrategyScanner/StrategyScanner';
 import MarketData from './components/MarketData/MarketData';
 import PositionOverview from './components/PositionOverview/PositionOverview';
+import BluechipRank from './components/BluechipRank/BluechipRank';
 import './App.css';
 import './utils/clipboard.css';
 
 const App = () => {
-  const [activeTab, setActiveTab] = useState('scanner');
+  const [activeTab, setActiveTab] = useState('bluechip');
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'bluechip':
+        return <BluechipRank />;
       case 'scanner':
         return <StrategyScanner />;
       case 'strategy':
@@ -25,7 +28,7 @@ const App = () => {
       case 'market':
         return <MarketData />;
       default:
-        return <StrategyScanner />;
+        return <BluechipRank />;
     }
   };
 
@@ -34,9 +37,15 @@ const App = () => {
       <nav className="navbar">
         <div className="nav-brand">
           🚀 MemeCoin 管理系统
-          <span className="version-badge">v4.4</span>
+          <span className="version-badge">v4.5</span>
         </div>
         <div className="nav-tabs">
+          <button
+            className={`nav-tab ${activeTab === 'bluechip' ? 'active' : ''}`}
+            onClick={() => setActiveTab('bluechip')}
+          >
+            🏆 蓝筹代币
+          </button>
           <button
             className={`nav-tab ${activeTab === 'scanner' ? 'active' : ''}`}
             onClick={() => setActiveTab('scanner')}
