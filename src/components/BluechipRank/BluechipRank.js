@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './BluechipRank.css';
+import { apiRequest } from '../../services/api';
 
 const BluechipRank = () => {
   const [tokens, setTokens] = useState([]);
@@ -35,12 +36,8 @@ const BluechipRank = () => {
       if (!silent) {
         setLoading(true);
       }
-      const response = await fetch('http://localhost:8888/api/bluechip/tokens?limit=50');
-      if (!response.ok) {
-        throw new Error('Network error: Failed to fetch');
-      }
-      const data = await response.json();
-      console.log('�� 获取到的代币数据:', data.data.rank?.slice(0, 3));
+      const data = await apiRequest('/bluechip/tokens?limit=50');
+      console.log(' 获取到的代币数据:', data.data.rank?.slice(0, 3));
       setTokens(data.data.rank || []);
       setLastUpdate(new Date());
       setRefreshCount(prev => prev + 1);
