@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './BluechipRank.css';
 
 const BluechipRank = () => {
@@ -8,64 +8,25 @@ const BluechipRank = () => {
   const [sortBy, setSortBy] = useState('swaps');
   const [sortDirection, setSortDirection] = useState('desc');
   const [expandedToken, setExpandedToken] = useState(null);
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState(null);
-  const [refreshCount, setRefreshCount] = useState(0);
-  const intervalRef = useRef(null);
 
   useEffect(() => {
     fetchTokens();
-    
-    // 设置自动刷新
-    if (autoRefresh) {
-      intervalRef.current = setInterval(() => {
-        fetchTokens(true); // 静默刷新
-      }, 30000); // 每30秒刷新一次
-    }
+  }, []);
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [autoRefresh]);
-
-  const fetchTokens = async (silent = false) => {
+  const fetchTokens = async () => {
     try {
-      if (!silent) {
-        setLoading(true);
-      }
+      setLoading(true);
       const response = await fetch('http://localhost:5000/api/bluechip/tokens?limit=50');
       if (!response.ok) {
         throw new Error('Network error: Failed to fetch');
       }
       const data = await response.json();
-      console.log('�� 获取到的代币数据:', data.data.rank?.slice(0, 3));
+      console.log('🔍 获取到的代币数据:', data.data.rank?.slice(0, 3));
       setTokens(data.data.rank || []);
-      setLastUpdate(new Date());
-      setRefreshCount(prev => prev + 1);
-      setError(null);
     } catch (err) {
       setError(err.message);
     } finally {
-      if (!silent) {
-        setLoading(false);
-      }
-    }
-  };
-
-  const toggleAutoRefresh = () => {
-    setAutoRefresh(!autoRefresh);
-    if (!autoRefresh) {
-      // 开启自动刷新
-      intervalRef.current = setInterval(() => {
-        fetchTokens(true);
-      }, 30000);
-    } else {
-      // 关闭自动刷新
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      setLoading(false);
     }
   };
 
@@ -152,7 +113,6 @@ const BluechipRank = () => {
     return (
       <div className="bluechip-rank">
         <div className="error">❌ {error}</div>
-        <button onClick={() => fetchTokens()} className="retry-btn">重试</button>
       </div>
     );
   }
@@ -162,27 +122,9 @@ const BluechipRank = () => {
       <div className="header">
         <h2>🏆 蓝筹代币排名</h2>
         <div className="controls">
-          <button className="refresh-btn" onClick={() => fetchTokens()}>
+          <button className="refresh-btn" onClick={fetchTokens}>
             🔄 刷新
           </button>
-          <button 
-            className={`auto-refresh-btn ${autoRefresh ? 'active' : ''}`}
-            onClick={toggleAutoRefresh}
-          >
-            {autoRefresh ? '⏸️ 暂停自动刷新' : '▶️ 开启自动刷新'}
-          </button>
-          <div className="status-info">
-            {lastUpdate && (
-              <span className="last-update">
-                最后更新: {lastUpdate.toLocaleTimeString()}
-              </span>
-            )}
-            {autoRefresh && (
-              <span className="refresh-indicator">
-                🔄 自动刷新中 ({refreshCount}次)
-              </span>
-            )}
-          </div>
           <div className="sort-controls">
             <span>排序:</span>
             <button 
@@ -465,4 +407,4 @@ const BluechipRank = () => {
   );
 };
 
-export default BluechipRank;
+export default BluechipRank; 

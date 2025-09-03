@@ -525,3 +525,114 @@
     text-align: center;
   }
 } 
+/* 加载动画 */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.loading {
+  animation: pulse 1.5s infinite;
+}
+
+/* 滚动条样式 */
+.bluechip-rank::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bluechip-rank::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.bluechip-rank::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 4px;
+}
+
+.bluechip-rank::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a6fd8, #6a4190);
+} 
+/* 自动刷新相关样式 */
+.auto-refresh-btn {
+  background: #f8f9fa;
+  color: #666;
+  border: 1px solid #e9ecef;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+}
+
+.auto-refresh-btn:hover {
+  background: #e9ecef;
+}
+
+.auto-refresh-btn.active {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: #666;
+  margin-left: 8px;
+}
+
+.last-update {
+  font-family: 'Courier New', monospace;
+}
+
+.refresh-indicator {
+  color: #10b981;
+  font-weight: 500;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.retry-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: all 0.2s ease;
+}
+
+.retry-btn:hover {
+  background: #dc2626;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .status-info {
+    margin-left: 0;
+    text-align: center;
+  }
+  
+  .auto-refresh-btn {
+    margin-left: 0;
+    width: 100%;
+  }
+}
