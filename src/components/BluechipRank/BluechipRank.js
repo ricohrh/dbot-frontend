@@ -3,282 +3,326 @@ import './BluechipRank.css';
 
 const BluechipRank = () => {
   const [tokens, setTokens] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedToken, setSelectedToken] = useState(null);
   const [sortBy, setSortBy] = useState('swaps');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [expandedToken, setExpandedToken] = useState(null);
 
   useEffect(() => {
-    fetchBluechipTokens();
+    fetchTokens();
   }, []);
 
-  const fetchBluechipTokens = async () => {
-    setLoading(true);
-    setError(null);
+  const fetchTokens = async () => {
     try {
+      setLoading(true);
       const response = await fetch('http://localhost:5000/api/bluechip/tokens?limit=50');
-      const data = await response.json();
-      
-      if (data.success && data.data.rank) {
-        setTokens(data.data.rank);
-      } else {
-        setError('Failed to fetch tokens');
+      if (!response.ok) {
+        throw new Error('Network error: Failed to fetch');
       }
+      const data = await response.json();
+      setTokens(data.data.rank || []);
     } catch (err) {
-      setError('Network error: ' + err.message);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSort = (field) => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('desc');
-    }
-  };
-
-  const sortedTokens = [...tokens].sort((a, b) => {
-    let aVal = a[sortBy];
-    let bVal = b[sortBy];
-    
-    // 处理数字字符串
-    if (typeof aVal === 'string' && !isNaN(parseFloat(aVal))) {
-      aVal = parseFloat(aVal);
-    }
-    if (typeof bVal === 'string' && !isNaN(parseFloat(bVal))) {
-      bVal = parseFloat(bVal);
-    }
-    
-    if (sortOrder === 'asc') {
-      return aVal > bVal ? 1 : -1;
-    } else {
-      return aVal < bVal ? 1 : -1;
-    }
-  });
-
   const formatNumber = (num) => {
-    if (typeof num === 'string') {
-      num = parseFloat(num);
-    }
-    if (isNaN(num)) return '0';
+    if (num === null || num === undefined) return 'N/A';
+    const numValue = parseFloat(num);
+    if (isNaN(numValue)) return 'N/A';
     
-    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-    return num.toFixed(2);
+    if (numValue >= 1e9) return (numValue / 1e9).toFixed(2) + 'B';
+    if (numValue >= 1e6) return (numValue / 1e6).toFixed(2) + 'M';
+    if (numValue >= 1e3) return (numValue / 1e3).toFixed(2) + 'K';
+    return numValue.toFixed(2);
   };
 
   const formatPrice = (price) => {
-    const num = parseFloat(price);
-    if (isNaN(num)) return '0';
-    if (num < 0.0001) return num.toExponential(2);
-    return num.toFixed(6);
+    if (!price) return '$0.00';
+    const numPrice = parseFloat(price);
+    if (numPrice < 0.0001) return `$${numPrice.toExponential(2)}`;
+    if (numPrice < 0.01) return `$${numPrice.toFixed(6)}`;
+    if (numPrice < 1) return `$${numPrice.toFixed(4)}`;
+    return `$${numPrice.toFixed(2)}`;
+  };
+
+  const formatPercentage = (value) => {
+    if (!value) return '0%';
+    const numValue = parseFloat(value);
+    return `${numValue > 0 ? '+' : ''}${numValue.toFixed(2)}%`;
+  };
+
+  const calculateSecurityScore = (securityInfo) => {
+    if (!securityInfo) return 0;
+    let score = 0;
+    
+    // 燃烧状态
+    if (securityInfo.burn_status === 'burn') score += 20;
+    if (securityInfo.renounced_freeze_account === 1) score += 20;
+    if (securityInfo.renounced_mint === 1) score += 20;
+    
+    // 开发者代币燃烧
+    if (parseFloat(securityInfo.dev_token_burn_ratio) > 0) score += 10;
+    
+    // 前10持有者比例
+    const top10Rate = parseFloat(securityInfo.top_10_holder_rate);
+    if (top10Rate < 0.2) score += 15;
+    else if (top10Rate < 0.3) score += 10;
+    else if (top10Rate < 0.5) score += 5;
+    
+    // 燃烧比例
+    if (parseFloat(securityInfo.burn_ratio) > 0.5) score += 15;
+    
+    return Math.min(score, 100);
   };
 
   const getPriceChangeColor = (change) => {
-    const num = parseFloat(change);
-    if (isNaN(num)) return 'neutral';
-    return num >= 0 ? 'positive' : 'negative';
+    if (!change) return 'neutral';
+    const numChange = parseFloat(change);
+    return numChange > 0 ? 'positive' : numChange < 0 ? 'negative' : 'neutral';
   };
 
-  const getSecurityScore = (securityInfo) => {
-    let score = 0;
-    if (securityInfo.renounced_freeze_account) score += 25;
-    if (securityInfo.renounced_mint) score += 25;
-    if (securityInfo.burn_status === 'burn') score += 25;
-    if (parseFloat(securityInfo.top_10_holder_rate) < 0.5) score += 25;
-    return score;
+  const sortedTokens = [...tokens].sort((a, b) => {
+    const aValue = parseFloat(a[sortBy] || 0);
+    const bValue = parseFloat(b[sortBy] || 0);
+    return sortDirection === 'desc' ? bValue - aValue : aValue - bValue;
+  });
+
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
+    } else {
+      setSortBy(field);
+      setSortDirection('desc');
+    }
   };
 
-  const getSecurityColor = (score) => {
-    if (score >= 75) return 'high';
-    if (score >= 50) return 'medium';
-    return 'low';
+  const toggleExpanded = (address) => {
+    setExpandedToken(expandedToken === address ? null : address);
   };
+
+  if (loading) {
+    return (
+      <div className="bluechip-rank">
+        <div className="loading">🔄 加载中...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bluechip-rank">
+        <div className="error">❌ {error}</div>
+        <button onClick={fetchTokens} className="retry-btn">重试</button>
+      </div>
+    );
+  }
 
   return (
     <div className="bluechip-rank">
-      <div className="section-header">
+      <div className="header">
         <h2>🏆 蓝筹代币排名</h2>
-        <div className="header-actions">
-          <button 
-            className="btn btn-primary" 
-            onClick={fetchBluechipTokens}
-            disabled={loading}
-          >
-            {loading ? '🔄 加载中...' : '🔄 刷新'}
-          </button>
-          <select 
-            value={`${sortBy}-${sortOrder}`}
-            onChange={(e) => {
-              const [field, order] = e.target.value.split('-');
-              setSortBy(field);
-              setSortOrder(order);
-            }}
-            className="sort-select"
-          >
-            <option value="swaps-desc">交易量 ↓</option>
-            <option value="swaps-asc">交易量 ↑</option>
-            <option value="volume-desc">成交量 ↓</option>
-            <option value="volume-asc">成交量 ↑</option>
-            <option value="holder_count-desc">持有者 ↓</option>
-            <option value="holder_count-asc">持有者 ↑</option>
-            <option value="market_cap-desc">市值 ↓</option>
-            <option value="market_cap-asc">市值 ↑</option>
-            <option value="price_change_percent_1h-desc">1h涨幅 ↓</option>
-            <option value="price_change_percent_1h-asc">1h涨幅 ↑</option>
-          </select>
+        <div className="controls">
+          <button onClick={fetchTokens} className="refresh-btn">🔄 刷新</button>
+          <div className="sort-controls">
+            <span>排序: </span>
+            <button 
+              className={sortBy === 'swaps' ? 'active' : ''} 
+              onClick={() => handleSort('swaps')}
+            >
+              交易量 {sortBy === 'swaps' && (sortDirection === 'desc' ? '↓' : '↑')}
+            </button>
+            <button 
+              className={sortBy === 'volume' ? 'active' : ''} 
+              onClick={() => handleSort('volume')}
+            >
+              成交量 {sortBy === 'volume' && (sortDirection === 'desc' ? '↓' : '↑')}
+            </button>
+            <button 
+              className={sortBy === 'holder_count' ? 'active' : ''} 
+              onClick={() => handleSort('holder_count')}
+            >
+              持有者 {sortBy === 'holder_count' && (sortDirection === 'desc' ? '↓' : '↑')}
+            </button>
+            <button 
+              className={sortBy === 'market_cap' ? 'active' : ''} 
+              onClick={() => handleSort('market_cap')}
+            >
+              市值 {sortBy === 'market_cap' && (sortDirection === 'desc' ? '↓' : '↑')}
+            </button>
+            <button 
+              className={sortBy === 'price_change_percent_1h' ? 'active' : ''} 
+              onClick={() => handleSort('price_change_percent_1h')}
+            >
+              1h变化 {sortBy === 'price_change_percent_1h' && (sortDirection === 'desc' ? '↓' : '↑')}
+            </button>
+          </div>
         </div>
       </div>
-
-      {error && (
-        <div className="error-message">
-          ❌ {error}
-        </div>
-      )}
 
       <div className="tokens-grid">
         {sortedTokens.map((token, index) => (
           <div key={token.address} className="token-card">
             <div className="token-header">
-              <div className="token-rank">#{index + 1}</div>
-              <img 
-                src={token.logo} 
-                alt={token.symbol}
-                className="token-logo"
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/40x40/666/fff?text=?';
-                }}
-              />
+              <div className="rank">#{index + 1}</div>
               <div className="token-info">
-                <div className="token-symbol">{token.symbol}</div>
-                <div className="token-address">
-                  {token.address.slice(0, 6)}...{token.address.slice(-4)}
-                </div>
+                <div className="symbol">{token.symbol}</div>
+                <div className="address">{token.address.slice(0, 8)}...{token.address.slice(-6)}</div>
               </div>
-              <div className="token-actions">
-                <button 
-                  className="btn-icon"
-                  onClick={() => setSelectedToken(selectedToken === token.address ? null : token.address)}
-                >
-                  {selectedToken === token.address ? '📖' : '📖'}
-                </button>
+              <div className="price-info">
+                <div className="price">{formatPrice(token.price)}</div>
+                <div className={`price-change ${getPriceChangeColor(token.price_change_percent_1h)}`}>
+                  {formatPercentage(token.price_change_percent_1h)}
+                </div>
               </div>
             </div>
 
             <div className="token-stats">
               <div className="stat-row">
-                <span className="stat-label">价格:</span>
-                <span className="stat-value">${formatPrice(token.price)}</span>
+                <span className="label">市值:</span>
+                <span className="value">${formatNumber(token.market_cap)}</span>
               </div>
-              
               <div className="stat-row">
-                <span className="stat-label">1h变化:</span>
-                <span className={`stat-value ${getPriceChangeColor(token.price_change_percent_1h)}`}>
-                  {parseFloat(token.price_change_percent_1h).toFixed(2)}%
+                <span className="label">流动性:</span>
+                <span className="value">${formatNumber(token.liquidity)}</span>
+              </div>
+              <div className="stat-row">
+                <span className="label">持有者:</span>
+                <span className="value">{formatNumber(token.holder_count)}</span>
+              </div>
+              <div className="stat-row">
+                <span className="label">交易量:</span>
+                <span className="value">{formatNumber(token.swaps)}</span>
+              </div>
+              <div className="stat-row">
+                <span className="label">成交量:</span>
+                <span className="value">${formatNumber(token.volume)}</span>
+              </div>
+              <div className="stat-row">
+                <span className="label">蓝筹率:</span>
+                <span className="value">{(parseFloat(token.bluechip_rate) * 100).toFixed(2)}%</span>
+              </div>
+            </div>
+
+            <div className="security-section">
+              <div className="security-score">
+                <span className="label">安全评分:</span>
+                <span className={`score score-${calculateSecurityScore(token.security_info)}`}>
+                  {calculateSecurityScore(token.security_info)}%
                 </span>
               </div>
-
-              <div className="stat-row">
-                <span className="stat-label">市值:</span>
-                <span className="stat-value">${formatNumber(token.market_cap)}</span>
-              </div>
-
-              <div className="stat-row">
-                <span className="stat-label">流动性:</span>
-                <span className="stat-value">${formatNumber(token.liquidity)}</span>
-              </div>
-
-              <div className="stat-row">
-                <span className="stat-label">持有者:</span>
-                <span className="stat-value">{formatNumber(token.holder_count)}</span>
-              </div>
-
-              <div className="stat-row">
-                <span className="stat-label">交易量:</span>
-                <span className="stat-value">{formatNumber(token.swaps)}</span>
-              </div>
-
-              <div className="stat-row">
-                <span className="stat-label">成交量:</span>
-                <span className="stat-value">${formatNumber(token.volume)}</span>
-              </div>
-
-              <div className="stat-row">
-                <span className="stat-label">安全评分:</span>
-                <span className={`stat-value security-${getSecurityColor(getSecurityScore(token.security_info))}`}>
-                  {getSecurityScore(token.security_info)}%
+              <div className="security-details">
+                <span className={`badge ${token.security_info?.burn_status === 'burn' ? 'good' : 'neutral'}`}>
+                  🔥 已燃烧
+                </span>
+                <span className={`badge ${token.security_info?.renounced_freeze_account === 1 ? 'good' : 'bad'}`}>
+                  🔒 冻结已放弃
+                </span>
+                <span className={`badge ${token.security_info?.renounced_mint === 1 ? 'good' : 'bad'}`}>
+                  🪙 铸造已放弃
                 </span>
               </div>
             </div>
 
-            {selectedToken === token.address && (
+            <div className="token-actions">
+              <button 
+                className="expand-btn"
+                onClick={() => toggleExpanded(token.address)}
+              >
+                {expandedToken === token.address ? '收起详情' : '查看详情'}
+              </button>
+            </div>
+
+            {expandedToken === token.address && (
               <div className="token-details">
-                <div className="detail-section">
+                <div className="details-section">
+                  <h4>📊 详细数据</h4>
+                  <div className="details-grid">
+                    <div className="detail-item">
+                      <span className="label">创建者:</span>
+                      <span className="value">{token.creator?.slice(0, 8)}...{token.creator?.slice(-6)}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">创建时间:</span>
+                      <span className="value">{new Date(token.open_timestamp * 1000).toLocaleDateString()}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">启动平台:</span>
+                      <span className="value">{token.launchpad_platform || 'N/A'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">CTO标志:</span>
+                      <span className="value">{token.cto_flag === 1 ? '是' : '否'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">5分钟变化:</span>
+                      <span className={`value ${getPriceChangeColor(token.price_change_percent_5m)}`}>
+                        {formatPercentage(token.price_change_percent_5m)}
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">1分钟变化:</span>
+                      <span className={`value ${getPriceChangeColor(token.price_change_percent_1m)}`}>
+                        {formatPercentage(token.price_change_percent_1m)}
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">买入次数:</span>
+                      <span className="value">{formatNumber(token.buys)}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">卖出次数:</span>
+                      <span className="value">{formatNumber(token.sells)}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">前10持有率:</span>
+                      <span className="value">{(parseFloat(token.security_info?.top_10_holder_rate || 0) * 100).toFixed(2)}%</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">洗盘交易:</span>
+                      <span className="value">{token.is_wash_trading ? '是' : '否'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="details-section">
                   <h4>🔗 链接</h4>
                   <div className="links-grid">
-                    {token.token_links.website && (
+                    {token.token_links?.website && (
                       <a href={token.token_links.website} target="_blank" rel="noopener noreferrer" className="link-btn">
                         🌐 官网
                       </a>
                     )}
-                    {token.token_links.twitter_username && (
+                    {token.token_links?.telegram && (
+                      <a href={token.token_links.telegram} target="_blank" rel="noopener noreferrer" className="link-btn">
+                        📱 Telegram
+                      </a>
+                    )}
+                    {token.token_links?.twitter_username && (
                       <a href={`https://twitter.com/${token.token_links.twitter_username}`} target="_blank" rel="noopener noreferrer" className="link-btn">
                         🐦 Twitter
                       </a>
                     )}
-                    {token.token_links.telegram && (
-                      <a href={token.token_links.telegram} target="_blank" rel="noopener noreferrer" className="link-btn">
-                        💬 Telegram
+                    {token.token_links?.gmgn && (
+                      <a href={token.token_links.gmgn} target="_blank" rel="noopener noreferrer" className="link-btn">
+                        📈 GMGN
                       </a>
                     )}
-                    <a href={token.token_links.gmgn} target="_blank" rel="noopener noreferrer" className="link-btn">
-                      📊 GMGN
-                    </a>
-                    <a href={token.token_links.geckoterminal} target="_blank" rel="noopener noreferrer" className="link-btn">
-                      📈 GeckoTerminal
-                    </a>
+                    {token.token_links?.geckoterminal && (
+                      <a href={token.token_links.geckoterminal} target="_blank" rel="noopener noreferrer" className="link-btn">
+                        📊 GeckoTerminal
+                      </a>
+                    )}
                   </div>
                 </div>
 
-                <div className="detail-section">
-                  <h4>🔒 安全信息</h4>
-                  <div className="security-grid">
-                    <div className="security-item">
-                      <span className="security-label">放弃冻结权限:</span>
-                      <span className={`security-value ${token.security_info.renounced_freeze_account ? 'yes' : 'no'}`}>
-                        {token.security_info.renounced_freeze_account ? '✅' : '❌'}
-                      </span>
-                    </div>
-                    <div className="security-item">
-                      <span className="security-label">放弃铸造权限:</span>
-                      <span className={`security-value ${token.security_info.renounced_mint ? 'yes' : 'no'}`}>
-                        {token.security_info.renounced_mint ? '✅' : '❌'}
-                      </span>
-                    </div>
-                    <div className="security-item">
-                      <span className="security-label">销毁状态:</span>
-                      <span className="security-value">
-                        {token.security_info.burn_status === 'burn' ? '✅ 已销毁' : '❌ 未销毁'}
-                      </span>
-                    </div>
-                    <div className="security-item">
-                      <span className="security-label">前10持有者比例:</span>
-                      <span className="security-value">
-                        {(parseFloat(token.security_info.top_10_holder_rate) * 100).toFixed(2)}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {token.token_links.description && (
-                  <div className="detail-section">
+                {token.token_links?.description && (
+                  <div className="details-section">
                     <h4>📝 描述</h4>
-                    <p className="token-description">{token.token_links.description}</p>
+                    <p className="description">{token.token_links.description}</p>
                   </div>
                 )}
               </div>
