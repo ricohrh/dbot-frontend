@@ -12,6 +12,7 @@ const BluechipRank = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [refreshCount, setRefreshCount] = useState(0);
+  const [copiedAddress, setCopiedAddress] = useState(null);
   const intervalRef = useRef(null);
 
   useEffect(() => {
@@ -135,6 +136,16 @@ const BluechipRank = () => {
     const bVal = parseFloat(b[sortBy] || 0);
     return sortDirection === 'desc' ? bVal - aVal : aVal - bVal;
   });
+
+  const handleCopy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedAddress(text);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch (e) {
+      console.error('复制失败:', e);
+    }
+  };
 
   const toggleExpanded = (tokenAddress) => {
     setExpandedToken(expandedToken === tokenAddress ? null : tokenAddress);
@@ -273,7 +284,12 @@ const BluechipRank = () => {
                   </div>
                   <div className="token-basic">
                     <h3 className="token-symbol">{token.symbol}</h3>
-                    <p className="token-address">{token.address?.slice(0, 8)}...{token.address?.slice(-6)}</p>
+                    <div className="token-address">
+  <span className="addr-text">{token.address?.slice(0, 8)}...{token.address?.slice(-6)}</span>
+  <button className="copy-btn" onClick={(e) => { e.stopPropagation(); handleCopy(token.address); }}>
+    {copiedAddress === token.address ? '已复制' : '复制'}
+  </button>
+</div>
                   </div>
                 </div>
                 <div className="price-info">
