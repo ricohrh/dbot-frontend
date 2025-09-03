@@ -37,8 +37,11 @@ const BluechipRank = () => {
         setLoading(true);
       }
       const data = await apiRequest('/bluechip/tokens?limit=50');
-      console.log(' 获取到的代币数据:', data.data.rank?.slice(0, 3));
-      setTokens(data.data.rank || []);
+      const rank = Array.isArray(data?.data?.rank)
+        ? data.data.rank
+        : (Array.isArray(data?.data) ? data.data : []);
+      console.log('获取到的代币数据(前3条):', rank.slice(0, 3));
+      setTokens(rank);
       setLastUpdate(new Date());
       setRefreshCount(prev => prev + 1);
       setError(null);
