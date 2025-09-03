@@ -553,8 +553,7 @@
 
 .bluechip-rank::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #5a6fd8, #6a4190);
-} 
-/* 自动刷新相关样式 */
+} /* 自动刷新相关样式 */
 .auto-refresh-btn {
   background: #f8f9fa;
   color: #666;
@@ -636,3 +635,6 @@
     width: 100%;
   }
 }
+
+
+ 

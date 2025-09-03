@@ -35,7 +35,7 @@ const BluechipRank = () => {
       if (!silent) {
         setLoading(true);
       }
-      const response = await fetch('http://localhost:5000/api/bluechip/tokens?limit=50');
+      const response = await fetch('http://localhost:8888/api/bluechip/tokens?limit=50');
       if (!response.ok) {
         throw new Error('Network error: Failed to fetch');
       }
