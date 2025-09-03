@@ -19,10 +19,11 @@ export const apiRequest = async (endpoint, options = {}) => {
     ...options
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.res || `HTTP ${response.status}`);
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || data?.error || data?.success === false) {
+    throw new Error(data.message || data.error || `HTTP ${response.status}`);
   }
 
-  return response.json();
+  return data;
 }; 
