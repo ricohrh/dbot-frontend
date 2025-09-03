@@ -21,6 +21,7 @@ const BluechipRank = () => {
         throw new Error('Network error: Failed to fetch');
       }
       const data = await response.json();
+      console.log('🔍 获取到的代币数据:', data.data.rank?.slice(0, 3));
       setTokens(data.data.rank || []);
     } catch (err) {
       setError(err.message);
@@ -171,17 +172,44 @@ const BluechipRank = () => {
                 <div className="rank-badge">#{index + 1}</div>
                 <div className="token-info">
                   <div className="token-avatar">
-                    {token.logo ? (
-                      <img 
-                        src={token.logo} 
-                        alt={token.symbol} 
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'block';
-                        }}
-                      />
-                    ) : null}
-                    <div className="avatar-fallback" style={{ display: token.logo ? 'none' : 'block' }}>
+                    <img 
+                      src={token.logo || ''} 
+                      alt={token.symbol} 
+                      onLoad={(e) => {
+                        console.log(`✅ 头像加载成功: ${token.symbol}`, token.logo);
+                        e.target.style.display = 'block';
+                        e.target.nextSibling.style.display = 'none';
+                      }}
+                      onError={(e) => {
+                        console.log(`❌ 头像加载失败: ${token.symbol}`, token.logo);
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'block';
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '50%',
+                        display: token.logo ? 'block' : 'none'
+                      }}
+                    />
+                    <div 
+                      className="avatar-fallback" 
+                      style={{ 
+                        display: token.logo ? 'none' : 'block',
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textTransform: 'uppercase'
+                      }}
+                    >
                       {token.symbol?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                   </div>
