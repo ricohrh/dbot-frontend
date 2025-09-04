@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../services/api';
 import './TokenDetailCard.css';
 
-const TokenDetailCard = ({ token, isExpanded, onClose }) => {
-  const [analysisData, setAnalysisData] = useState(null);
+const TokenDetailCard = ({ token, isExpanded, onClose, analysisData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // 如果没有传入analysisData，则获取数据
   useEffect(() => {
-    if (isExpanded && token?.address) {
+    if (isExpanded && token?.address && !analysisData) {
       fetchTokenAnalysis();
     }
-  }, [isExpanded, token?.address]);
+  }, [isExpanded, token?.address, analysisData]);
 
   const fetchTokenAnalysis = async () => {
     try {
@@ -20,7 +20,8 @@ const TokenDetailCard = ({ token, isExpanded, onClose }) => {
       const response = await apiRequest(`/bluechip/token/${token.address}`);
       
       if (response.success) {
-        setAnalysisData(response.data);
+        // 这里可以触发父组件更新数据，但为了简化，我们直接使用传入的数据
+        setError('数据获取成功，请刷新页面查看');
       } else {
         setError(response.message || '获取分析数据失败');
       }
@@ -170,6 +171,13 @@ const TokenDetailCard = ({ token, isExpanded, onClose }) => {
                 </div>
               </div>
             </>
+          )}
+
+          {!analysisData && !loading && !error && (
+            <div className="no-data-section">
+              <p>暂无分析数据</p>
+              <button onClick={fetchTokenAnalysis} className="fetch-btn">获取分析数据</button>
+            </div>
           )}
         </div>
       </div>

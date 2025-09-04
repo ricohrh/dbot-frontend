@@ -718,3 +718,31 @@
     max-width: none;
   }
 }
+
+/* 暂无数据样式 */
+.no-data-section {
+  text-align: center;
+  padding: 40px 20px;
+  color: #a0aec0;
+}
+
+.no-data-section p {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.fetch-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.fetch-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}

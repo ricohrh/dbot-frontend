@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './BluechipRank.css';
+import { apiRequest } from '../../services/api';
+
+import TokenDetailCard from "./TokenDetailCard";
 
 const BluechipRank = () => {
   const [tokens, setTokens] = useState([]);
@@ -8,25 +11,67 @@ const BluechipRank = () => {
   const [sortBy, setSortBy] = useState('swaps');
   const [sortDirection, setSortDirection] = useState('desc');
   const [expandedToken, setExpandedToken] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+
+  const [showDetailCard, setShowDetailCard] = useState(false);
+  const [selectedToken, setSelectedToken] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(null);
+  const [refreshCount, setRefreshCount] = useState(0);
+  const [copiedAddress, setCopiedAddress] = useState(null);
+  const intervalRef = useRef(null);
 
   useEffect(() => {
     fetchTokens();
-  }, []);
+    
+    // 设置自动刷新
+    if (autoRefresh) {
+      intervalRef.current = setInterval(() => {
+        fetchTokens(true); // 静默刷新
+      }, 30000); // 每30秒刷新一次
+    }
 
-  const fetchTokens = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('http://localhost:5000/api/bluechip/tokens?limit=50');
-      if (!response.ok) {
-        throw new Error('Network error: Failed to fetch');
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
-      const data = await response.json();
-      console.log('🔍 获取到的代币数据:', data.data.rank?.slice(0, 3));
-      setTokens(data.data.rank || []);
+    };
+  }, [autoRefresh]);
+
+  const fetchTokens = async (silent = false) => {
+    try {
+      if (!silent) {
+        setLoading(true);
+      }
+      const data = await apiRequest('/bluechip/tokens?limit=50');
+      const rank = Array.isArray(data?.data?.rank)
+        ? data.data.rank
+        : (Array.isArray(data?.data) ? data.data : []);
+      console.log('获取到的代币数据(前3条):', rank.slice(0, 3));
+      setTokens(rank);
+      setLastUpdate(new Date());
+      setRefreshCount(prev => prev + 1);
+      setError(null);
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
+    }
+  };
+
+  const toggleAutoRefresh = () => {
+    setAutoRefresh(!autoRefresh);
+    if (!autoRefresh) {
+      // 开启自动刷新
+      intervalRef.current = setInterval(() => {
+        fetchTokens(true);
+      }, 30000);
+    } else {
+      // 关闭自动刷新
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     }
   };
 
@@ -97,8 +142,28 @@ const BluechipRank = () => {
     return sortDirection === 'desc' ? bVal - aVal : aVal - bVal;
   });
 
+  const handleCopy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedAddress(text);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch (e) {
+      console.error('复制失败:', e);
+    }
+  };
+
   const toggleExpanded = (tokenAddress) => {
     setExpandedToken(expandedToken === tokenAddress ? null : tokenAddress);
+  };
+
+  const showTokenDetail = (token) => {
+    setSelectedToken(token);
+    setShowDetailCard(true);
+  };
+
+  const closeDetailCard = () => {
+    setShowDetailCard(false);
+    setSelectedToken(null);
   };
 
   if (loading) {
@@ -113,6 +178,7 @@ const BluechipRank = () => {
     return (
       <div className="bluechip-rank">
         <div className="error">❌ {error}</div>
+        <button onClick={() => fetchTokens()} className="retry-btn">重试</button>
       </div>
     );
   }
@@ -122,9 +188,27 @@ const BluechipRank = () => {
       <div className="header">
         <h2>🏆 蓝筹代币排名</h2>
         <div className="controls">
-          <button className="refresh-btn" onClick={fetchTokens}>
+          <button className="refresh-btn" onClick={() => fetchTokens()}>
             🔄 刷新
           </button>
+          <button 
+            className={`auto-refresh-btn ${autoRefresh ? 'active' : ''}`}
+            onClick={toggleAutoRefresh}
+          >
+            {autoRefresh ? '⏸️ 暂停自动刷新' : '▶️ 开启自动刷新'}
+          </button>
+          <div className="status-info">
+            {lastUpdate && (
+              <span className="last-update">
+                最后更新: {lastUpdate.toLocaleTimeString()}
+              </span>
+            )}
+            {autoRefresh && (
+              <span className="refresh-indicator">
+                🔄 自动刷新中 ({refreshCount}次)
+              </span>
+            )}
+          </div>
           <div className="sort-controls">
             <span>排序:</span>
             <button 
@@ -215,7 +299,12 @@ const BluechipRank = () => {
                   </div>
                   <div className="token-basic">
                     <h3 className="token-symbol">{token.symbol}</h3>
-                    <p className="token-address">{token.address?.slice(0, 8)}...{token.address?.slice(-6)}</p>
+                    <div className="token-address">
+  <span className="addr-text">{token.address?.slice(0, 8)}...{token.address?.slice(-6)}</span>
+  <button className="copy-btn" onClick={(e) => { e.stopPropagation(); handleCopy(token.address); }}>
+    {copiedAddress === token.address ? '已复制' : '复制'}
+  </button>
+</div>
                   </div>
                 </div>
                 <div className="price-info">
@@ -276,13 +365,20 @@ const BluechipRank = () => {
                 </div>
               </div>
 
-              <button 
-                className={`expand-btn ${isExpanded ? 'expanded' : ''}`}
-                onClick={() => toggleExpanded(token.address)}
-              >
-                {isExpanded ? '收起详情' : '查看详情'}
-              </button>
-
+              <div className="action-buttons">
+                <button 
+                  className={`expand-btn ${isExpanded ? "expanded" : ""}`}
+                  onClick={() => toggleExpanded(token.address)}
+                >
+                  {isExpanded ? "收起详情" : "查看详情"}
+                </button>
+                <button
+                  className="memeradar-btn"
+                  onClick={() => showTokenDetail(token)}
+                >
+                  🔍 MEMERADAR分析
+                </button>
+              </div>
               {isExpanded && (
                 <div className="expanded-details">
                   <div className="details-grid">
@@ -403,8 +499,14 @@ const BluechipRank = () => {
           );
         })}
       </div>
+
+      <TokenDetailCard 
+        token={selectedToken}
+        isExpanded={showDetailCard}
+        onClose={closeDetailCard}
+      />
     </div>
   );
 };
 
-export default BluechipRank; 
+export default BluechipRank;

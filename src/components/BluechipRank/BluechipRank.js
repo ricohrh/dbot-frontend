@@ -12,6 +12,8 @@ const BluechipRank = () => {
   const [sortDirection, setSortDirection] = useState('desc');
   const [expandedToken, setExpandedToken] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [analysisData, setAnalysisData] = useState({}); // 存储所有代币的分析数据
+  const [analysisLoading, setAnalysisLoading] = useState({}); // 存储分析数据的加载状态
 
   const [showDetailCard, setShowDetailCard] = useState(false);
   const [selectedToken, setSelectedToken] = useState(null);
@@ -36,6 +38,35 @@ const BluechipRank = () => {
       }
     };
   }, [autoRefresh]);
+
+  // 当tokens更新时，预加载前10个代币的分析数据
+  useEffect(() => {
+    if (tokens.length > 0) {
+      preloadAnalysisData();
+    }
+  }, [tokens]);
+
+  const preloadAnalysisData = async () => {
+    // 只预加载前10个代币的分析数据，避免过多请求
+    const tokensToAnalyze = tokens.slice(0, 10);
+    
+    for (const token of tokensToAnalyze) {
+      if (!analysisData[token.address] && !analysisLoading[token.address]) {
+        setAnalysisLoading(prev => ({ ...prev, [token.address]: true }));
+        
+        try {
+          const response = await apiRequest(`/bluechip/token/${token.address}`);
+          if (response.success) {
+            setAnalysisData(prev => ({ ...prev, [token.address]: response.data }));
+          }
+        } catch (err) {
+          console.error(`获取 ${token.symbol} 分析数据失败:`, err);
+        } finally {
+          setAnalysisLoading(prev => ({ ...prev, [token.address]: false }));
+        }
+      }
+    }
+  };
 
   const fetchTokens = async (silent = false) => {
     try {
@@ -152,16 +183,12 @@ const BluechipRank = () => {
     }
   };
 
-  const toggleExpanded = (tokenAddress) => {
-    setExpandedToken(expandedToken === tokenAddress ? null : tokenAddress);
-  };
-
-  const showTokenDetail = (token) => {
+  const handleShowDetail = (token) => {
     setSelectedToken(token);
     setShowDetailCard(true);
   };
 
-  const closeDetailCard = () => {
+  const handleCloseDetail = () => {
     setShowDetailCard(false);
     setSelectedToken(null);
   };
@@ -169,7 +196,10 @@ const BluechipRank = () => {
   if (loading) {
     return (
       <div className="bluechip-rank">
-        <div className="loading">🔄 加载中...</div>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>正在加载蓝筹代币数据...</p>
+        </div>
       </div>
     );
   }
@@ -177,8 +207,10 @@ const BluechipRank = () => {
   if (error) {
     return (
       <div className="bluechip-rank">
-        <div className="error">❌ {error}</div>
-        <button onClick={() => fetchTokens()} className="retry-btn">重试</button>
+        <div className="error-container">
+          <p className="error-message">❌ {error}</p>
+          <button onClick={() => fetchTokens()} className="retry-btn">重试</button>
+        </div>
       </div>
     );
   }
@@ -186,325 +218,131 @@ const BluechipRank = () => {
   return (
     <div className="bluechip-rank">
       <div className="header">
-        <h2>🏆 蓝筹代币排名</h2>
+        <h1>🏆 蓝筹代币排行榜</h1>
         <div className="controls">
-          <button className="refresh-btn" onClick={() => fetchTokens()}>
-            🔄 刷新
-          </button>
-          <button 
-            className={`auto-refresh-btn ${autoRefresh ? 'active' : ''}`}
-            onClick={toggleAutoRefresh}
-          >
-            {autoRefresh ? '⏸️ 暂停自动刷新' : '▶️ 开启自动刷新'}
-          </button>
-          <div className="status-info">
+          <div className="refresh-info">
+            <span className="refresh-count">刷新次数: {refreshCount}</span>
             {lastUpdate && (
               <span className="last-update">
                 最后更新: {lastUpdate.toLocaleTimeString()}
               </span>
             )}
-            {autoRefresh && (
-              <span className="refresh-indicator">
-                🔄 自动刷新中 ({refreshCount}次)
-              </span>
-            )}
           </div>
-          <div className="sort-controls">
-            <span>排序:</span>
-            <button 
-              className={sortBy === 'swaps' ? 'active' : ''} 
-              onClick={() => handleSort('swaps')}
-            >
-              交易量
-            </button>
-            <button 
-              className={sortBy === 'volume' ? 'active' : ''} 
-              onClick={() => handleSort('volume')}
-            >
-              成交量
-            </button>
-            <button 
-              className={sortBy === 'holder_count' ? 'active' : ''} 
-              onClick={() => handleSort('holder_count')}
-            >
-              持有者
-            </button>
-            <button 
-              className={sortBy === 'market_cap' ? 'active' : ''} 
-              onClick={() => handleSort('market_cap')}
-            >
-              市值
-            </button>
-            <button 
-              className={sortBy === 'price_change_percent_1h' ? 'active' : ''} 
-              onClick={() => handleSort('price_change_percent_1h')}
-            >
-              1h变化
-            </button>
-          </div>
+          <button
+            className={`auto-refresh-btn ${autoRefresh ? 'active' : ''}`}
+            onClick={toggleAutoRefresh}
+          >
+            {autoRefresh ? '⏸️ 暂停自动刷新' : '▶️ 开启自动刷新'}
+          </button>
+          <button onClick={() => fetchTokens()} className="refresh-btn">
+            🔄 手动刷新
+          </button>
         </div>
       </div>
 
-      <div className="tokens-grid">
-        {sortedTokens.map((token, index) => {
-          const securityScore = calculateSecurityScore(token);
-          const isExpanded = expandedToken === token.address;
-          
-          return (
-            <div key={token.address} className={`token-card ${isExpanded ? 'expanded' : ''}`}>
-              <div className="token-header">
-                <div className="rank-badge">#{index + 1}</div>
-                <div className="token-info">
-                  <div className="token-avatar">
+      <div className="table-container">
+        <table className="tokens-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>代币</th>
+              <th 
+                className={`sortable ${sortBy === 'market_cap' ? 'active' : ''}`}
+                onClick={() => handleSort('market_cap')}
+              >
+                市值 {sortBy === 'market_cap' && (sortDirection === 'desc' ? '↓' : '↑')}
+              </th>
+              <th 
+                className={`sortable ${sortBy === 'price' ? 'active' : ''}`}
+                onClick={() => handleSort('price')}
+              >
+                价格 {sortBy === 'price' && (sortDirection === 'desc' ? '↓' : '↑')}
+              </th>
+              <th 
+                className={`sortable ${sortBy === 'holder_count' ? 'active' : ''}`}
+                onClick={() => handleSort('holder_count')}
+              >
+                持有者 {sortBy === 'holder_count' && (sortDirection === 'desc' ? '↓' : '↑')}
+              </th>
+              <th 
+                className={`sortable ${sortBy === 'volume' ? 'active' : ''}`}
+                onClick={() => handleSort('volume')}
+              >
+                24h交易量 {sortBy === 'volume' && (sortDirection === 'desc' ? '↓' : '↑')}
+              </th>
+              <th 
+                className={`sortable ${sortBy === 'swaps' ? 'active' : ''}`}
+                onClick={() => handleSort('swaps')}
+              >
+                24h交易次数 {sortBy === 'swaps' && (sortDirection === 'desc' ? '↓' : '↑')}
+              </th>
+              <th>安全评分</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedTokens.map((token, index) => (
+              <tr key={token.address} className="token-row">
+                <td className="rank">#{index + 1}</td>
+                <td className="token-info">
+                  <div className="token-details">
                     <img 
-                      src={token.logo || ''} 
+                      src={token.logo} 
                       alt={token.symbol} 
-                      onLoad={(e) => {
-                        console.log(`✅ 头像加载成功: ${token.symbol}`, token.logo);
-                        e.target.style.display = 'block';
-                        e.target.nextSibling.style.display = 'none';
-                      }}
+                      className="token-logo"
                       onError={(e) => {
-                        console.log(`❌ 头像加载失败: ${token.symbol}`, token.logo);
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'block';
-                      }}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: '50%',
-                        display: token.logo ? 'block' : 'none'
+                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2MzY2RjEiLz4KPHRleHQgeD0iMjAiIHk9IjI2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNCIgZm9udC1mYW1pbHk9IkFyaWFsIj5EPC90ZXh0Pgo8L3N2Zz4K';
                       }}
                     />
-                    <div 
-                      className="avatar-fallback" 
-                      style={{ 
-                        display: token.logo ? 'none' : 'block',
-                        width: '100%',
-                        height: '100%',
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
-                        fontSize: '20px',
-                        fontWeight: 'bold',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        textTransform: 'uppercase'
-                      }}
-                    >
-                      {token.symbol?.charAt(0)?.toUpperCase() || '?'}
+                    <div className="token-text">
+                      <div className="token-symbol">{token.symbol}</div>
+                      <div className="token-name">{token.token_links?.description || '暂无描述'}</div>
                     </div>
                   </div>
-                  <div className="token-basic">
-                    <h3 className="token-symbol">{token.symbol}</h3>
-                    <div className="token-address">
-  <span className="addr-text">{token.address?.slice(0, 8)}...{token.address?.slice(-6)}</span>
-  <button className="copy-btn" onClick={(e) => { e.stopPropagation(); handleCopy(token.address); }}>
-    {copiedAddress === token.address ? '已复制' : '复制'}
-  </button>
-</div>
-                  </div>
-                </div>
-                <div className="price-info">
-                  <div className="price">{formatPrice(token.price)}</div>
-                  <div className={`price-change ${parseFloat(token.price_change_percent_1h || 0) >= 0 ? 'positive' : 'negative'}`}>
-                    {parseFloat(token.price_change_percent_1h || 0).toFixed(2)}%
-                  </div>
-                </div>
-              </div>
-
-              <div className="token-metrics">
-                <div className="metric">
-                  <span className="label">市值:</span>
-                  <span className="value">${formatNumber(token.market_cap)}</span>
-                </div>
-                <div className="metric">
-                  <span className="label">流动性:</span>
-                  <span className="value">${formatNumber(token.liquidity)}</span>
-                </div>
-                <div className="metric">
-                  <span className="label">持有者:</span>
-                  <span className="value">{formatNumber(token.holder_count)}</span>
-                </div>
-                <div className="metric">
-                  <span className="label">交易量:</span>
-                  <span className="value">{formatNumber(token.swaps)}</span>
-                </div>
-                <div className="metric">
-                  <span className="label">成交量:</span>
-                  <span className="value">${formatNumber(token.volume)}</span>
-                </div>
-                <div className="metric">
-                  <span className="label">蓝筹率:</span>
-                  <span className="value">{(parseFloat(token.bluechip_rate || 0) * 100).toFixed(2)}%</span>
-                </div>
-              </div>
-
-              <div className="security-section">
-                <div className="security-score">
-                  <span className="label">安全评分:</span>
-                  <span 
-                    className="score-badge" 
-                    style={{ backgroundColor: getSecurityScoreColor(securityScore) }}
+                </td>
+                <td className="market-cap">${formatNumber(token.market_cap)}</td>
+                <td className="price">{formatPrice(token.price)}</td>
+                <td className="holders">{formatNumber(token.holder_count)}</td>
+                <td className="volume">${formatNumber(token.volume)}</td>
+                <td className="swaps">{formatNumber(token.swaps)}</td>
+                <td className="security-score">
+                  <div 
+                    className="score-badge"
+                    style={{ backgroundColor: getSecurityScoreColor(calculateSecurityScore(token)) }}
                   >
-                    {securityScore}%
-                  </span>
-                </div>
-                <div className="security-badges">
-                  {(token.security_info?.burn_status === 'burn') && (
-                    <span className="security-badge burn">🔥 已燃烧</span>
-                  )}
-                  {(token.security_info?.renounced_freeze_account === 1) && (
-                    <span className="security-badge frozen">🔒 冻结已放弃</span>
-                  )}
-                  {(token.security_info?.renounced_mint === 1) && (
-                    <span className="security-badge mint">🪙 铸造已放弃</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="action-buttons">
-                <button 
-                  className={`expand-btn ${isExpanded ? "expanded" : ""}`}
-                  onClick={() => toggleExpanded(token.address)}
-                >
-                  {isExpanded ? "收起详情" : "查看详情"}
-                </button>
-                <button
-                  className="memeradar-btn"
-                  onClick={() => showTokenDetail(token)}
-                >
-                  🔍 MEMERADAR分析
-                </button>
-              </div>
-              {isExpanded && (
-                <div className="expanded-details">
-                  <div className="details-grid">
-                    <div className="detail-section">
-                      <h4>📊 技术指标</h4>
-                      <div className="detail-item">
-                        <span>5分钟变化:</span>
-                        <span className={parseFloat(token.price_change_percent_5m || 0) >= 0 ? 'positive' : 'negative'}>
-                          {parseFloat(token.price_change_percent_5m || 0).toFixed(2)}%
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span>1分钟变化:</span>
-                        <span className={parseFloat(token.price_change_percent_1m || 0) >= 0 ? 'positive' : 'negative'}>
-                          {parseFloat(token.price_change_percent_1m || 0).toFixed(2)}%
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span>买入次数:</span>
-                        <span>{formatNumber(token.buys)}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span>卖出次数:</span>
-                        <span>{formatNumber(token.sells)}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span>智能买入24h:</span>
-                        <span>{formatNumber(token.smart_buys_24h)}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span>智能卖出24h:</span>
-                        <span>{formatNumber(token.smart_sells_24h)}</span>
-                      </div>
-                    </div>
-
-                    <div className="detail-section">
-                      <h4>🔒 安全信息</h4>
-                      <div className="detail-item">
-                        <span>燃烧比例:</span>
-                        <span>{(parseFloat(token.security_info?.burn_ratio || 0) * 100).toFixed(2)}%</span>
-                      </div>
-                      <div className="detail-item">
-                        <span>前10持有者比例:</span>
-                        <span>{(parseFloat(token.security_info?.top_10_holder_rate || 0) * 100).toFixed(2)}%</span>
-                      </div>
-                      <div className="detail-item">
-                        <span>开发者代币燃烧:</span>
-                        <span>{formatNumber(token.security_info?.dev_token_burn_amount)}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span>洗盘交易:</span>
-                        <span className={token.is_wash_trading ? 'negative' : 'positive'}>
-                          {token.is_wash_trading ? '是' : '否'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="detail-section">
-                      <h4>📅 项目信息</h4>
-                      <div className="detail-item">
-                        <span>创建者:</span>
-                        <span className="address">{token.creator?.slice(0, 8)}...{token.creator?.slice(-6)}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span>启动平台:</span>
-                        <span>{token.launchpad_platform || '未知'}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span>CTO标志:</span>
-                        <span>{token.cto_flag ? '是' : '否'}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span>创建时间:</span>
-                        <span>{new Date(token.open_timestamp * 1000).toLocaleDateString()}</span>
-                      </div>
-                      {token.token_links?.description && (
-                        <div className="detail-item description">
-                          <span>项目描述:</span>
-                          <span>{token.token_links.description}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="detail-section">
-                      <h4>🔗 相关链接</h4>
-                      <div className="links-grid">
-                        {token.token_links?.website && (
-                          <a href={token.token_links.website} target="_blank" rel="noopener noreferrer" className="link-btn">
-                            🌐 官网
-                          </a>
-                        )}
-                        {token.token_links?.telegram && (
-                          <a href={token.token_links.telegram} target="_blank" rel="noopener noreferrer" className="link-btn">
-                            📱 Telegram
-                          </a>
-                        )}
-                        {token.token_links?.twitter_username && (
-                          <a href={`https://twitter.com/${token.token_links.twitter_username}`} target="_blank" rel="noopener noreferrer" className="link-btn">
-                            🐦 Twitter
-                          </a>
-                        )}
-                        {token.token_links?.gmgn && (
-                          <a href={token.token_links.gmgn} target="_blank" rel="noopener noreferrer" className="link-btn">
-                            📈 GMGN
-                          </a>
-                        )}
-                        {token.token_links?.geckoterminal && (
-                          <a href={token.token_links.geckoterminal} target="_blank" rel="noopener noreferrer" className="link-btn">
-                            📊 GeckoTerminal
-                          </a>
-                        )}
-                      </div>
-                    </div>
+                    {calculateSecurityScore(token)}
                   </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+                </td>
+                <td className="actions">
+                  <button
+                    className="copy-btn"
+                    onClick={() => handleCopy(token.address)}
+                    title="复制地址"
+                  >
+                    {copiedAddress === token.address ? '✅' : '📋'}
+                  </button>
+                  <button
+                    className="detail-btn"
+                    onClick={() => handleShowDetail(token)}
+                    title="MEMERADAR分析"
+                  >
+                    🔍 MEMERADAR分析
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      <TokenDetailCard 
-        token={selectedToken}
-        isExpanded={showDetailCard}
-        onClose={closeDetailCard}
-      />
+      {showDetailCard && selectedToken && (
+        <TokenDetailCard
+          token={selectedToken}
+          isExpanded={showDetailCard}
+          onClose={handleCloseDetail}
+          analysisData={analysisData[selectedToken.address]}
+        />
+      )}
     </div>
   );
 };
