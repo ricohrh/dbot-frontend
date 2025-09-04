@@ -193,54 +193,6 @@ const TokenDetailCard = ({ token, isExpanded, onClose }) => {
                 )}
               </div>
 
-              {/* 原始MEMERADAR数据 */}
-              <div className="raw-data-section">
-                <h4>🔍 原始MEMERADAR数据</h4>
-                <div className="raw-data-grid">
-                  {/* 社区分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>👥 社区分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.community_analysis, null, 2)}</pre>
-                  </div>
-                  
-                  {/* KOL分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>🌟 KOL分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.kol_analysis, null, 2)}</pre>
-                  </div>
-                  
-                  {/* Twitter分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>🐦 Twitter分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.twitter_analysis, null, 2)}</pre>
-                  </div>
-                  
-                  {/* Telegram分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>📱 Telegram分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.telegram_analysis, null, 2)}</pre>
-                  </div>
-                  
-                  {/* 叙事分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>📖 叙事分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.narrative_analysis, null, 2)}</pre>
-                  </div>
-                  
-                  {/* 开发者分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>👨‍💻 开发者分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.dev_analysis, null, 2)}</pre>
-                  </div>
-                  
-                  {/* 持有者分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>👤 持有者分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.holder_analysis, null, 2)}</pre>
-                  </div>
-                </div>
-              </div>
-
               {/* 基础信息 */}
               <div className="basic-info">
                 <h4>📋 基础信息</h4>
@@ -252,7 +204,7 @@ const TokenDetailCard = ({ token, isExpanded, onClose }) => {
                   <div className="info-item">
                     <span>价格:</span>
                     <span>${parseFloat(token.price || 0).toFixed(8)}</span>
-                    </div>
+                  </div>
                   <div className="info-item">
                     <span>持有者:</span>
                     <span>{formatNumber(token.holder_count)}</span>
