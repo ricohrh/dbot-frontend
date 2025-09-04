@@ -931,3 +931,87 @@
     max-width: none;
   }
 }
+
+/* 正面信号样式 - 机会扫描风格 */
+.positive-signals-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  border-left: 4px solid #00b894;
+  margin: 20px 0;
+}
+
+.signals-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.signals-icon {
+  font-size: 16px;
+}
+
+.signals-title {
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+}
+
+.signals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.signal-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #e9ecef;
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.signal-item:hover {
+  background: #dee2e6;
+  transform: translateX(2px);
+}
+
+.signal-checkbox {
+  font-size: 14px;
+  color: #00b894;
+  flex-shrink: 0;
+}
+
+.signal-icon-secondary {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.signal-text {
+  font-size: 12px;
+  color: #555;
+  flex: 1;
+}
+
+.no-signals {
+  color: #a0aec0;
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .signal-item {
+    padding: 6px 10px;
+  }
+  
+  .signal-text {
+    font-size: 11px;
+  }
+}
