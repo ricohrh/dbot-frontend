@@ -47,8 +47,8 @@ const BluechipRank = () => {
   }, [tokens]);
 
   const preloadAnalysisData = async () => {
-    // 只预加载前10个代币的分析数据，避免过多请求
-    const tokensToAnalyze = tokens.slice(0, 10);
+    // 预加载前30个代币的分析数据
+    const tokensToAnalyze = tokens.slice(0, 30);
     
     for (const token of tokensToAnalyze) {
       if (!analysisData[token.address] && !analysisLoading[token.address]) {
@@ -186,6 +186,22 @@ const BluechipRank = () => {
   const handleShowDetail = (token) => {
     setSelectedToken(token);
     setShowDetailCard(true);
+    // 如果该代币还没有分析数据，则静默后台获取
+    if (!analysisData[token.address] && !analysisLoading[token.address]) {
+      (async () => {
+        try {
+          setAnalysisLoading(prev => ({ ...prev, [token.address]: true }));
+          const response = await apiRequest(`/bluechip/token/${token.address}`);
+          if (response.success) {
+            setAnalysisData(prev => ({ ...prev, [token.address]: response.data }));
+          }
+        } catch (err) {
+          console.error(`获取 ${token.symbol} 分析数据失败:`, err);
+        } finally {
+          setAnalysisLoading(prev => ({ ...prev, [token.address]: false }));
+        }
+      })();
+    }
   };
 
   const handleCloseDetail = () => {

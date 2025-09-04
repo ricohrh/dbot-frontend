@@ -1,34 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { apiRequest } from '../../services/api';
 import './TokenDetailCard.css';
 
 const TokenDetailCard = ({ token, isExpanded, onClose, analysisData }) => {
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // 如果没有传入analysisData，则获取数据
-  useEffect(() => {
-    if (isExpanded && token?.address && !analysisData) {
-      fetchTokenAnalysis();
-    }
-  }, [isExpanded, token?.address, analysisData]);
 
   const fetchTokenAnalysis = async () => {
     try {
-      setLoading(true);
       setError(null);
       const response = await apiRequest(`/bluechip/token/${token.address}`);
-      
       if (response.success) {
-        // 这里可以触发父组件更新数据，但为了简化，我们直接使用传入的数据
-        setError('数据获取成功，请刷新页面查看');
+        // 静默获取，不阻塞展示
+        setError(null);
       } else {
         setError(response.message || '获取分析数据失败');
       }
     } catch (err) {
       setError(err.message || '网络请求失败');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -50,13 +38,6 @@ const TokenDetailCard = ({ token, isExpanded, onClose, analysisData }) => {
         </div>
 
         <div className="detail-content">
-          {loading && (
-            <div className="loading-section">
-              <div className="loading-spinner"></div>
-              <p>正在分析代币数据...</p>
-            </div>
-          )}
-
           {error && (
             <div className="error-section">
               <p className="error-message">❌ {error}</p>
@@ -69,7 +50,6 @@ const TokenDetailCard = ({ token, isExpanded, onClose, analysisData }) => {
               {/* MEMERADAR信号分析 */}
               <div className="memeradar-signals-section">
                 <h4>📡 MEMERADAR信号分析</h4>
-                
                 {/* 信号总览 */}
                 <div className="signals-overview">
                   <div className="signal-stats">
@@ -173,10 +153,10 @@ const TokenDetailCard = ({ token, isExpanded, onClose, analysisData }) => {
             </>
           )}
 
-          {!analysisData && !loading && !error && (
+          {!analysisData && !error && (
             <div className="no-data-section">
               <p>暂无分析数据</p>
-              <button onClick={fetchTokenAnalysis} className="fetch-btn">获取分析数据</button>
+              <button onClick={fetchTokenAnalysis} className="fetch-btn">后台获取</button>
             </div>
           )}
         </div>
