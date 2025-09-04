@@ -65,9 +65,73 @@ const TokenDetailCard = ({ token, isExpanded, onClose }) => {
     };
   };
 
+  // 获取所有分析模块的信号
+  const getAllSignals = () => {
+    const signals = [];
+    
+    // 社区分析信号
+    if (analysisData?.analysis?.community_analysis) {
+      const community = analysisData.analysis.community_analysis;
+      if (community.summary) signals.push(`社区分析: ${community.summary}`);
+      if (community.engagement_level) signals.push(`社区活跃度: ${community.engagement_level}`);
+      if (community.community_count > 0) signals.push(`社区数量: ${community.community_count}个`);
+    }
+
+    // KOL分析信号
+    if (analysisData?.analysis?.kol_analysis) {
+      const kol = analysisData.analysis.kol_analysis;
+      if (kol.summary) signals.push(`KOL分析: ${kol.summary}`);
+      if (kol.kol_count > 0) signals.push(`KOL数量: ${kol.kol_count}个`);
+      if (kol.influence_score > 0) signals.push(`影响力评分: ${kol.influence_score}`);
+    }
+
+    // Twitter分析信号
+    if (analysisData?.analysis?.twitter_analysis) {
+      const twitter = analysisData.analysis.twitter_analysis;
+      if (twitter.summary) signals.push(`Twitter分析: ${twitter.summary}`);
+      if (twitter.tweet_count > 0) signals.push(`推文数量: ${twitter.tweet_count}条`);
+      if (twitter.engagement_rate > 0) signals.push(`互动率: ${twitter.engagement_rate}%`);
+    }
+
+    // Telegram分析信号
+    if (analysisData?.analysis?.telegram_analysis) {
+      const telegram = analysisData.analysis.telegram_analysis;
+      if (telegram.summary) signals.push(`Telegram分析: ${telegram.summary}`);
+      if (telegram.member_count > 0) signals.push(`成员数量: ${telegram.member_count}人`);
+      if (telegram.activity_level) signals.push(`活跃度: ${telegram.activity_level}`);
+    }
+
+    // 叙事分析信号
+    if (analysisData?.analysis?.narrative_analysis) {
+      const narrative = analysisData.analysis.narrative_analysis;
+      if (narrative.summary) signals.push(`叙事分析: ${narrative.summary}`);
+      if (narrative.main_narrative) signals.push(`主要叙事: ${narrative.main_narrative}`);
+      if (narrative.keywords?.length > 0) signals.push(`关键词: ${narrative.keywords.join(', ')}`);
+    }
+
+    // 开发者分析信号
+    if (analysisData?.analysis?.dev_analysis) {
+      const dev = analysisData.analysis.dev_analysis;
+      if (dev.summary) signals.push(`开发者分析: ${dev.summary}`);
+      if (dev.dev_activity) signals.push(`开发活跃度: ${dev.dev_activity}`);
+      if (dev.code_quality) signals.push(`代码质量: ${dev.code_quality}`);
+    }
+
+    // 持有者分析信号
+    if (analysisData?.analysis?.holder_analysis) {
+      const holder = analysisData.analysis.holder_analysis;
+      if (holder.summary) signals.push(`持有者分析: ${holder.summary}`);
+      if (holder.distribution_health) signals.push(`分布健康度: ${holder.distribution_health}`);
+      if (holder.whale_ratio > 0) signals.push(`巨鲸比例: ${holder.whale_ratio}%`);
+    }
+
+    return signals;
+  };
+
   if (!isExpanded) return null;
 
   const memeradarData = getMemeradarSignals();
+  const allSignals = getAllSignals();
 
   return (
     <div className="token-detail-overlay" onClick={onClose}>
@@ -124,6 +188,24 @@ const TokenDetailCard = ({ token, isExpanded, onClose }) => {
                     <div className="stat-label">投资评分</div>
                   </div>
                 </div>
+
+                {/* 所有分析信号 */}
+                {allSignals.length > 0 && (
+                  <div className="positive-signals-section">
+                    <div className="signals-header">
+                      <span className="signals-icon">📊</span>
+                      <span className="signals-title">分析信号</span>
+                    </div>
+                    <div className="signals-list">
+                      {allSignals.map((signal, index) => (
+                        <div key={index} className="signal-item">
+                          <span className="signal-checkbox">✅</span>
+                          <span className="signal-text">{signal}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* 检测到的信号 */}
                 {memeradarData.signals.length > 0 && (

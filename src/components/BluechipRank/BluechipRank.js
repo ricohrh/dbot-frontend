@@ -178,7 +178,7 @@ const BluechipRank = () => {
     return (
       <div className="bluechip-rank">
         <div className="error">❌ {error}</div>
-        <button onClick={() => fetchTokens()} className="retry-btn">重试</button>
+          <button onClick={() => fetchTokens()} className="retry-btn">重试</button>
       </div>
     );
   }
@@ -229,18 +229,18 @@ const BluechipRank = () => {
             >
               持有者
             </button>
-            <button 
+          <button
               className={sortBy === 'market_cap' ? 'active' : ''} 
               onClick={() => handleSort('market_cap')}
-            >
+          >
               市值
-            </button>
+          </button>
             <button 
               className={sortBy === 'price_change_percent_1h' ? 'active' : ''} 
               onClick={() => handleSort('price_change_percent_1h')}
             >
               1h变化
-            </button>
+          </button>
           </div>
         </div>
       </div>
@@ -371,13 +371,13 @@ const BluechipRank = () => {
                   onClick={() => toggleExpanded(token.address)}
                 >
                   {isExpanded ? "收起详情" : "查看详情"}
-                </button>
-                <button
+                  </button>
+                  <button
                   className="memeradar-btn"
                   onClick={() => showTokenDetail(token)}
-                >
-                  🔍 MEMERADAR分析
-                </button>
+                  >
+                    🔍 MEMERADAR分析
+                  </button>
               </div>
               {isExpanded && (
                 <div className="expanded-details">
@@ -500,11 +500,11 @@ const BluechipRank = () => {
         })}
       </div>
 
-      <TokenDetailCard 
-        token={selectedToken}
-        isExpanded={showDetailCard}
+        <TokenDetailCard
+          token={selectedToken}
+          isExpanded={showDetailCard}
         onClose={closeDetailCard}
-      />
+        />
     </div>
   );
 };
