@@ -746,3 +746,188 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
+
+/* MEMERADAR信号分析样式 - 机会扫描风格 */
+.memeradar-signals-section {
+  margin-top: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #1e1e2e 0%, #2d2d3f 100%);
+  border-radius: 15px;
+  border: 1px solid #444;
+}
+
+.memeradar-signals-section h4 {
+  color: #fff;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 18px;
+}
+
+/* 信号统计网格 */
+.signal-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  border: 1px solid #555;
+}
+
+.stat-value {
+  display: block;
+  color: #00ff88;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  display: block;
+  color: #a0aec0;
+  font-size: 12px;
+}
+
+/* 正面信号样式 - 机会扫描风格 */
+.positive-signals-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  border-left: 4px solid #00b894;
+  margin-bottom: 15px;
+}
+
+.positive-signals-section.chainzhi {
+  border-left-color: #fbbf24;
+  background: #fffbf0;
+}
+
+.positive-signals-section.social {
+  border-left-color: #3b82f6;
+  background: #f0f4ff;
+}
+
+.positive-signals-section.volume {
+  border-left-color: #10b981;
+  background: #f0fdf4;
+}
+
+.positive-signals-section.holder {
+  border-left-color: #8b5cf6;
+  background: #faf5ff;
+}
+
+.signals-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.signals-icon {
+  font-size: 16px;
+}
+
+.signals-title {
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+}
+
+.signals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.signal-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.signal-checkbox {
+  font-size: 14px;
+  color: #00b894;
+}
+
+.signal-text {
+  font-size: 12px;
+  color: #555;
+}
+
+/* 热度等级和推荐 */
+.heat-recommendation {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid #555;
+  margin-top: 20px;
+}
+
+.heat-level, .recommendation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.heat-level:last-child, .recommendation:last-child {
+  margin-bottom: 0;
+}
+
+.heat-label, .rec-label {
+  color: #a0aec0;
+  font-size: 14px;
+}
+
+.heat-value {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.heat-value.hot {
+  color: #ef4444;
+}
+
+.heat-value.warm {
+  color: #f59e0b;
+}
+
+.heat-value.cool {
+  color: #3b82f6;
+}
+
+.heat-value.cold {
+  color: #6b7280;
+}
+
+.rec-text {
+  color: #00ff88;
+  font-size: 14px;
+  text-align: right;
+  max-width: 200px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .signal-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .heat-level, .recommendation {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .rec-text {
+    text-align: left;
+    max-width: none;
+  }
+}

@@ -60,7 +60,43 @@ const TokenDetailCard = ({ token, isExpanded, onClose }) => {
     }
   };
 
+  // 获取MEMERADAR信号数据
+  const getMemeradarSignals = () => {
+    if (!analysisData?.analysis?.community_analysis?.raw_memeradar_data) {
+      return {
+        signals: [],
+        chainzhi_signals: [],
+        social_signals: [],
+        volume_signals: [],
+        holder_signals: [],
+        signal_count: 0,
+        community_count: 0,
+        kol_mention_count: 0,
+        investment_score: 0,
+        heat_level: 'cold',
+        recommendation: '暂无建议'
+      };
+    }
+    
+    const memeradar = analysisData.analysis.community_analysis.raw_memeradar_data;
+    return {
+      signals: memeradar.signals || [],
+      chainzhi_signals: memeradar.chainzhi_signals || [],
+      social_signals: memeradar.social_signals || [],
+      volume_signals: memeradar.volume_signals || [],
+      holder_signals: memeradar.holder_signals || [],
+      signal_count: memeradar.signal_count || 0,
+      community_count: memeradar.community_count || 0,
+      kol_mention_count: memeradar.kol_mention_count || 0,
+      investment_score: memeradar.investment_score || 0,
+      heat_level: memeradar.heat_level || 'cold',
+      recommendation: memeradar.recommendation || '暂无建议'
+    };
+  };
+
   if (!isExpanded) return null;
+
+  const memeradarData = getMemeradarSignals();
 
   return (
     <div className="token-detail-overlay" onClick={onClose}>
@@ -125,7 +161,7 @@ const TokenDetailCard = ({ token, isExpanded, onClose }) => {
 
               {/* 各模块评分 */}
               <div className="modules-grid">
-                <h4>📊 各模块评分</h4>
+                <h4>�� 各模块评分</h4>
                 <div className="modules-list">
                   {Object.entries(analysisData.analysis.comprehensive_score.breakdown).map(([module, data]) => (
                     <div key={module} className="module-item">
@@ -193,50 +229,133 @@ const TokenDetailCard = ({ token, isExpanded, onClose }) => {
                 )}
               </div>
 
-              {/* 原始MEMERADAR数据 */}
-              <div className="raw-data-section">
-                <h4>🔍 原始MEMERADAR数据</h4>
-                <div className="raw-data-grid">
-                  {/* 社区分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>👥 社区分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.community_analysis, null, 2)}</pre>
+              {/* MEMERADAR信号分析 - 使用机会扫描的样式 */}
+              <div className="memeradar-signals-section">
+                <h4>📡 MEMERADAR信号分析</h4>
+                
+                {/* 信号统计 */}
+                <div className="signal-stats-grid">
+                  <div className="stat-card">
+                    <div className="stat-value">{memeradarData.signal_count}</div>
+                    <div className="stat-label">信号总数</div>
                   </div>
-                  
-                  {/* KOL分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>🌟 KOL分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.kol_analysis, null, 2)}</pre>
+                  <div className="stat-card">
+                    <div className="stat-value">{memeradarData.community_count}</div>
+                    <div className="stat-label">社群数量</div>
                   </div>
-                  
-                  {/* Twitter分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>🐦 Twitter分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.twitter_analysis, null, 2)}</pre>
+                  <div className="stat-card">
+                    <div className="stat-value">{memeradarData.kol_mention_count}</div>
+                    <div className="stat-label">KOL提及</div>
                   </div>
-                  
-                  {/* Telegram分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>📱 Telegram分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.telegram_analysis, null, 2)}</pre>
+                  <div className="stat-card">
+                    <div className="stat-value">{Math.round(memeradarData.investment_score)}</div>
+                    <div className="stat-label">投资评分</div>
                   </div>
-                  
-                  {/* 叙事分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>📖 叙事分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.narrative_analysis, null, 2)}</pre>
+                </div>
+
+                {/* 检测到的信号 */}
+                {memeradarData.signals.length > 0 && (
+                  <div className="positive-signals-section">
+                    <div className="signals-header">
+                      <span className="signals-icon">📡</span>
+                      <span className="signals-title">检测到的信号</span>
+                    </div>
+                    <div className="signals-list">
+                      {memeradarData.signals.map((signal, index) => (
+                        <div key={index} className="signal-item">
+                          <span className="signal-checkbox">✅</span>
+                          <span className="signal-text">{signal}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  
-                  {/* 开发者分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>👨‍💻 开发者分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.dev_analysis, null, 2)}</pre>
+                )}
+
+                {/* 链智权威信号 */}
+                {memeradarData.chainzhi_signals.length > 0 && (
+                  <div className="positive-signals-section chainzhi">
+                    <div className="signals-header">
+                      <span className="signals-icon">⭐</span>
+                      <span className="signals-title">链智权威信号</span>
+                    </div>
+                    <div className="signals-list">
+                      {memeradarData.chainzhi_signals.map((signal, index) => (
+                        <div key={index} className="signal-item">
+                          <span className="signal-checkbox">⭐</span>
+                          <span className="signal-text">{signal}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  
-                  {/* 持有者分析原始数据 */}
-                  <div className="raw-data-item">
-                    <h5>👤 持有者分析原始数据</h5>
-                    <pre>{JSON.stringify(analysisData.analysis.holder_analysis, null, 2)}</pre>
+                )}
+
+                {/* 社交信号 */}
+                {memeradarData.social_signals.length > 0 && (
+                  <div className="positive-signals-section social">
+                    <div className="signals-header">
+                      <span className="signals-icon">👥</span>
+                      <span className="signals-title">社交信号</span>
+                    </div>
+                    <div className="signals-list">
+                      {memeradarData.social_signals.map((signal, index) => (
+                        <div key={index} className="signal-item">
+                          <span className="signal-checkbox">👥</span>
+                          <span className="signal-text">{signal}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 交易量信号 */}
+                {memeradarData.volume_signals.length > 0 && (
+                  <div className="positive-signals-section volume">
+                    <div className="signals-header">
+                      <span className="signals-icon">📈</span>
+                      <span className="signals-title">交易量信号</span>
+                    </div>
+                    <div className="signals-list">
+                      {memeradarData.volume_signals.map((signal, index) => (
+                        <div key={index} className="signal-item">
+                          <span className="signal-checkbox">📈</span>
+                          <span className="signal-text">{signal}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 持有者信号 */}
+                {memeradarData.holder_signals.length > 0 && (
+                  <div className="positive-signals-section holder">
+                    <div className="signals-header">
+                      <span className="signals-icon">👤</span>
+                      <span className="signals-title">持有者信号</span>
+                    </div>
+                    <div className="signals-list">
+                      {memeradarData.holder_signals.map((signal, index) => (
+                        <div key={index} className="signal-item">
+                          <span className="signal-checkbox">👤</span>
+                          <span className="signal-text">{signal}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 热度等级和投资建议 */}
+                <div className="heat-recommendation">
+                  <div className="heat-level">
+                    <span className="heat-label">热度等级:</span>
+                    <span className={`heat-value ${memeradarData.heat_level}`}>
+                      {memeradarData.heat_level === 'hot' ? '🔥 热度很高' :
+                       memeradarData.heat_level === 'warm' ? '🌡️ 热度一般' :
+                       memeradarData.heat_level === 'cool' ? '❄️ 热度较低' : '🧊 热度很低'}
+                    </span>
+                  </div>
+                  <div className="recommendation">
+                    <span className="rec-label">投资建议:</span>
+                    <span className="rec-text">{memeradarData.recommendation}</span>
                   </div>
                 </div>
               </div>
@@ -252,7 +371,7 @@ const TokenDetailCard = ({ token, isExpanded, onClose }) => {
                   <div className="info-item">
                     <span>价格:</span>
                     <span>${parseFloat(token.price || 0).toFixed(8)}</span>
-                    </div>
+                  </div>
                   <div className="info-item">
                     <span>持有者:</span>
                     <span>{formatNumber(token.holder_count)}</span>
