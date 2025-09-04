@@ -1,10 +1,5 @@
 // API配置
-const isDevelopment = process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost';
-
-export const API_BASE_URL = isDevelopment 
-  ? 'http://localhost:8888/api'  // 本地开发环境
-  : 'https://api.ricohrhptop.top/api';  // 生产环境
-
+export const API_BASE_URL = 'https://api.ricohrhptop.top/api';
 export const API_KEY = 'hwxwzxlpdc6whlt9uwaipnp6jxpdfabw';
 
 // 通用API请求函数
@@ -31,4 +26,4 @@ export const apiRequest = async (endpoint, options = {}) => {
   }
 
   return data;
-};
+}; 

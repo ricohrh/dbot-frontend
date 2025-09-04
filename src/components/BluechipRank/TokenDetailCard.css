@@ -1,0 +1,467 @@
+/* 代币详情卡片样式 */
+.token-detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.token-detail-card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid #333;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #333;
+  background: linear-gradient(90deg, #2d3748 0%, #4a5568 100%);
+  border-radius: 20px 20px 0 0;
+}
+
+.token-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.token-logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid #4a5568;
+}
+
+.token-basic h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.token-name {
+  margin: 5px 0;
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+.token-address {
+  margin: 0;
+  color: #718096;
+  font-size: 0.8rem;
+  font-family: monospace;
+}
+
+.close-btn {
+  background: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: #c53030;
+  transform: scale(1.1);
+}
+
+.detail-content {
+  padding: 20px;
+}
+
+.loading-section {
+  text-align: center;
+  padding: 40px;
+  color: #a0aec0;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #4a5568;
+  border-top: 4px solid #4299e1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-section {
+  text-align: center;
+  padding: 40px;
+  color: #e53e3e;
+}
+
+.error-message {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+.retry-btn {
+  background: #4299e1;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+  background: #3182ce;
+}
+
+/* 评分卡片 */
+.score-card {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #4a5568;
+}
+
+.score-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.score-header h4 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.score-badge {
+  background: #4299e1;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.score-details {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.grade-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.grade {
+  background: #4299e1;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.level {
+  color: #a0aec0;
+  font-size: 1rem;
+}
+
+/* 投资建议卡片 */
+.advice-card {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #4a5568;
+}
+
+.advice-card h4 {
+  margin: 0 0 15px 0;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.advice-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.recommendation {
+  font-size: 1.3rem;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.risk-level {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* 模块评分网格 */
+.modules-grid {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #4a5568;
+}
+
+.modules-grid h4 {
+  margin: 0 0 20px 0;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.modules-list {
+  display: grid;
+  gap: 15px;
+}
+
+.module-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  border: 1px solid #4a5568;
+}
+
+.module-name {
+  color: #fff;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.module-score {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 120px;
+}
+
+.score-bar {
+  flex: 1;
+  height: 8px;
+  background: #4a5568;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.score-text {
+  color: #a0aec0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-width: 35px;
+}
+
+/* 行动建议 */
+.action-items {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #4a5568;
+}
+
+.action-items h4 {
+  margin: 0 0 15px 0;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.action-items ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #a0aec0;
+}
+
+.action-items li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+/* 优势和劣势 */
+.strengths-weaknesses {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.strengths, .weaknesses {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  border-radius: 15px;
+  padding: 20px;
+  border: 1px solid #4a5568;
+}
+
+.strengths h4, .weaknesses h4 {
+  margin: 0 0 15px 0;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.strengths ul, .weaknesses ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #a0aec0;
+}
+
+.strengths li, .weaknesses li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+/* 基础信息 */
+.basic-info {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  border-radius: 15px;
+  padding: 20px;
+  border: 1px solid #4a5568;
+}
+
+.basic-info h4 {
+  margin: 0 0 15px 0;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid #4a5568;
+}
+
+.info-item span:first-child {
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+.info-item span:last-child {
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .token-detail-overlay {
+    padding: 10px;
+  }
+  
+  .token-detail-card {
+    max-height: 95vh;
+  }
+  
+  .detail-header {
+    padding: 15px;
+  }
+  
+  .token-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .token-basic h3 {
+    font-size: 1.2rem;
+  }
+  
+  .detail-content {
+    padding: 15px;
+  }
+  
+  .strengths-weaknesses {
+    grid-template-columns: 1fr;
+  }
+  
+  .advice-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .module-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .module-score {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+/* 滚动条样式 */
+.token-detail-card::-webkit-scrollbar {
+  width: 8px;
+}
+
+.token-detail-card::-webkit-scrollbar-track {
+  background: #2d3748;
+  border-radius: 4px;
+}
+
+.token-detail-card::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 4px;
+}
+
+.token-detail-card::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}

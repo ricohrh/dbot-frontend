@@ -372,13 +372,9 @@ const BluechipRank = () => {
                 >
                   {isExpanded ? "收起详情" : "查看详情"}
                 </button>
-                <button
-                  className="memeradar-btn"
-                  onClick={() => showTokenDetail(token)}
-                >
-                  🔍 MEMERADAR分析
-                </button>
-              </div>
+                <button 
+
+                  onClick={() => showTokenDetail(token)}                >                  🔍 MEMERADAR分析                </button>              </div>
               {isExpanded && (
                 <div className="expanded-details">
                   <div className="details-grid">
