@@ -193,107 +193,50 @@ const TokenDetailCard = ({ token, isExpanded, onClose }) => {
                 )}
               </div>
 
-              {/* MEMERADAR信号分析 */}
-              <div className="memeradar-signals-section">
-                <h4>📡 MEMERADAR信号分析</h4>
-                
-                {/* 信号总览 */}
-                <div className="signals-overview">
-                  <div className="signal-stats">
-                    <div className="stat-item">
-                      <span className="stat-label">信号总数</span>
-                      <span className="stat-value">{analysisData.analysis.community_analysis?.raw_memeradar_data?.signal_count || 0}</span>
-                    </div>
-                    <div className="stat-item">
-                      <span className="stat-label">社群数量</span>
-                      <span className="stat-value">{analysisData.analysis.community_analysis?.raw_memeradar_data?.community_count || 0}</span>
-                    </div>
-                    <div className="stat-item">
-                      <span className="stat-label">KOL提及</span>
-                      <span className="stat-value">{analysisData.analysis.community_analysis?.raw_memeradar_data?.kol_mention_count || 0}</span>
-                    </div>
-                    <div className="stat-item">
-                      <span className="stat-label">投资评分</span>
-                      <span className="stat-value">{Math.round(analysisData.analysis.community_analysis?.raw_memeradar_data?.investment_score || 0)}</span>
-                    </div>
+              {/* 原始MEMERADAR数据 */}
+              <div className="raw-data-section">
+                <h4>🔍 原始MEMERADAR数据</h4>
+                <div className="raw-data-grid">
+                  {/* 社区分析原始数据 */}
+                  <div className="raw-data-item">
+                    <h5>👥 社区分析原始数据</h5>
+                    <pre>{JSON.stringify(analysisData.analysis.community_analysis, null, 2)}</pre>
                   </div>
-                </div>
-
-                {/* 信号列表 */}
-                <div className="signals-list">
-                  <h5>🎯 检测到的信号</h5>
-                  {analysisData.analysis.community_analysis?.raw_memeradar_data?.signals?.length > 0 ? (
-                    <div className="signals-grid">
-                      {analysisData.analysis.community_analysis.raw_memeradar_data.signals.map((signal, index) => (
-                        <div key={index} className="signal-item">
-                          <span className="signal-icon">📡</span>
-                          <span className="signal-text">{signal}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="no-signals">暂无检测到信号</div>
-                  )}
-                </div>
-
-                {/* 链智信号 */}
-                {analysisData.analysis.community_analysis?.raw_memeradar_data?.chainzhi_signals?.length > 0 && (
-                  <div className="chainzhi-signals">
-                    <h5>⭐ 链智权威信号</h5>
-                    <div className="signals-grid">
-                      {analysisData.analysis.community_analysis.raw_memeradar_data.chainzhi_signals.map((signal, index) => (
-                        <div key={index} className="signal-item chainzhi">
-                          <span className="signal-icon">⭐</span>
-                          <span className="signal-text">{signal}</span>
-                        </div>
-                      ))}
-                    </div>
+                  
+                  {/* KOL分析原始数据 */}
+                  <div className="raw-data-item">
+                    <h5>🌟 KOL分析原始数据</h5>
+                    <pre>{JSON.stringify(analysisData.analysis.kol_analysis, null, 2)}</pre>
                   </div>
-                )}
-
-                {/* 社交信号 */}
-                {analysisData.analysis.community_analysis?.raw_memeradar_data?.social_signals?.length > 0 && (
-                  <div className="social-signals">
-                    <h5>👥 社交信号</h5>
-                    <div className="signals-grid">
-                      {analysisData.analysis.community_analysis.raw_memeradar_data.social_signals.map((signal, index) => (
-                        <div key={index} className="signal-item social">
-                          <span className="signal-icon">👥</span>
-                          <span className="signal-text">{signal}</span>
-                        </div>
-                      ))}
-                    </div>
+                  
+                  {/* Twitter分析原始数据 */}
+                  <div className="raw-data-item">
+                    <h5>🐦 Twitter分析原始数据</h5>
+                    <pre>{JSON.stringify(analysisData.analysis.twitter_analysis, null, 2)}</pre>
                   </div>
-                )}
-
-                {/* 交易量信号 */}
-                {analysisData.analysis.community_analysis?.raw_memeradar_data?.volume_signals?.length > 0 && (
-                  <div className="volume-signals">
-                    <h5>📈 交易量信号</h5>
-                    <div className="signals-grid">
-                      {analysisData.analysis.community_analysis.raw_memeradar_data.volume_signals.map((signal, index) => (
-                        <div key={index} className="signal-item volume">
-                          <span className="signal-icon">📈</span>
-                          <span className="signal-text">{signal}</span>
-                        </div>
-                      ))}
-                    </div>
+                  
+                  {/* Telegram分析原始数据 */}
+                  <div className="raw-data-item">
+                    <h5>📱 Telegram分析原始数据</h5>
+                    <pre>{JSON.stringify(analysisData.analysis.telegram_analysis, null, 2)}</pre>
                   </div>
-                )}
-
-                {/* 热度等级和推荐 */}
-                <div className="heat-recommendation">
-                  <div className="heat-level">
-                    <span className="heat-label">热度等级:</span>
-                    <span className={`heat-value ${analysisData.analysis.community_analysis?.raw_memeradar_data?.heat_level || 'cold'}`}>
-                      {analysisData.analysis.community_analysis?.raw_memeradar_data?.heat_level === 'hot' ? '🔥 热度很高' :
-                       analysisData.analysis.community_analysis?.raw_memeradar_data?.heat_level === 'warm' ? '🌡️ 热度一般' :
-                       analysisData.analysis.community_analysis?.raw_memeradar_data?.heat_level === 'cool' ? '❄️ 热度较低' : '🧊 热度很低'}
-                    </span>
+                  
+                  {/* 叙事分析原始数据 */}
+                  <div className="raw-data-item">
+                    <h5>📖 叙事分析原始数据</h5>
+                    <pre>{JSON.stringify(analysisData.analysis.narrative_analysis, null, 2)}</pre>
                   </div>
-                  <div className="recommendation">
-                    <span className="rec-label">投资建议:</span>
-                    <span className="rec-text">{analysisData.analysis.community_analysis?.raw_memeradar_data?.recommendation || '暂无建议'}</span>
+                  
+                  {/* 开发者分析原始数据 */}
+                  <div className="raw-data-item">
+                    <h5>👨‍💻 开发者分析原始数据</h5>
+                    <pre>{JSON.stringify(analysisData.analysis.dev_analysis, null, 2)}</pre>
+                  </div>
+                  
+                  {/* 持有者分析原始数据 */}
+                  <div className="raw-data-item">
+                    <h5>👤 持有者分析原始数据</h5>
+                    <pre>{JSON.stringify(analysisData.analysis.holder_analysis, null, 2)}</pre>
                   </div>
                 </div>
               </div>
@@ -309,7 +252,7 @@ const TokenDetailCard = ({ token, isExpanded, onClose }) => {
                   <div className="info-item">
                     <span>价格:</span>
                     <span>${parseFloat(token.price || 0).toFixed(8)}</span>
-                  </div>
+                    </div>
                   <div className="info-item">
                     <span>持有者:</span>
                     <span>{formatNumber(token.holder_count)}</span>
