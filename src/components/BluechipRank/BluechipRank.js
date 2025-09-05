@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './BluechipRank.css';
 import { apiRequest } from '../../services/api';
+import { fetchTopRSI } from '../../services/rsiService';
 
 import TokenDetailCard from "./TokenDetailCard";
 
@@ -48,6 +49,15 @@ const BluechipRank = () => {
         : (Array.isArray(data?.data) ? data.data : []);
       console.log('获取到的代币数据(前3条):', rank.slice(0, 3));
       setTokens(rank);
+
+        try {
+          const rsiList = await fetchTopRSI(50, 14, "1m", 120);
+          const addrToRSI = new Map(rsiList.map(x => [x.address, x.current_rsi]));
+          const tokensWithRSI = rank.map(t => ({ ...t, current_rsi: addrToRSI.get(t.address) ?? null }));
+          setTokens(tokensWithRSI);
+        } catch (e) {
+          console.warn("获取RSI失败", e);
+        }
       setLastUpdate(new Date());
       setRefreshCount(prev => prev + 1);
       setError(null);
@@ -309,6 +319,9 @@ const BluechipRank = () => {
                 </div>
                 <div className="price-info">
                   <div className="price">{formatPrice(token.price)}</div>
+                  {token.current_rsi != null && (
+                    <div className="rsi-badge">RSI: {token.current_rsi}</div>
+                  )}
                   <div className={`price-change ${parseFloat(token.price_change_percent_1h || 0) >= 0 ? 'positive' : 'negative'}`}>
                     {parseFloat(token.price_change_percent_1h || 0).toFixed(2)}%
                   </div>
