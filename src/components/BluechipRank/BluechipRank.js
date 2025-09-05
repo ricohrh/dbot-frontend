@@ -48,6 +48,7 @@ const BluechipRank = () => {
         ? data.data.rank
         : (Array.isArray(data?.data) ? data.data : []);
       console.log('获取到的代币数据(前3条):', rank.slice(0, 3));
+      console.log('第一个代币的symbol:', rank[0]?.symbol);
       setTokens(rank);
 
         try {
@@ -308,7 +309,7 @@ const BluechipRank = () => {
                     </div>
                   </div>
                   <div className="token-basic">
-                    <h3 className="token-symbol">{token.symbol}</h3>
+                    <h3 className="token-symbol">{token.symbol || 'Unknown'}</h3>
                     <div className="token-address">
   <span className="addr-text">{token.address?.slice(0, 8)}...{token.address?.slice(-6)}</span>
   <button className="copy-btn" onClick={(e) => { e.stopPropagation(); handleCopy(token.address); }}>
