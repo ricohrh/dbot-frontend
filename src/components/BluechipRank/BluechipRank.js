@@ -265,6 +265,9 @@ const BluechipRank = () => {
             <div key={token.address} className={`token-card ${isExpanded ? 'expanded' : ''}`}>
               <div className="token-header">
                 <div className="rank-badge">#{index + 1}</div>
+                <div style={{position: 'absolute', top: 15, left: 55, fontWeight: 700, color: '#111827'}}>
+                  {token.symbol || 'Unknown'}
+                </div>
                 <div className="token-info">
                   <div className="token-avatar">
                     <img 
