@@ -324,7 +324,7 @@ const BluechipRank = () => {
                 <div className="price-info">
                   <div className="price">{formatPrice(token.price)}</div>
                   {token.current_rsi != null && (
-                    <div className="rsi-badge">RSI: {token.current_rsi}</div>
+                    <div className={`rsi-badge rsi-${token.rsi_status || "neutral"}`}>RSI: {token.current_rsi}</div>
                   )}
                   <div className={`price-change ${parseFloat(token.price_change_percent_1h || 0) >= 0 ? 'positive' : 'negative'}`}>
                     {parseFloat(token.price_change_percent_1h || 0).toFixed(2)}%
